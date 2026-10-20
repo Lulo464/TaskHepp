@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { AppContext } from '../context.js';
 import { exportAll } from '../routes/system.js';
+import { syncDueSources } from './calendars.js';
 
 const LONG_TIMER_HOURS = 4;
 
@@ -32,6 +33,10 @@ const remindedEntries = new Set<number>();
 const jobs: Record<string, Job> = {
   publishEntities: async ctx => {
     await ctx.publisher.publishAll();
+  },
+
+  syncCalendars: async ctx => {
+    await syncDueSources(ctx);
   },
 
   autoStopAtMidnight: async ctx => {

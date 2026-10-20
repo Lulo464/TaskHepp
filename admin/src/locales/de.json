@@ -36,6 +36,10 @@
       "label": "Regeln",
       "sub": "Wenn in Home Assistant etwas passiert, entsteht ein Ticket – oder wird geschlossen."
     },
+    "calendars": {
+      "label": "Kalender",
+      "sub": "Termine aus Home-Assistant-Kalendern – z. B. Abfuhrtermine – werden automatisch zu Tickets."
+    },
     "notify": {
       "label": "Benachrichtigungen",
       "sub": "Wann und worüber du informiert wirst."
@@ -132,7 +136,11 @@
     "openCount": "{{count}} offen",
     "addProject": "Projekt hinzufügen",
     "newProject": "Neues Projekt {{n}}",
-    "projectName": "Name des neuen Projekts"
+    "projectName": "Name des neuen Projekts",
+    "addArea": "Bereich hinzufügen",
+    "areaName": "Name des neuen Bereichs (z. B. Arbeit, Zuhause)",
+    "suggestion": "Zuhause",
+    "empty": "Noch keine Bereiche. Lege zuerst einen an – Tickets und Regeln brauchen einen Bereich."
   },
   "reports": {
     "byArea": "Bereich",
@@ -208,7 +216,8 @@
     "testMeta": "{{area}} · Prio {{prio}} · heute fällig · von Home Assistant",
     "notTranslatable": "Diese Bedingung kann nicht automatisch in einen Home-Assistant-Trigger übersetzt werden. Unterstützt: „> 1.8“, „= on“, „on > 2 h“, „in 1 Tag“ und als Zusatz „sensor.x < 5“.",
     "testDisabled": "Die Regel ist deaktiviert und würde gerade kein Ticket erstellen.",
-    "testDuplicate": "Kein neues Ticket: „{{title}}“ ist noch offen (Duplikat-Schutz)."
+    "testDuplicate": "Kein neues Ticket: „{{title}}“ ist noch offen (Duplikat-Schutz).",
+    "needArea": "Lege zuerst unter „Bereiche & Projekte“ einen Bereich an."
   },
   "notify": {
     "dueSoon": {
@@ -371,5 +380,37 @@
     "later": "Später heute",
     "allDone": "Für heute ist alles erledigt.",
     "offline": "Keine Verbindung – zeige den letzten Stand."
+  },
+  "calendars": {
+    "add": "Kalender hinzufügen",
+    "pick": "Kalender aus Home Assistant",
+    "link": "Einbinden",
+    "noneLeft": "Alle Kalender aus Home Assistant sind schon eingebunden.",
+    "empty": "Noch kein Kalender eingebunden.",
+    "edit": "Kalender bearbeiten",
+    "error": "Fehler",
+    "defaultTemplate": "{title} rausstellen",
+    "template": "Ticket-Titel",
+    "templateHint": "{title} = Termin (z. B. Restmüll), {date} = Datum (z. B. 03.11.)",
+    "due": "Ticket fällig",
+    "lead0": "Am Tag selbst",
+    "lead1": "Am Vortag",
+    "lead2": "2 Tage vorher",
+    "lookahead": "Tickets anlegen",
+    "days": "{{n}} Tage vorher",
+    "autoClose": "Nach dem Termin automatisch erledigen",
+    "autoCloseDesc": "Ist der Abfuhrtag vorbei, wird ein offenes Ticket geschlossen.",
+    "enabled": "Abgleich aktiv",
+    "enabledDesc": "Alle 15 Minuten nach neuen Terminen schauen.",
+    "syncNow": "Jetzt abgleichen",
+    "syncResult": "{{events}} Termine gefunden, {{created}} Tickets angelegt, {{closed}} geschlossen.",
+    "lastSync": "Zuletzt abgeglichen {{when}}",
+    "neverSynced": "Noch nicht abgeglichen.",
+    "deleteConfirm": "Kalender „{{name}}“ entfernen? Bereits angelegte Tickets bleiben.",
+    "upcoming": "Nächste Termine",
+    "dueOn": "fällig {{date}}",
+    "createdFrom": "Ticket ab {{date}}",
+    "ticketDeleted": "Ticket gelöscht",
+    "noEvents": "Keine Termine in den nächsten 60 Tagen."
   }
 }
