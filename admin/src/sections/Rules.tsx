@@ -58,6 +58,7 @@ export function Rules() {
   };
 
   const addRule = () => act(async () => {
+    if (!areas.length) throw new Error(t('rules.needArea'));
     const created = await post<Rule>('/api/rules', {
       name: t('rules.newName'), entity: 'sensor.beispiel', cond: '> 0', join: 'and', cond2: '', window: '00:00–23:59',
       title: t('rules.newTitle'), areaId: areas[areas.length - 1]?.id, prio: 'normal', onEnd: 'close', dedupe: true, enabled: false,
@@ -86,7 +87,7 @@ export function Rules() {
         {rules.map(r => (
           <button key={r.id} type="button" className={`rule-item${r.id === draft?.id ? ' is-active' : ''}`} aria-pressed={r.id === draft?.id} onClick={() => pick(r.id)}>
             <span className="grow">
-              <span className="row-title">{r.name}</span>
+              <span className="row-title"><span className="muted">#{r.id}</span> {r.name}</span>
               <span className="rule-when mono" style={{ display: 'block' }}>{r.entity} {r.cond}</span>
             </span>
             <span className={`tag ${r.enabled ? 'tag-accent' : 'tag-neutral'}`}>{t(r.enabled ? 'rules.active' : 'rules.off')}</span>
@@ -99,7 +100,7 @@ export function Rules() {
 
       {draft && (
         <div className="card editor">
-          <div className="kicker accent">{t('rules.edit')}</div>
+          <div className="kicker accent">{t('rules.edit')} · #{draft.id}</div>
           <Field label={t('rules.name')}><input className="input" {...text('name')} /></Field>
 
           <div className="kicker">{t('rules.when')}</div>

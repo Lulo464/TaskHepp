@@ -16,7 +16,17 @@ export function Areas() {
     if (name?.trim()) void act(() => post(`/api/areas/${a.id}/projects`, { name: name.trim() }));
   };
 
+  const addArea = () => {
+    const name = window.prompt(t('areas.areaName'), areas.length ? '' : t('areas.suggestion'));
+    if (name?.trim()) void act(() => post('/api/areas', { name: name.trim(), icon: /haus|home|zuhause/i.test(name) ? 'house' : /arbeit|work|job/i.test(name) ? 'briefcase' : 'folder' }));
+  };
+
   return (
+    <>
+    <div className="toolbar">
+      <button type="button" className="btn btn-secondary" onClick={addArea}><Icon name="plus" /> {t('areas.addArea')}</button>
+    </div>
+    {areas.length === 0 && <div className="muted">{t('areas.empty')}</div>}
     <div className="area-grid">
       {areas.map(a => (
         <div key={a.id} className="card pad-lg" style={{ gap: 0 }}>
@@ -40,5 +50,6 @@ export function Areas() {
         </div>
       ))}
     </div>
+    </>
   );
 }

@@ -132,7 +132,11 @@
     "openCount": "{{count}} offen",
     "addProject": "Projekt hinzufügen",
     "newProject": "Neues Projekt {{n}}",
-    "projectName": "Name des neuen Projekts"
+    "projectName": "Name des neuen Projekts",
+    "addArea": "Bereich hinzufügen",
+    "areaName": "Name des neuen Bereichs (z. B. Arbeit, Zuhause)",
+    "suggestion": "Zuhause",
+    "empty": "Noch keine Bereiche. Lege zuerst einen an – Tickets und Regeln brauchen einen Bereich."
   },
   "reports": {
     "byArea": "Bereich",
@@ -208,7 +212,8 @@
     "testMeta": "{{area}} · Prio {{prio}} · heute fällig · von Home Assistant",
     "notTranslatable": "Diese Bedingung kann nicht automatisch in einen Home-Assistant-Trigger übersetzt werden. Unterstützt: „> 1.8“, „= on“, „on > 2 h“, „in 1 Tag“ und als Zusatz „sensor.x < 5“.",
     "testDisabled": "Die Regel ist deaktiviert und würde gerade kein Ticket erstellen.",
-    "testDuplicate": "Kein neues Ticket: „{{title}}“ ist noch offen (Duplikat-Schutz)."
+    "testDuplicate": "Kein neues Ticket: „{{title}}“ ist noch offen (Duplikat-Schutz).",
+    "needArea": "Lege zuerst unter „Bereiche & Projekte“ einen Bereich an."
   },
   "notify": {
     "dueSoon": {
