@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/ui';
-import { isLogError, logTag } from '../lib/format';
+import { formatTime, logTag } from '../lib/format';
 import type { LogEntry } from '../lib/types';
 
 /** Event rows shared by the overview and the log section. */
-export function LogTable({ entries, withHeader, onRetry }: { entries: { entry: LogEntry; index: number }[]; withHeader?: boolean; onRetry?: (index: number) => void }) {
+export function LogTable({ entries, withHeader, onRetry }: { entries: LogEntry[]; withHeader?: boolean; onRetry?: (id: number) => void }) {
   const { t } = useTranslation();
   return (
     <div className="table-wrap">
@@ -21,19 +21,19 @@ export function LogTable({ entries, withHeader, onRetry }: { entries: { entry: L
           </thead>
         )}
         <tbody>
-          {entries.map(({ entry: e, index }) => (
-            <tr key={index}>
-              <td>{e.time}</td>
+          {entries.map(e => (
+            <tr key={e.id}>
+              <td>{formatTime(e.at)}</td>
               <td className="dir">
-                <Icon name={e.dir === 'in' ? 'arrow-right' : 'arrow-left'} />
-                {t(e.dir === 'in' ? 'common.dirIn' : 'common.dirOut')}
+                <Icon name={e.direction === 'in' ? 'arrow-right' : 'arrow-left'} />
+                {t(e.direction === 'in' ? 'common.dirIn' : 'common.dirOut')}
               </td>
-              <td>{e.what}</td>
+              <td>{e.message}</td>
               <td><span className={`tag ${logTag[e.status]}`}>{t(`logStatus.${e.status}`)}</span></td>
               {onRetry && (
                 <td className="right">
-                  {isLogError(e.status) && (
-                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => onRetry(index)}>
+                  {e.retryable && (
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => onRetry(e.id)}>
                       <Icon name="arrow-clockwise" /> {t('log.retry')}
                     </button>
                   )}
@@ -41,6 +41,7 @@ export function LogTable({ entries, withHeader, onRetry }: { entries: { entry: L
               )}
             </tr>
           ))}
+          {entries.length === 0 && <tr><td colSpan={5} className="empty">{t('log.empty')}</td></tr>}
         </tbody>
       </table>
     </div>

@@ -30,9 +30,14 @@ const backupSchema = z.object({
 async function monitorData(ctx: AppContext, s: Settings) {
   const { db } = ctx;
   const { rows: timer } = await db.query(
-    `SELECT t.title, e.started_at AS "startedAt", u.name AS "user" FROM time_entries e
-       JOIN tickets t ON t.id = e.ticket_id LEFT JOIN users u ON u.id = e.user_id
+    `SELECT t.title, a.name AS area, t.source, e.started_at AS "startedAt", u.name AS "user" FROM time_entries e
+       JOIN tickets t ON t.id = e.ticket_id JOIN areas a ON a.id = t.area_id LEFT JOIN users u ON u.id = e.user_id
       WHERE e.ended_at IS NULL ORDER BY e.started_at DESC LIMIT 1`,
+  );
+  const { rows: [totals] } = await db.query<{ openTickets: number; todayMinutes: number }>(
+    `SELECT (SELECT count(*)::int FROM tickets WHERE status <> 'done') AS "openTickets",
+            (SELECT COALESCE(round(sum(extract(epoch FROM (COALESCE(ended_at, now()) - GREATEST(started_at, date_trunc('day', now()))))) / 60), 0)::int
+               FROM time_entries WHERE COALESCE(ended_at, now()) > date_trunc('day', now())) AS "todayMinutes"`,
   );
   const { rows: today } = await db.query<{ id: number; title: string; prio: string; area: string; overdue: boolean }>(
     `SELECT t.id, t.title, t.prio, a.name AS area, t.due_date < current_date AS overdue
@@ -42,7 +47,7 @@ async function monitorData(ctx: AppContext, s: Settings) {
   );
 
   // Sensor values for the entities the rules watch.
-  let sensors: { entity: string; state: string; unit?: string }[] = [];
+  let sensors: { entity: string; state: string; unit?: string; name?: unknown }[] = [];
   if (s.widgets.haSensors && (await ctx.ha.isConfigured())) {
     const entities = [...new Set((await listRules(db)).filter(r => r.enabled).map(r => r.entity))].slice(0, 8);
     sensors = (await Promise.all(entities.map(async entity => {
@@ -59,6 +64,7 @@ async function monitorData(ctx: AppContext, s: Settings) {
     now: new Date().toISOString(),
     interval: s.monitorInterval,
     widgets: s.widgets,
+    ...totals,
     timer: s.widgets.timer ? timer[0] ?? null : null,
     next: s.widgets.next ? today.slice(0, 3) : [],
     later: s.widgets.later ? today.slice(3) : [],
