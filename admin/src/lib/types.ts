@@ -163,3 +163,29 @@ export interface MonitorData {
   later: { id: number; title: string; area: string; prio: Prio; overdue: boolean }[];
   sensors: { entity: string; state: string; unit?: string; name?: string }[];
 }
+
+export interface CalendarSource {
+  id: number;
+  entityId: string;
+  name: string;
+  areaId: number;
+  titleTemplate: string;
+  leadDays: number;
+  lookaheadDays: number;
+  prio: Prio;
+  autoClose: boolean;
+  enabled: boolean;
+  lastSyncAt: string | null;
+  lastError: string | null;
+}
+
+export interface CalendarEventPreview {
+  date: string;
+  summary: string;
+  ticketTitle: string;
+  due: string;
+  imported: boolean;
+  ticketId: number | null;
+  ticketStatus: TicketStatus | null;
+  createFrom: string;
+}

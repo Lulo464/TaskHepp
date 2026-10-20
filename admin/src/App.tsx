@@ -4,6 +4,7 @@ import { Icon } from './components/ui';
 import { post, useApi, useApiError } from './lib/api';
 import type { Me } from './lib/types';
 import { Areas } from './sections/Areas';
+import { Calendars } from './sections/Calendars';
 import { Config } from './sections/Config';
 import { HomeAssistant } from './sections/HomeAssistant';
 import { Log } from './sections/Log';
@@ -32,6 +33,7 @@ const navGroups: { group: string; sections: Section[] }[] = [
   { group: 'ha', sections: [
     { id: 'ha', icon: 'house-line', view: HomeAssistant },
     { id: 'rules', icon: 'flow-arrow', view: Rules },
+    { id: 'calendars', icon: 'calendar-check', view: Calendars },
     { id: 'notify', icon: 'bell', view: Notifications },
   ] },
   { group: 'monitor', sections: [

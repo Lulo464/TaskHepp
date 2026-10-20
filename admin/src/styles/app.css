@@ -105,7 +105,7 @@ body { background: var(--color-bg); }
 .toggle-row:hover .switch { box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 15%, transparent); }
 
 /* — segmented control on buttons — */
-.seg-btn { font: inherit; font-size: 13px; color: inherit; background: transparent; border: 0; justify-content: center; }
+.seg-btn { white-space: nowrap; font: inherit; font-size: 13px; color: inherit; background: transparent; border: 0; justify-content: center; }
 .seg-btn.seg-fill { flex: 1; }
 .seg-btn:hover:not(.is-active) { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
 .seg-btn:active { background: color-mix(in srgb, var(--color-accent) 22%, transparent); }

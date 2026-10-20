@@ -76,6 +76,12 @@ Die passende HA-Konfiguration (rest_command und Automationen) erzeugt Tasklog un
 
 Benachrichtigungen gehen über `notify.notify`. Push und E-Mail sind noch nicht angebunden.
 
+**Kalender (z. B. Abfuhrtermine):** Unter „Kalender“ bindest du einen Kalender aus Home Assistant ein, etwa den von *Waste Collection Schedule*. Tasklog liest die Termine alle 15 Minuten über die HA-API.
+
+- Für jeden Termin entsteht genau ein Ticket, z. B. „Restmüll rausstellen“, fällig am Vortag.
+- Tickets entstehen nur bis zu 14 Tage im Voraus. Ist der Abfuhrtag vorbei, wird das Ticket automatisch erledigt.
+- Ein gelöschtes Ticket wird nicht neu angelegt.
+
 ## Tagesmonitor
 
 `<PUBLIC_URL>/monitor?t=<token>` ist eine Vollbildansicht für ein Wanddisplay oder einen Browser-Tab, ohne Login. Den Link gibt es unter „Tagesmonitor“, dort lässt er sich auch erneuern.

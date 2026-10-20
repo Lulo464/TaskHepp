@@ -1,5 +1,13 @@
 import type { SettingsStore } from './settings.js';
 
+export interface HaCalendarEvent {
+  summary: string;
+  start: { date?: string; dateTime?: string };
+  end?: { date?: string; dateTime?: string };
+  description?: string | null;
+  uid?: string | null;
+}
+
 export class HaNotConfigured extends Error {
   constructor() {
     super('Home Assistant ist nicht eingerichtet (URL und Token fehlen)');
@@ -46,6 +54,17 @@ export class HomeAssistant {
 
   getState(entityId: string) {
     return this.request<{ state: string; attributes: Record<string, unknown> }>(`api/states/${encodeURIComponent(entityId)}`);
+  }
+
+  /** All calendar entities, e.g. [{ entity_id: 'calendar.abfall_io', name: 'Abfall' }]. */
+  listCalendars() {
+    return this.request<{ entity_id: string; name: string }[]>('api/calendars');
+  }
+
+  /** Events between two instants. All-day events have `start.date`, timed ones `start.dateTime`. */
+  calendarEvents(entityId: string, start: Date, end: Date) {
+    const q = new URLSearchParams({ start: start.toISOString(), end: end.toISOString() });
+    return this.request<HaCalendarEvent[]>(`api/calendars/${encodeURIComponent(entityId)}?${q}`);
   }
 
   callService(domain: string, service: string, data: Record<string, unknown>) {

@@ -51,6 +51,8 @@ export async function setup(): Promise<TestApp> {
 export interface FakeHa {
   url: string;
   states: Map<string, { state: string; attributes: Record<string, unknown> }>;
+  /** Calendar entity → events (HA format, e.g. { summary, start: { date } }). */
+  calendars: Map<string, { summary: string; start: { date?: string; dateTime?: string } }[]>;
   calls: { method: string; path: string; body: unknown; auth?: string }[];
   fail: boolean;
   close: () => Promise<void>;
@@ -58,7 +60,7 @@ export interface FakeHa {
 
 /** Minimal Home Assistant REST API: config, states, notify. */
 export async function fakeHomeAssistant(token = 'ha-token'): Promise<FakeHa> {
-  const fake: Omit<FakeHa, 'url' | 'close'> = { states: new Map(), calls: [], fail: false };
+  const fake: Omit<FakeHa, 'url' | 'close'> = { states: new Map(), calendars: new Map(), calls: [], fail: false };
   const readBody = (req: IncomingMessage) => new Promise<string>(r => { let b = ''; req.on('data', c => (b += c)); req.on('end', () => r(b)); });
   const server: Server = createServer(async (req, res) => {
     const body = await readBody(req);
@@ -72,6 +74,13 @@ export async function fakeHomeAssistant(token = 'ha-token'): Promise<FakeHa> {
     if (m && req.method === 'POST') { fake.states.set(decodeURIComponent(m[1]), JSON.parse(body)); return send(200, {}); }
     if (m) return fake.states.has(decodeURIComponent(m[1])) ? send(200, fake.states.get(decodeURIComponent(m[1]))) : send(404, {});
     if (path === '/api/services/notify/notify') return send(200, []);
+    if (path === '/api/calendars') return send(200, [...fake.calendars.keys()].map(id => ({ entity_id: id, name: id.split('.')[1] })));
+    // Returns every event, ignoring ?start/&end, so Tasklog's own range filter is exercised.
+    const cal = path.match(/^\/api\/calendars\/([^?]+)\?/);
+    if (cal) {
+      const events = fake.calendars.get(decodeURIComponent(cal[1]));
+      return events ? send(200, events) : send(404, { message: 'not found' });
+    }
     return send(404, {});
   });
   await new Promise<void>(r => server.listen(0, '127.0.0.1', r));
