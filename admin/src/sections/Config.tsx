@@ -1,22 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Icon, Seg } from '../components/ui';
-import { useStore } from '../lib/store';
-import { homeAssistantYaml, tasklogYaml } from '../lib/yaml';
+import { Icon, Loading, Seg } from '../components/ui';
+import { useApi } from '../lib/api';
+
+const FILES = { ha: '/api/config/homeassistant.yaml', tasklog: '/api/config/tasklog.yaml' } as const;
 
 export function Config() {
   const { t } = useTranslation();
-  const { state } = useStore();
-  const [tab, setTab] = useState<'ha' | 'tasklog'>('ha');
+  const [tab, setTab] = useState<keyof typeof FILES>('ha');
+  const yaml = useApi<string>(FILES[tab], { text: true });
   const [copied, setCopied] = useState(false);
   const timer = useRef<number>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
-  const yaml = tab === 'ha' ? homeAssistantYaml(state.rules) : tasklogYaml(state.rules, state.entities);
-
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(yaml);
+      await navigator.clipboard.writeText(yaml ?? '');
     } catch {
       // Clipboard may be unavailable (insecure context); the text stays selectable.
     }
@@ -29,11 +28,15 @@ export function Config() {
     <>
       <div className="config-bar">
         <Seg fill={false} options={[{ value: 'ha' as const, label: t('config.ha') }, { value: 'tasklog' as const, label: t('config.tasklog') }]} value={tab} onChange={setTab} />
-        <button type="button" className="btn btn-secondary" style={{ height: 32 }} onClick={copy}>
-          <Icon name="copy" /> {t(copied ? 'config.copied' : 'config.copy')}
-        </button>
+        <div className="row">
+          <a className="btn btn-ghost" style={{ height: 32 }} href={FILES[tab]} download><Icon name="download-simple" /> {t('config.download')}</a>
+          <button type="button" className="btn btn-secondary" style={{ height: 32 }} onClick={copy}>
+            <Icon name="copy" /> {t(copied ? 'config.copied' : 'config.copy')}
+          </button>
+        </div>
       </div>
-      <pre className="yaml">{yaml}</pre>
+      {yaml === undefined ? <Loading /> : <pre className="yaml">{yaml}</pre>}
+      {tab === 'ha' && <div className="field-hint" style={{ maxWidth: 760, marginTop: 10 }}>{t('config.haHint')}</div>}
     </>
   );
 }

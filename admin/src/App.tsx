@@ -1,6 +1,8 @@
 import { useEffect, useState, type ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from './components/ui';
+import { post, useApi, useApiError } from './lib/api';
+import type { Me } from './lib/types';
 import { Areas } from './sections/Areas';
 import { Config } from './sections/Config';
 import { HomeAssistant } from './sections/HomeAssistant';
@@ -57,7 +59,14 @@ export function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
+  const me = useApi<Me>('/api/me');
+  const { error, clear } = useApiError();
   const View = current.view;
+
+  const logout = async () => {
+    await post('/api/logout');
+    window.location.href = '/auth/login';
+  };
 
   return (
     <div className="shell">
@@ -82,13 +91,24 @@ export function App() {
             </div>
           ))}
         </nav>
-        <div className="account">
-          <span className="avatar">M</span>max@example.com
-        </div>
+        {me?.kind === 'user' && (
+          <div className="account">
+            <span className="avatar">{(me.name ?? me.email ?? '?').charAt(0).toUpperCase()}</span>
+            <span className="grow" title={me.email}>{me.email}</span>
+            <button type="button" className="icon-btn" aria-label={t('account.logout')} title={t('account.logout')} onClick={logout}><Icon name="sign-out" /></button>
+          </div>
+        )}
       </aside>
       <main className="main">
         <h1 className="page-title">{t(`sections.${current.id}.label`)}</h1>
         <div className="page-sub">{t(`sections.${current.id}.sub`)}</div>
+        {error && (
+          <div className="error-banner" role="alert">
+            <Icon name="warning" /> <span className="grow">{error}</span>
+            <button type="button" className="icon-btn" aria-label={t('common.close')} onClick={clear}><Icon name="x" /></button>
+          </div>
+        )}
+        {me?.kind === 'user' && me.role !== 'admin' && <div className="error-banner muted-banner"><Icon name="info" /> {t('account.notAdmin')}</div>}
         <View />
       </main>
     </div>

@@ -1,38 +1,39 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Icon, Seg } from '../components/ui';
-import { formatHours, nextStatus, ticketTag } from '../lib/format';
-import { useStore } from '../lib/store';
+import { Icon, Loading, Seg } from '../components/ui';
+import { patch, post, useAction, useApi } from '../lib/api';
+import { firstName, formatDue, formatMinutes, nextStatus, ticketTag } from '../lib/format';
+import type { Area, Ticket } from '../lib/types';
 
 const HA_FILTER = '__ha';
 const ALL = '__all';
 
 export function Tickets() {
   const { t } = useTranslation();
-  const { state, update } = useStore();
+  const tickets = useApi<Ticket[]>('/api/tickets');
+  const areas = useApi<Area[]>('/api/areas');
+  const act = useAction();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState(ALL);
   const [picked, setPicked] = useState<number[]>([]);
 
+  if (!tickets) return <Loading />;
+
   const filters = [
     { value: ALL, label: t('common.all') },
-    ...state.areas.map(a => ({ value: a.name, label: a.name })),
+    ...(areas ?? []).map(a => ({ value: String(a.id), label: a.name })),
     { value: HA_FILTER, label: t('tickets.filterHa') },
   ];
-  const rows = state.tickets.filter(x =>
-    (filter === ALL || (filter === HA_FILTER ? x.fromHa : x.area === filter)) &&
+  const rows = tickets.filter(x =>
+    (filter === ALL || (filter === HA_FILTER ? x.source === 'ha' : String(x.areaId) === filter)) &&
     x.title.toLowerCase().includes(query.toLowerCase()));
 
   const togglePick = (id: number) => setPicked(p => (p.includes(id) ? p.filter(x => x !== id) : [...p, id]));
-  const bulkDone = () => {
-    update(s => ({ tickets: s.tickets.map(x => (picked.includes(x.id) ? { ...x, status: 'done' as const } : x)) }));
+  const bulk = (action: 'setStatus' | 'delete') => act(async () => {
+    await post('/api/tickets/bulk', { ids: picked, action, status: 'done' });
     setPicked([]);
-  };
-  const bulkDelete = () => {
-    update(s => ({ tickets: s.tickets.filter(x => !picked.includes(x.id)) }));
-    setPicked([]);
-  };
-  const cycle = (id: number) => update(s => ({ tickets: s.tickets.map(x => (x.id === id ? { ...x, status: nextStatus[x.status] } : x)) }));
+  });
+  const cycle = (x: Ticket) => act(() => patch(`/api/tickets/${x.id}`, { status: nextStatus[x.status] }));
 
   return (
     <>
@@ -43,8 +44,8 @@ export function Tickets() {
         {picked.length > 0 && (
           <>
             <span className="soft" style={{ fontSize: 13 }}>{t('tickets.selected', { count: picked.length })}</span>
-            <button type="button" className="btn btn-secondary" onClick={bulkDone}><Icon name="check" /> {t('tickets.markDone')}</button>
-            <button type="button" className="btn btn-ghost" onClick={bulkDelete}><Icon name="trash" /> {t('common.delete')}</button>
+            <button type="button" className="btn btn-secondary" onClick={() => bulk('setStatus')}><Icon name="check" /> {t('tickets.markDone')}</button>
+            <button type="button" className="btn btn-ghost" onClick={() => bulk('delete')}><Icon name="trash" /> {t('common.delete')}</button>
           </>
         )}
       </div>
@@ -74,18 +75,19 @@ export function Tickets() {
                   </td>
                   <td>
                     {x.title}{' '}
-                    {x.fromHa && <i className="ph ph-house-line accent" title={t('tickets.fromHa')} />}
+                    {x.source === 'ha' && <i className="ph ph-house-line accent" title={t('tickets.fromHa')} />}
+                    {x.running && <i className="ph-fill ph-timer accent" title={t('tickets.running')} />}
                   </td>
-                  <td className="soft">{x.area} / {x.project}</td>
+                  <td className="soft">{x.area}{x.project ? ` / ${x.project}` : ''}</td>
                   <td>
-                    <button type="button" className={`tag ${ticketTag[x.status]}`} title={t('tickets.cycleStatus')} onClick={() => cycle(x.id)}>
+                    <button type="button" className={`tag ${ticketTag[x.status]}`} title={t('tickets.cycleStatus')} onClick={() => cycle(x)}>
                       {t(`status.${x.status}`)}
                     </button>
                   </td>
                   <td>{t(`prio.${x.prio}`)}</td>
-                  <td>{x.assignee}</td>
-                  <td>{x.due}</td>
-                  <td className="right">{formatHours(x.hours)}</td>
+                  <td>{firstName(x.assignee)}</td>
+                  <td>{formatDue(x.due)}</td>
+                  <td className="right">{formatMinutes(x.minutes)}</td>
                 </tr>
               );
             })}

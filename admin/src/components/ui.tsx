@@ -1,4 +1,15 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+
+export function Loading() {
+  const { t } = useTranslation();
+  return <div className="muted" role="status">{t('common.loading')}</div>;
+}
+
+/** Hint line under a control, e.g. "Push ist noch nicht angebunden". */
+export function Note({ children }: { children: ReactNode }) {
+  return <div className="note"><Icon name="info" /> {children}</div>;
+}
 
 /** Phosphor icon by name, e.g. <Icon name="house-line" />. */
 export function Icon({ name, fill, className = '' }: { name: string; fill?: boolean; className?: string }) {
