@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/nocturne-493ae4f7-e752-4f4b-8ed1-5e6c04648b60/styles.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<style>body{margin:0;background:var(--color-neutral-900)}</style>
+</helmet>
+<div style="padding:48px;font-family:var(--font-body);color:var(--color-text);display:flex;flex-direction:column;gap:56px">
+<div><div style="font-size:12px;color:var(--color-accent)">TASKLOG · STATISCHE SCREENS</div><h1 style="font-size:30px;font-weight:500;margin:6px 0 6px">Mobile App + Tagesmonitor</h1><div style="font-size:14px;color:var(--color-neutral-300);max-width:620px;line-height:1.5">Ablauf: Login (OIDC) → Heute → Tickets → Detail/Timer. Home Assistant erstellt Tickets automatisch per Regel; der Monitor zeigt im Browser, was am Tag ansteht.</div></div>
+
+<div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:12px;color:var(--color-neutral-400)">1 · Login (OIDC)</div>
+<div style="width:360px;height:740px;background:var(--color-bg);border-radius:40px;border:1px solid var(--color-neutral-700);box-shadow:var(--shadow-lg);overflow:hidden;display:flex;flex-direction:column;padding:60px 28px 32px;box-sizing:border-box;background-image:radial-gradient(ellipse at 20% 0%,var(--color-accent-900),transparent 60%)">
+<div style="width:44px;height:44px;border-radius:12px;border:1px solid var(--color-accent);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--color-accent);box-shadow:0 0 24px var(--color-accent-800)"><i class="ph ph-check-square-offset"></i></div>
+<h2 style="font-size:34px;font-weight:500;margin:28px 0 8px;letter-spacing:-.02em">Tasklog</h2>
+<p style="color:var(--color-neutral-300);margin:0;font-size:15px;line-height:1.5;max-width:270px">Aufgaben und Zeit – bei der Arbeit und zuhause an einem Ort.</p>
+<div style="flex:1"></div>
+<div class="field"><label>OIDC-Provider</label><input class="input" value="https://auth.example.com" readonly="readonly"></div>
+<div style="height:14px"></div>
+<button class="btn btn-primary btn-block"><i class="ph ph-key"></i> Mit SSO anmelden</button>
+<p style="font-size:12px;color:var(--color-neutral-400);margin:14px 0 0">OpenID Connect · Authorization Code + PKCE</p>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:12px;color:var(--color-neutral-400)">2 · Heute</div>
+<div style="width:360px;height:740px;background:var(--color-bg);border-radius:40px;border:1px solid var(--color-neutral-700);box-shadow:var(--shadow-lg);overflow:hidden;display:flex;flex-direction:column">
+<div style="height:44px;flex:none"></div>
+<div style="flex:1;padding:12px 20px;overflow:hidden">
+<div style="font-size:13px;color:var(--color-neutral-400)">Dienstag, 20. Oktober</div>
+<h2 style="font-size:26px;font-weight:500;margin:4px 0 16px">Hallo Max</h2>
+<div style="border:1px solid var(--color-neutral-700);border-radius:12px;padding:16px;background:linear-gradient(160deg,var(--color-accent-900),var(--color-neutral-800) 70%)">
+<div style="font-size:12px;color:var(--color-neutral-300)">Heute erfasst</div>
+<div style="font-size:40px;font-weight:500;margin:6px 0 2px">3:45 h</div>
+<div style="display:flex;gap:16px;font-size:12px;color:var(--color-neutral-300)"><span><i class="ph ph-briefcase"></i> Arbeit 2:30</span><span><i class="ph ph-house"></i> Zuhause 1:15</span></div></div>
+<div style="font-size:14px;font-weight:500;margin:22px 0 4px">Heute fällig</div>
+<sc-for list="{{ due }}" as="t" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--color-neutral-800)"><span style="width:8px;height:8px;border-radius:50%;background:{{ t.dot }};flex:none"></span><div style="flex:1"><div style="font-size:14px">{{ t.title }}</div><div style="font-size:12px;color:var(--color-neutral-400);margin-top:2px">{{ t.meta }}</div></div><i class="ph ph-play" style="font-size:20px;color:var(--color-accent)"></i></div>
+</sc-for>
+<div style="margin-top:18px;border:1px dashed var(--color-neutral-600);border-radius:12px;padding:14px;display:flex;gap:12px"><i class="ph ph-house-line" style="font-size:22px;color:var(--color-accent)"></i><div><div style="font-size:13px;font-weight:500">Automatisch von Home Assistant</div><div style="font-size:12px;color:var(--color-neutral-300);margin-top:4px;line-height:1.4">Wärmepumpe: Filter reinigen – Ticket erstellt 07:12</div></div></div>
+</div>
+<sc-for list="{{ tabsHome }}" as="x" hint-placeholder-count="0"><span></span></sc-for>
+<div style="height:76px;flex:none;display:flex;justify-content:space-around;padding-top:8px;border-top:1px solid var(--color-neutral-800)"><sc-for list="{{ tabsHome }}" as="t" hint-placeholder-count="5"><div style="display:flex;flex-direction:column;align-items:center;gap:3px;width:64px;font-size:11px;color:{{ t.c }}"><i class="{{ t.i }}" style="font-size:24px"></i>{{ t.l }}</div></sc-for></div>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:12px;color:var(--color-neutral-400)">3 · Tickets mit Filter</div>
+<div style="width:360px;height:740px;background:var(--color-bg);border-radius:40px;border:1px solid var(--color-neutral-700);box-shadow:var(--shadow-lg);overflow:hidden;display:flex;flex-direction:column">
+<div style="height:44px;flex:none"></div>
+<div style="flex:1;padding:12px 20px;overflow:hidden">
+<h2 style="font-size:26px;font-weight:500;margin:4px 0 14px">Tickets</h2>
+<div style="display:flex;gap:8px;margin-bottom:8px"><span style="font-size:13px;padding:6px 14px;border-radius:999px;background:var(--color-accent-800);border:1px solid var(--color-accent)">Alle</span><span style="font-size:13px;padding:6px 14px;border-radius:999px;border:1px solid var(--color-neutral-700);color:var(--color-neutral-300)">Arbeit</span><span style="font-size:13px;padding:6px 14px;border-radius:999px;border:1px solid var(--color-neutral-700);color:var(--color-neutral-300)">Zuhause</span><span style="font-size:13px;padding:6px 14px;border-radius:999px;border:1px solid var(--color-neutral-700);color:var(--color-neutral-300)"><i class="ph ph-house-line"></i> HA</span></div>
+<sc-for list="{{ all }}" as="t" hint-placeholder-count="6">
+<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--color-neutral-800)"><span style="width:8px;height:8px;border-radius:50%;background:{{ t.dot }};flex:none"></span><div style="flex:1;min-width:0"><div style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</div><div style="font-size:12px;color:var(--color-neutral-400);margin-top:3px">{{ t.meta }}</div></div><i class="ph ph-caret-right" style="color:var(--color-neutral-500)"></i></div>
+</sc-for></div>
+<div style="height:76px;flex:none;display:flex;justify-content:space-around;padding-top:8px;border-top:1px solid var(--color-neutral-800)"><sc-for list="{{ tabsList }}" as="t" hint-placeholder-count="5"><div style="display:flex;flex-direction:column;align-items:center;gap:3px;width:64px;font-size:11px;color:{{ t.c }}"><i class="{{ t.i }}" style="font-size:24px"></i>{{ t.l }}</div></sc-for></div>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:12px;color:var(--color-neutral-400)">4 · Ticket-Detail mit Timer</div>
+<div style="width:360px;height:740px;background:var(--color-bg);border-radius:40px;border:1px solid var(--color-neutral-700);box-shadow:var(--shadow-lg);overflow:hidden;display:flex;flex-direction:column">
+<div style="height:44px;flex:none"></div>
+<div style="flex:1;padding:4px 20px;overflow:hidden">
+<div style="font-size:14px;color:var(--color-neutral-300);padding:10px 0"><i class="ph ph-caret-left"></i> Tickets</div>
+<div style="display:flex;gap:8px;margin-bottom:10px"><span class="tag tag-accent">Zuhause</span><span class="tag tag-outline"><i class="ph ph-house-line"></i> Home Assistant</span></div>
+<h2 style="font-size:24px;font-weight:500;margin:0 0 10px;line-height:1.25">Wärmepumpe: Filter reinigen</h2>
+<p style="font-size:14px;line-height:1.5;color:var(--color-neutral-300);margin:0 0 18px">Automatisch erstellt (Sensor: Filterdruck &gt; 1,8 bar).</p>
+<div class="seg" style="margin-bottom:20px"><button class="seg-opt">Offen</button><button class="seg-opt" style="background:var(--color-accent-800)">In Arbeit</button><button class="seg-opt">Erledigt</button></div>
+<div style="border:1px solid var(--color-neutral-700);border-radius:12px;padding:16px;background:var(--color-neutral-800)">
+<div style="font-size:12px;color:var(--color-neutral-400)">Erfasste Zeit · läuft</div>
+<div style="font-size:36px;font-weight:500;margin:4px 0 14px">0:23 h</div>
+<button class="btn btn-primary btn-block"><i class="ph-fill ph-pause"></i> Timer stoppen</button>
+<div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-secondary" style="flex:1">+ 15 min</button><button class="btn btn-secondary" style="flex:1">+ 30 min</button><button class="btn btn-secondary" style="flex:1">+ 1 h</button></div></div>
+<div style="font-size:12px;color:var(--color-neutral-400);margin:20px 0 6px">VERLAUF</div>
+<div style="font-size:13px;color:var(--color-neutral-300);line-height:1.8">07:12 Ticket von Home Assistant erstellt<br>08:40 Timer gestartet</div>
+</div>
+<div style="margin:0 12px 8px;padding:10px 12px;border-radius:12px;border:1px solid var(--color-accent);background:var(--color-accent-900);display:flex;align-items:center;gap:12px"><span style="width:8px;height:8px;border-radius:50%;background:var(--color-accent)"></span><span style="flex:1;font-size:13px">Wärmepumpe: Filter reinigen</span><span style="font-size:14px">00:23:41</span><i class="ph-fill ph-stop"></i></div>
+<div style="height:76px;flex:none;display:flex;justify-content:space-around;padding-top:8px;border-top:1px solid var(--color-neutral-800)"><sc-for list="{{ tabsList }}" as="t" hint-placeholder-count="5"><div style="display:flex;flex-direction:column;align-items:center;gap:3px;width:64px;font-size:11px;color:{{ t.c }}"><i class="{{ t.i }}" style="font-size:24px"></i>{{ t.l }}</div></sc-for></div>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:12px;color:var(--color-neutral-400)">5 · Ticket anlegen</div>
+<div style="width:360px;height:740px;background:var(--color-bg);border-radius:40px;border:1px solid var(--color-neutral-700);box-shadow:var(--shadow-lg);overflow:hidden;display:flex;flex-direction:column">
+<div style="height:44px;flex:none"></div>
+<div style="flex:1;padding:4px 20px;overflow:hidden">
+<div style="font-size:14px;color:var(--color-neutral-300);padding:10px 0"><i class="ph ph-x"></i> Abbrechen</div>
+<h2 style="font-size:26px;font-weight:500;margin:8px 0 18px">Neues Ticket</h2>
+<div class="field"><label>Titel</label><input class="input" value="Rasenmäher warten" readonly="readonly"></div>
+<div style="height:16px"></div>
+<div class="field"><label>Bereich</label></div>
+<div class="seg" style="margin-top:6px"><button class="seg-opt">Arbeit</button><button class="seg-opt" style="background:var(--color-accent-800)">Zuhause</button></div>
+<div style="height:16px"></div>
+<div class="field"><label>Fällig</label><input class="input" value="Sa, 24. Oktober" readonly="readonly"></div>
+<div style="height:16px"></div>
+<div class="field"><label>Beschreibung</label><input class="input" placeholder="Optional" readonly="readonly"></div>
+<div style="height:24px"></div>
+<button class="btn btn-primary btn-block">Ticket anlegen</button>
+<button class="btn btn-secondary btn-block" style="margin-top:10px"><i class="ph ph-play"></i> Anlegen und starten</button></div>
+<div style="height:76px;flex:none;display:flex;justify-content:space-around;padding-top:8px;border-top:1px solid var(--color-neutral-800)"><sc-for list="{{ tabsNew }}" as="t" hint-placeholder-count="5"><div style="display:flex;flex-direction:column;align-items:center;gap:3px;width:64px;font-size:11px;color:{{ t.c }}"><i class="{{ t.i }}" style="font-size:24px"></i>{{ t.l }}</div></sc-for></div>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:12px;color:var(--color-neutral-400)">6 · Bereiche</div>
+<div style="width:360px;height:740px;background:var(--color-bg);border-radius:40px;border:1px solid var(--color-neutral-700);box-shadow:var(--shadow-lg);overflow:hidden;display:flex;flex-direction:column">
+<div style="height:44px;flex:none"></div>
+<div style="flex:1;padding:12px 20px;overflow:hidden">
+<h2 style="font-size:26px;font-weight:500;margin:4px 0 16px">Bereiche</h2>
+<sc-for list="{{ areas }}" as="a" hint-placeholder-count="2">
+<div class="card" style="padding:16px;margin-bottom:12px"><div style="display:flex;align-items:center;gap:12px"><i class="{{ a.icon }}" style="font-size:24px;color:var(--color-accent)"></i><div style="flex:1;font-size:17px">{{ a.name }}</div><span style="font-size:12px;color:var(--color-neutral-400)">{{ a.week }} diese Woche</span></div>
+<sc-for list="{{ a.projects }}" as="p" hint-placeholder-count="3"><div style="display:flex;justify-content:space-between;padding:10px 0 0;margin-top:10px;border-top:1px solid var(--color-neutral-800);font-size:14px"><span>{{ p.n }}</span><span style="color:var(--color-neutral-400)">{{ p.c }} offen</span></div></sc-for></div>
+</sc-for>
+<button class="btn btn-secondary btn-block"><i class="ph ph-plus"></i> Projekt hinzufügen</button></div>
+<div style="height:76px;flex:none;display:flex;justify-content:space-around;padding-top:8px;border-top:1px solid var(--color-neutral-800)"><sc-for list="{{ tabsMore }}" as="t" hint-placeholder-count="5"><div style="display:flex;flex-direction:column;align-items:center;gap:3px;width:64px;font-size:11px;color:{{ t.c }}"><i class="{{ t.i }}" style="font-size:24px"></i>{{ t.l }}</div></sc-for></div>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:12px;color:var(--color-neutral-400)">7 · Einstellungen · Integrationen</div>
+<div style="width:360px;height:740px;background:var(--color-bg);border-radius:40px;border:1px solid var(--color-neutral-700);box-shadow:var(--shadow-lg);overflow:hidden;display:flex;flex-direction:column">
+<div style="height:44px;flex:none"></div>
+<div style="flex:1;padding:12px 20px;overflow:hidden">
+<h2 style="font-size:26px;font-weight:500;margin:4px 0 16px">Einstellungen</h2>
+<div style="font-size:12px;color:var(--color-neutral-400);margin-bottom:8px">KONTO · OIDC</div>
+<div class="card" style="padding:14px"><div style="display:flex;align-items:center;gap:12px"><div style="width:38px;height:38px;border-radius:50%;background:var(--color-accent-800);display:flex;align-items:center;justify-content:center">M</div><div style="flex:1"><div style="font-size:14px">Max Mustermann</div><div style="font-size:12px;color:var(--color-neutral-400)">auth.example.com</div></div><span class="tag tag-accent">Verbunden</span></div></div>
+<div style="font-size:12px;color:var(--color-neutral-400);margin:20px 0 8px">HOME ASSISTANT · AUTOMATISCHE TICKETS</div>
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:14px">homeassistant.local:8123</span><span class="tag tag-accent">Online</span></div>
+<sc-for list="{{ rules }}" as="r" hint-placeholder-count="3"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:12px;border-top:1px solid var(--color-neutral-800)"><div><div style="font-size:14px">{{ r.n }}</div><div style="font-size:12px;color:var(--color-neutral-400);margin-top:2px">{{ r.w }}</div></div><span style="width:40px;height:22px;border-radius:999px;border:1px solid var(--color-accent);position:relative;flex:none;background:{{ r.bg }}"><span style="position:absolute;top:2px;left:{{ r.l }}px;width:16px;height:16px;border-radius:50%;background:{{ r.k }}"></span></span></div></sc-for>
+</div>
+<button class="btn btn-secondary btn-block" style="margin-top:12px"><i class="ph ph-plus"></i> Regel hinzufügen</button>
+<button class="btn btn-ghost btn-block" style="margin-top:8px"><i class="ph ph-sign-out"></i> Abmelden</button></div>
+<div style="height:76px;flex:none;display:flex;justify-content:space-around;padding-top:8px;border-top:1px solid var(--color-neutral-800)"><sc-for list="{{ tabsMore }}" as="t" hint-placeholder-count="5"><div style="display:flex;flex-direction:column;align-items:center;gap:3px;width:64px;font-size:11px;color:{{ t.c }}"><i class="{{ t.i }}" style="font-size:24px"></i>{{ t.l }}</div></sc-for></div>
+</div></div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:12px;color:var(--color-neutral-400)">8 · Tagesmonitor (Browser / Wanddisplay, 1280×720)</div>
+<div style="width:1280px;height:720px;box-sizing:border-box;border:1px solid var(--color-neutral-700);border-radius:16px;box-shadow:var(--shadow-lg);background:radial-gradient(ellipse at 0% 0%,var(--color-accent-900),transparent 50%),var(--color-bg);padding:40px 48px;display:flex;flex-direction:column;gap:28px;overflow:hidden">
+<div style="display:flex;justify-content:space-between;align-items:flex-end"><div><div style="font-size:14px;color:var(--color-neutral-300)">Dienstag, 20. Oktober</div><div style="font-size:72px;font-weight:500;letter-spacing:-.03em;line-height:1">14:32</div></div>
+<div style="display:flex;gap:40px;text-align:right"><div><div style="font-size:12px;color:var(--color-neutral-400)">ERFASST HEUTE</div><div style="font-size:32px">3:45 h</div></div><div><div style="font-size:12px;color:var(--color-neutral-400)">NOCH OFFEN</div><div style="font-size:32px">5 Tickets</div></div></div></div>
+<div style="flex:1;display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:32px;min-height:0">
+<div><div style="font-size:12px;color:var(--color-accent);margin-bottom:10px">JETZT</div>
+<div style="border:1px solid var(--color-accent);border-radius:12px;padding:20px;background:var(--color-accent-900);box-shadow:0 0 32px var(--color-accent-900)"><div style="font-size:22px;line-height:1.3">Wärmepumpe: Filter reinigen</div><div style="font-size:13px;color:var(--color-neutral-300);margin:6px 0 16px"><i class="ph ph-house-line"></i> Zuhause · Home Assistant</div><div style="font-size:44px;font-variant-numeric:tabular-nums">00:23:41</div></div>
+<div style="font-size:12px;color:var(--color-neutral-400);margin:24px 0 8px">HOME ASSISTANT</div>
+<div style="font-size:15px;line-height:1.9;color:var(--color-neutral-300)"><i class="ph ph-thermometer"></i> Wohnzimmer 21,4 °C<br><i class="ph ph-warning" style="color:var(--color-accent)"></i> Filterdruck 1,9 bar</div></div>
+<div><div style="font-size:12px;color:var(--color-neutral-400);margin-bottom:6px">ALS NÄCHSTES</div>
+<sc-for list="{{ next }}" as="t" hint-placeholder-count="3"><div style="padding:14px 0;border-bottom:1px solid var(--color-neutral-800)"><div style="font-size:12px;color:var(--color-accent)">{{ t.at }}</div><div style="font-size:18px;margin-top:2px">{{ t.title }}</div><div style="font-size:13px;color:var(--color-neutral-400);margin-top:2px">{{ t.area }}</div></div></sc-for></div>
+<div><div style="font-size:12px;color:var(--color-neutral-400);margin-bottom:6px">SPÄTER HEUTE</div>
+<sc-for list="{{ later }}" as="t" hint-placeholder-count="2"><div style="padding:14px 0;border-bottom:1px solid var(--color-neutral-800)"><div style="font-size:12px;color:var(--color-neutral-400)">{{ t.at }}</div><div style="font-size:18px;margin-top:2px;color:var(--color-neutral-300)">{{ t.title }}</div><div style="font-size:13px;color:var(--color-neutral-400);margin-top:2px">{{ t.area }}</div></div></sc-for></div>
+</div></div></div>
+
+<div style="font-size:12px;color:var(--color-neutral-400);max-width:700px;line-height:1.6">Nächste Schritte: Schnittstelle Home Assistant → Tickets (Webhook/REST) definieren · Monitor als eigene Browser-Route mit Auto-Refresh · Rechte pro OIDC-Gruppe.</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const tabs = a => [['ph-house','Heute'],['ph-list-checks','Tickets'],['ph-plus-circle','Neu'],['ph-chart-bar','Zeit'],['ph-gear','Mehr']].map((t, i) => ({ i: (i === a ? 'ph-fill ' : 'ph ') + t[0], l: t[1], c: i === a ? 'var(--color-accent)' : 'var(--color-neutral-400)' }));
+    const D = { o: 'var(--color-neutral-400)', a: 'var(--color-accent)', d: 'var(--color-neutral-600)' };
+    return {
+      tabsHome: tabs(0), tabsList: tabs(1), tabsNew: tabs(2), tabsMore: tabs(4),
+      due: [{ title: 'Wärmepumpe: Filter reinigen', meta: 'Zuhause · Home Assistant · 0:23 h', dot: D.a }, { title: 'Sprint-Review vorbereiten', meta: 'Arbeit · 1:30 h', dot: D.o }, { title: 'Rauchmelder Batterien tauschen', meta: 'Zuhause · 0:00 h', dot: D.o }],
+      all: [{ title: 'Wärmepumpe: Filter reinigen', meta: 'Zuhause · In Arbeit · HA', dot: D.a }, { title: 'Steuererklärung 2025 abgeben', meta: 'Zuhause · In Arbeit · 0:45 h', dot: D.a }, { title: 'Sprint-Review vorbereiten', meta: 'Arbeit · Offen · 1:30 h', dot: D.o }, { title: 'Rauchmelder Batterien tauschen', meta: 'Zuhause · Offen', dot: D.o }, { title: 'API-Doku Auth-Flow ergänzen', meta: 'Arbeit · In Arbeit · 2:30 h', dot: D.a }, { title: 'Hecke schneiden', meta: 'Zuhause · Erledigt · 1:00 h', dot: D.d }],
+      areas: [{ icon: 'ph ph-briefcase', name: 'Arbeit', week: '21:00 h', projects: [{ n: 'Plattform / Auth', c: 4 }, { n: 'Sprint 42', c: 3 }] }, { icon: 'ph ph-house', name: 'Zuhause', week: '3:45 h', projects: [{ n: 'Haus & Technik', c: 3 }, { n: 'Garten', c: 2 }, { n: 'Finanzen', c: 1 }] }],
+      rules: [{ n: 'Filterdruck zu hoch', w: 'sensor.filterdruck > 1,8 bar', bg: 'var(--color-accent-800)', l: 21, k: 'var(--color-accent)' }, { n: 'Müllabfuhr morgen', w: 'calendar.muell · 1 Tag vorher', bg: 'var(--color-accent-800)', l: 21, k: 'var(--color-accent)' }, { n: 'Fenster lange offen', w: 'binary_sensor.fenster · > 2 h', bg: 'transparent', l: 3, k: 'var(--color-neutral-500)' }],
+      next: [{ at: '15:30', title: 'Sprint-Review vorbereiten', area: 'Arbeit' }, { at: '17:00', title: 'Steuererklärung 2025 abgeben', area: 'Zuhause' }, { at: '18:30', title: 'Rauchmelder Batterien tauschen', area: 'Zuhause' }],
+      later: [{ at: '20:00', title: 'Müll rausstellen', area: 'Zuhause · Home Assistant' }, { at: '21:00', title: 'Wochenplan prüfen', area: 'Arbeit' }]
+    };
+  }
+}
+</script>
+</body>
+</html>

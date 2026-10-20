@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/nocturne-493ae4f7-e752-4f4b-8ed1-5e6c04648b60/styles.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<style>body{margin:0;background:var(--color-bg)}pre{white-space:pre}</style>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:var(--font-body);color:var(--color-text);background:radial-gradient(ellipse at 100% 0%,var(--color-accent-900),transparent 45%),var(--color-bg)">
+<aside style="width:236px;flex:none;border-right:1px solid var(--color-neutral-800);padding:24px 14px;display:flex;flex-direction:column;gap:2px;box-sizing:border-box">
+<div style="display:flex;align-items:center;gap:10px;padding:0 10px 18px"><span style="width:30px;height:30px;border-radius:8px;border:1px solid var(--color-accent);display:flex;align-items:center;justify-content:center;color:var(--color-accent)"><i class="ph ph-check-square-offset"></i></span><span style="font-size:17px">Tasklog <span style="color:var(--color-neutral-400);font-size:12px">Admin</span></span></div>
+<sc-for list="{{ nav }}" as="n" hint-placeholder-count="14">
+<div style="font-size:11px;letter-spacing:.06em;color:var(--color-neutral-500);padding:{{ n.pad }};display:{{ n.hd }}">{{ n.group }}</div>
+<button onClick="{{ n.go }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:14px;color:{{ n.color }};background:{{ n.bg }}"><i class="{{ n.icon }}" style="font-size:18px"></i>{{ n.label }}</button>
+</sc-for>
+<div style="flex:1"></div>
+<div style="padding:10px;font-size:12px;color:var(--color-neutral-400);display:flex;gap:10px;align-items:center"><span style="width:28px;height:28px;border-radius:50%;background:var(--color-accent-800);display:flex;align-items:center;justify-content:center;color:var(--color-text)">M</span>max@example.com</div>
+</aside>
+<main style="flex:1;min-width:0;padding:32px 40px 64px;box-sizing:border-box">
+<h1 style="font-size:28px;font-weight:500;margin:0 0 6px">{{ title }}</h1>
+<div style="font-size:14px;color:var(--color-neutral-300);margin-bottom:26px;max-width:640px;line-height:1.5">{{ sub }}</div>
+
+<sc-if value="{{ is.overview }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:28px">
+<sc-for list="{{ stats }}" as="s" hint-placeholder-count="4"><div class="card" style="padding:18px"><div style="font-size:12px;color:var(--color-neutral-400)">{{ s.l }}</div><div style="font-size:32px;margin-top:6px">{{ s.v }}</div><div style="font-size:12px;color:var(--color-neutral-400);margin-top:4px">{{ s.n }}</div></div></sc-for></div>
+<div style="font-size:14px;font-weight:500;margin-bottom:8px">Letzte Ereignisse</div>
+<table class="table" style="width:100%"><tbody><sc-for list="{{ recent }}" as="e" hint-placeholder-count="5"><tr><td>{{ e.t }}</td><td><i class="{{ e.icon }}" style="color:var(--color-accent)"></i> {{ e.dir }}</td><td>{{ e.what }}</td><td><span class="tag {{ e.tag }}">{{ e.st }}</span></td></tr></sc-for></tbody></table>
+</sc-if>
+
+<sc-if value="{{ is.tickets }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+<input class="input" placeholder="Suchen …" value="{{ q }}" onInput="{{ onQ }}" style="width:240px">
+<div class="seg"><sc-for list="{{ tFilters }}" as="f" hint-placeholder-count="4"><button class="seg-opt" onClick="{{ f.set }}" style="{{ f.style }}">{{ f.label }}</button></sc-for></div>
+<div style="flex:1"></div>
+<sc-if value="{{ hasSel }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:var(--color-neutral-300)">{{ selCount }} ausgewählt</span><button class="btn btn-secondary" onClick="{{ bulkDone }}"><i class="ph ph-check"></i> Erledigt</button><button class="btn btn-ghost" onClick="{{ bulkDel }}"><i class="ph ph-trash"></i> Löschen</button></sc-if>
+</div>
+<table class="table" style="width:100%"><thead><tr><th style="width:30px"></th><th style="text-align:left">Titel</th><th style="text-align:left">Bereich / Projekt</th><th style="text-align:left">Status</th><th style="text-align:left">Prio</th><th style="text-align:left">Zugewiesen</th><th style="text-align:left">Fällig</th><th style="text-align:right">Zeit</th></tr></thead><tbody>
+<sc-for list="{{ tRows }}" as="t" hint-placeholder-count="6"><tr><td><i onClick="{{ t.pick }}" class="{{ t.chk }}" style="cursor:pointer;font-size:18px;color:var(--color-accent)"></i></td><td>{{ t.title }} <sc-if value="{{ t.ha }}" hint-placeholder-val="{{ false }}"><i class="ph ph-house-line" style="color:var(--color-accent)"></i></sc-if></td><td style="color:var(--color-neutral-300)">{{ t.where }}</td><td><span class="tag {{ t.tag }}" onClick="{{ t.cycle }}" style="cursor:pointer">{{ t.status }}</span></td><td>{{ t.prio }}</td><td>{{ t.who }}</td><td>{{ t.due }}</td><td style="text-align:right">{{ t.time }}</td></tr></sc-for></tbody></table>
+</sc-if>
+
+<sc-if value="{{ is.areas }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px">
+<sc-for list="{{ areas }}" as="a" hint-placeholder-count="2"><div class="card" style="padding:20px">
+<div style="display:flex;align-items:center;gap:12px"><i class="{{ a.icon }}" style="font-size:24px;color:var(--color-accent)"></i><div style="flex:1;font-size:18px">{{ a.name }}</div><span class="tag tag-neutral">Standard-Prio: {{ a.prio }}</span></div>
+<sc-for list="{{ a.projects }}" as="p" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:10px;padding:12px 0;margin-top:2px;border-bottom:1px solid var(--color-neutral-800);font-size:14px"><span style="width:8px;height:8px;border-radius:50%;background:{{ p.color }}"></span><span style="flex:1">{{ p.n }}</span><span style="color:var(--color-neutral-400)">{{ p.c }} offen</span></div></sc-for>
+<button class="btn btn-secondary" style="margin-top:14px" onClick="{{ a.add }}"><i class="ph ph-plus"></i> Projekt hinzufügen</button></div></sc-for></div>
+</sc-if>
+
+<sc-if value="{{ is.reports }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:22px">
+<div class="seg"><sc-for list="{{ rGroups }}" as="f" hint-placeholder-count="3"><button class="seg-opt" onClick="{{ f.set }}" style="{{ f.style }}">{{ f.label }}</button></sc-for></div>
+<div class="seg"><sc-for list="{{ rRanges }}" as="f" hint-placeholder-count="2"><button class="seg-opt" onClick="{{ f.set }}" style="{{ f.style }}">{{ f.label }}</button></sc-for></div>
+<div style="flex:1"></div><button class="btn btn-secondary"><i class="ph ph-download-simple"></i> CSV exportieren</button></div>
+<div class="card" style="padding:22px"><div style="font-size:12px;color:var(--color-neutral-400);margin-bottom:4px">Gesamt</div><div style="font-size:36px;margin-bottom:20px">{{ rTotal }}</div>
+<sc-for list="{{ rRows }}" as="r" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:170px 1fr 70px;gap:14px;align-items:center;padding:8px 0;font-size:14px"><span>{{ r.n }}</span><span style="height:8px;border-radius:4px;background:var(--color-neutral-800);position:relative"><span style="position:absolute;left:0;top:0;bottom:0;width:{{ r.w }}%;border-radius:4px;background:var(--color-accent)"></span></span><span style="text-align:right;color:var(--color-neutral-300)">{{ r.v }}</span></div></sc-for></div>
+</sc-if>
+
+<sc-if value="{{ is.ha }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:1fr 90px 1fr;align-items:stretch;margin-bottom:28px">
+<div class="card" style="padding:20px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:16px"><i class="ph ph-house-line" style="color:var(--color-accent)"></i> Home Assistant</span><span class="tag tag-accent">{{ haState }}</span></div>
+<div style="font-size:13px;color:var(--color-neutral-300);margin:10px 0 14px">homeassistant.local:8123 · v2026.10</div>
+<div class="field"><label>Long-Lived Access Token</label><input class="input" value="••••••••••••••••••••" readonly="readonly"></div>
+<button class="btn btn-secondary" style="margin-top:14px" onClick="{{ testHa }}"><i class="ph ph-plugs-connected"></i> Verbindung testen</button></div>
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--color-accent);font-size:11px"><span>Tickets</span><i class="ph ph-arrow-right" style="font-size:22px"></i><i class="ph ph-arrow-left" style="font-size:22px"></i><span>Zustände</span></div>
+<div class="card" style="padding:20px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:16px"><i class="ph ph-check-square-offset" style="color:var(--color-accent)"></i> Tasklog</span><span class="tag tag-accent">Bereit</span></div>
+<div style="font-size:13px;color:var(--color-neutral-300);margin:10px 0 14px">REST-API + Webhook · OIDC-geschützt</div>
+<div class="field"><label>Webhook-URL (HA → Tasklog)</label><input class="input" value="https://tasks.example.com/api/hooks/ha/8f3c…" readonly="readonly"></div></div></div>
+<div style="font-size:14px;font-weight:500;margin-bottom:4px">Tasklog → Home Assistant · veröffentlichte Entitäten</div>
+<div style="font-size:12px;color:var(--color-neutral-400);margin-bottom:10px">Als Sensoren in HA sichtbar, nutzbar in Automationen und Dashboards.</div>
+<div class="card" style="padding:4px 18px"><sc-for list="{{ entities }}" as="x" hint-placeholder-count="5">
+<div onClick="{{ x.toggle }}" style="display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--color-neutral-800);cursor:pointer"><div style="flex:1"><div style="font-size:14px;font-family:ui-monospace,Menlo,monospace">{{ x.n }}</div><div style="font-size:12px;color:var(--color-neutral-400);margin-top:2px">{{ x.d }}</div></div><span style="width:40px;height:22px;border-radius:999px;border:1px solid var(--color-accent);position:relative;background:{{ x.bg }}"><span style="position:absolute;top:2px;left:{{ x.l }}px;width:16px;height:16px;border-radius:50%;background:{{ x.k }}"></span></span></div></sc-for></div>
+</sc-if>
+
+<sc-if value="{{ is.rules }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.2fr);gap:24px;align-items:start">
+<div class="card" style="padding:4px 16px"><sc-for list="{{ rules }}" as="r" hint-placeholder-count="4">
+<div onClick="{{ r.pick }}" style="display:flex;gap:12px;align-items:center;padding:14px 8px;margin:0 -8px;border-bottom:1px solid var(--color-neutral-800);cursor:pointer;border-radius:8px;background:{{ r.bg }}"><div style="flex:1;min-width:0"><div style="font-size:14px">{{ r.name }}</div><div style="font-size:12px;color:var(--color-neutral-400);margin-top:3px;font-family:ui-monospace,Menlo,monospace">{{ r.when }}</div></div><span class="tag {{ r.tag }}">{{ r.st }}</span></div></sc-for>
+<button class="btn btn-secondary btn-block" style="margin:14px 0" onClick="{{ addRule }}"><i class="ph ph-plus"></i> Neue Regel</button></div>
+<div class="card" style="padding:20px;display:flex;flex-direction:column;gap:16px">
+<div style="font-size:12px;color:var(--color-accent)">REGEL BEARBEITEN</div>
+<div class="field"><label>Name</label><input class="input" value="{{ sel.name }}" onInput="{{ f.name }}"></div>
+<div style="font-size:12px;color:var(--color-neutral-400)">WENN</div>
+<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:12px"><div class="field"><label>Entität</label><input class="input" value="{{ sel.ent }}" onInput="{{ f.ent }}"></div><div class="field"><label>Bedingung</label><input class="input" value="{{ sel.cond }}" onInput="{{ f.cond }}"></div></div>
+<div style="display:grid;grid-template-columns:90px 1fr;gap:12px;align-items:end"><div class="seg"><sc-for list="{{ joinOpts }}" as="a" hint-placeholder-count="2"><button class="seg-opt" onClick="{{ a.set }}" style="{{ a.style }}">{{ a.label }}</button></sc-for></div><div class="field"><label>Zusatzbedingung (optional)</label><input class="input" value="{{ sel.cond2 }}" onInput="{{ f.cond2 }}"></div></div>
+<div class="field"><label>Zeitfenster</label><input class="input" value="{{ sel.win }}" onInput="{{ f.win }}"></div>
+<div style="font-size:12px;color:var(--color-neutral-400)">DANN</div>
+<div class="field"><label>Ticket-Titel (Vorlage)</label><input class="input" value="{{ sel.title }}" onInput="{{ f.title }}"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div><div style="font-size:13px;color:var(--color-neutral-300);margin-bottom:6px">Bereich</div><div class="seg"><sc-for list="{{ areaOpts }}" as="a" hint-placeholder-count="2"><button class="seg-opt" onClick="{{ a.set }}" style="{{ a.style }}">{{ a.label }}</button></sc-for></div></div>
+<div><div style="font-size:13px;color:var(--color-neutral-300);margin-bottom:6px">Priorität</div><div class="seg"><sc-for list="{{ prioOpts }}" as="a" hint-placeholder-count="2"><button class="seg-opt" onClick="{{ a.set }}" style="{{ a.style }}">{{ a.label }}</button></sc-for></div></div></div>
+<div><div style="font-size:13px;color:var(--color-neutral-300);margin-bottom:6px">Wenn Bedingung endet</div><div class="seg"><sc-for list="{{ endOpts }}" as="a" hint-placeholder-count="2"><button class="seg-opt" onClick="{{ a.set }}" style="{{ a.style }}">{{ a.label }}</button></sc-for></div></div>
+<div onClick="{{ f.dedupe }}" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:14px">Kein Duplikat, solange ein Ticket offen ist<span style="width:40px;height:22px;border-radius:999px;border:1px solid var(--color-accent);position:relative;background:{{ dd.bg }}"><span style="position:absolute;top:2px;left:{{ dd.l }}px;width:16px;height:16px;border-radius:50%;background:{{ dd.k }}"></span></span></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" onClick="{{ f.active }}">{{ activeBtn }}</button><button class="btn btn-secondary" onClick="{{ runTest }}"><i class="ph ph-flask"></i> Testen</button><button class="btn btn-ghost" onClick="{{ f.del }}"><i class="ph ph-trash"></i> Löschen</button></div>
+<sc-if value="{{ showTest }}" hint-placeholder-val="{{ false }}"><div style="border:1px dashed var(--color-accent);border-radius:12px;padding:14px"><div style="font-size:12px;color:var(--color-accent);margin-bottom:6px">TESTLAUF · VORSCHAU DES TICKETS</div><div style="font-size:15px">{{ sel.title }}</div><div style="font-size:12px;color:var(--color-neutral-300);margin-top:4px">{{ sel.area }} · Prio {{ sel.prio }} · heute fällig · von Home Assistant</div></div></sc-if>
+</div></div>
+</sc-if>
+
+<sc-if value="{{ is.notify }}" hint-placeholder-val="{{ false }}">
+<div class="card" style="padding:4px 18px;margin-bottom:20px"><sc-for list="{{ notifs }}" as="x" hint-placeholder-count="4">
+<div onClick="{{ x.toggle }}" style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--color-neutral-800);cursor:pointer"><div style="flex:1"><div style="font-size:14px">{{ x.n }}</div><div style="font-size:12px;color:var(--color-neutral-400);margin-top:2px">{{ x.d }}</div></div><span style="width:40px;height:22px;border-radius:999px;border:1px solid var(--color-accent);position:relative;background:{{ x.bg }}"><span style="position:absolute;top:2px;left:{{ x.l }}px;width:16px;height:16px;border-radius:50%;background:{{ x.k }}"></span></span></div></sc-for></div>
+<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end"><div><div style="font-size:13px;color:var(--color-neutral-300);margin-bottom:6px">Kanal</div><div class="seg"><sc-for list="{{ chanOpts }}" as="a" hint-placeholder-count="3"><button class="seg-opt" onClick="{{ a.set }}" style="{{ a.style }}">{{ a.label }}</button></sc-for></div></div>
+<div class="field"><label>Ruhezeit von</label><input class="input" value="22:00" style="width:110px" readonly="readonly"></div><div class="field"><label>bis</label><input class="input" value="07:00" style="width:110px" readonly="readonly"></div></div>
+</sc-if>
+
+<sc-if value="{{ is.monitor }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start">
+<div><div class="card" style="padding:4px 18px"><sc-for list="{{ widgets }}" as="x" hint-placeholder-count="5">
+<div onClick="{{ x.toggle }}" style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--color-neutral-800);cursor:pointer"><div style="flex:1;font-size:14px">{{ x.n }}</div><span style="width:40px;height:22px;border-radius:999px;border:1px solid var(--color-accent);position:relative;background:{{ x.bg }}"><span style="position:absolute;top:2px;left:{{ x.l }}px;width:16px;height:16px;border-radius:50%;background:{{ x.k }}"></span></span></div></sc-for></div>
+<div style="font-size:13px;color:var(--color-neutral-300);margin:20px 0 6px">Aktualisierung</div><div class="seg"><sc-for list="{{ intOpts }}" as="a" hint-placeholder-count="3"><button class="seg-opt" onClick="{{ a.set }}" style="{{ a.style }}">{{ a.label }}</button></sc-for></div>
+<div class="field" style="margin-top:20px"><label>Öffentlicher Link (nur lesen)</label><input class="input" value="https://tasks.example.com/monitor?t=9d2e…" readonly="readonly"></div>
+<button class="btn btn-secondary" style="margin-top:12px"><i class="ph ph-arrows-clockwise"></i> Link erneuern</button></div>
+<div style="border:1px solid var(--color-neutral-700);border-radius:12px;padding:20px;background:var(--color-neutral-900)"><div style="font-size:11px;color:var(--color-neutral-500);margin-bottom:10px">VORSCHAU · alle {{ intLabel }}</div>
+<div style="font-size:34px;letter-spacing:-.02em;margin-bottom:14px">14:32</div>
+<sc-for list="{{ preview }}" as="p" hint-placeholder-count="4"><div style="padding:10px 0;border-bottom:1px solid var(--color-neutral-800);font-size:14px;display:flex;gap:12px"><span style="color:var(--color-accent);width:46px">{{ p.at }}</span><span>{{ p.t }}</span></div></sc-for></div></div>
+</sc-if>
+
+<sc-if value="{{ is.users }}" hint-placeholder-val="{{ false }}">
+<table class="table" style="width:100%;margin-bottom:28px"><thead><tr><th style="text-align:left">Benutzer</th><th style="text-align:left">OIDC-Gruppe</th><th style="text-align:left">Rolle</th><th style="text-align:left">Zuletzt aktiv</th></tr></thead><tbody>
+<sc-for list="{{ users }}" as="u" hint-placeholder-count="4"><tr><td>{{ u.name }}<div style="font-size:12px;color:var(--color-neutral-400)">{{ u.mail }}</div></td><td style="font-family:ui-monospace,Menlo,monospace;font-size:13px">{{ u.group }}</td><td><span class="tag {{ u.tag }}" onClick="{{ u.cycle }}" style="cursor:pointer">{{ u.role }}</span></td><td style="color:var(--color-neutral-300)">{{ u.seen }}</td></tr></sc-for></tbody></table>
+<div style="font-size:14px;font-weight:500;margin-bottom:8px">Gruppen-Zuordnung</div>
+<div class="card" style="padding:4px 18px;margin-bottom:28px"><sc-for list="{{ groupMap }}" as="g" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--color-neutral-800);font-size:14px"><span style="font-family:ui-monospace,Menlo,monospace;flex:1">{{ g.g }}</span><i class="ph ph-arrow-right" style="color:var(--color-neutral-500)"></i><span class="tag {{ g.tag }}">{{ g.r }}</span></div></sc-for></div>
+<div style="font-size:14px;font-weight:500;margin-bottom:8px">Aktive Sitzungen</div>
+<div class="card" style="padding:4px 18px"><sc-for list="{{ sessions }}" as="s" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--color-neutral-800);font-size:14px"><i class="{{ s.icon }}" style="font-size:20px;color:var(--color-accent)"></i><span style="flex:1">{{ s.d }}<div style="font-size:12px;color:var(--color-neutral-400)">{{ s.w }}</div></span><button class="btn btn-ghost" onClick="{{ s.revoke }}">Beenden</button></div></sc-for></div>
+</sc-if>
+
+<sc-if value="{{ is.log }}" hint-placeholder-val="{{ false }}">
+<div class="seg" style="margin-bottom:14px;max-width:420px"><sc-for list="{{ lFilters }}" as="f" hint-placeholder-count="4"><button class="seg-opt" onClick="{{ f.set }}" style="{{ f.style }}">{{ f.label }}</button></sc-for></div>
+<table class="table" style="width:100%"><thead><tr><th style="text-align:left">Zeit</th><th style="text-align:left">Richtung</th><th style="text-align:left">Ereignis</th><th style="text-align:left">Status</th><th></th></tr></thead><tbody>
+<sc-for list="{{ lRows }}" as="e" hint-placeholder-count="6"><tr><td>{{ e.t }}</td><td><i class="{{ e.icon }}" style="color:var(--color-accent)"></i> {{ e.dir }}</td><td>{{ e.what }}</td><td><span class="tag {{ e.tag }}">{{ e.st }}</span></td><td style="text-align:right"><sc-if value="{{ e.err }}" hint-placeholder-val="{{ false }}"><button class="btn btn-secondary" style="height:30px" onClick="{{ e.retry }}"><i class="ph ph-arrow-clockwise"></i> Wiederholen</button></sc-if></td></tr></sc-for></tbody></table>
+</sc-if>
+
+<sc-if value="{{ is.system }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:28px"><sc-for list="{{ status }}" as="s" hint-placeholder-count="4"><div class="card" style="padding:16px"><div style="font-size:12px;color:var(--color-neutral-400)">{{ s.l }}</div><div style="font-size:20px;margin-top:6px"><span style="width:8px;height:8px;border-radius:50%;background:var(--color-accent);display:inline-block;margin-right:8px"></span>{{ s.v }}</div></div></sc-for></div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:20px">
+<div class="card" style="padding:18px;display:flex;flex-direction:column;gap:14px"><div style="font-size:14px">Allgemein</div><div class="field"><label>Sprache</label><input class="input" value="Deutsch" readonly="readonly"></div><div class="field"><label>Zeitzone</label><input class="input" value="Europe/Berlin" readonly="readonly"></div></div>
+<div class="card" style="padding:4px 18px"><div style="font-size:14px;padding:14px 0 4px">Zeiterfassung</div><sc-for list="{{ timeRules }}" as="x" hint-placeholder-count="3">
+<div onClick="{{ x.toggle }}" style="display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--color-neutral-800);cursor:pointer"><div style="flex:1"><div style="font-size:14px">{{ x.n }}</div><div style="font-size:12px;color:var(--color-neutral-400);margin-top:2px">{{ x.d }}</div></div><span style="width:40px;height:22px;border-radius:999px;border:1px solid var(--color-accent);position:relative;background:{{ x.bg }}"><span style="position:absolute;top:2px;left:{{ x.l }}px;width:16px;height:16px;border-radius:50%;background:{{ x.k }}"></span></span></div></sc-for>
+<div style="padding:14px 0"><div style="font-size:13px;color:var(--color-neutral-300);margin-bottom:6px">Runden auf</div><div class="seg"><sc-for list="{{ roundOpts }}" as="a" hint-placeholder-count="3"><button class="seg-opt" onClick="{{ a.set }}" style="{{ a.style }}">{{ a.label }}</button></sc-for></div></div></div>
+<div class="card" style="padding:18px;display:flex;flex-direction:column;gap:14px"><div style="font-size:14px">Zugang · OIDC</div><div class="field"><label>Issuer</label><input class="input" value="https://auth.example.com" readonly="readonly"></div><div class="field"><label>Client-ID</label><input class="input" value="tasklog-app" readonly="readonly"></div></div></div>
+<div style="display:flex;flex-direction:column;gap:20px">
+<div class="card" style="padding:18px"><div style="font-size:14px;margin-bottom:6px">API-Tokens</div><sc-for list="{{ tokens }}" as="t" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--color-neutral-800);font-size:14px"><span style="flex:1">{{ t.n }}<div style="font-size:12px;color:var(--color-neutral-400);font-family:ui-monospace,Menlo,monospace">{{ t.k }}</div></span><span class="tag tag-outline">{{ t.s }}</span><button class="btn btn-ghost btn-icon" onClick="{{ t.revoke }}"><i class="ph ph-trash"></i></button></div></sc-for>
+<button class="btn btn-secondary" style="margin-top:14px" onClick="{{ addToken }}"><i class="ph ph-plus"></i> Token erstellen</button></div>
+<div class="card" style="padding:4px 18px"><div onClick="{{ toggleSig }}" style="display:flex;align-items:center;gap:14px;padding:14px 0;cursor:pointer"><div style="flex:1"><div style="font-size:14px">Webhook-Signatur (HMAC) erzwingen</div><div style="font-size:12px;color:var(--color-neutral-400);margin-top:2px">Unsignierte Aufrufe werden abgelehnt.</div></div><span style="width:40px;height:22px;border-radius:999px;border:1px solid var(--color-accent);position:relative;background:{{ sig.bg }}"><span style="position:absolute;top:2px;left:{{ sig.l }}px;width:16px;height:16px;border-radius:50%;background:{{ sig.k }}"></span></span></div></div>
+<div class="card" style="padding:18px"><div style="font-size:14px;margin-bottom:12px">Backup &amp; Export</div><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-secondary"><i class="ph ph-download-simple"></i> Alles exportieren</button><button class="btn btn-secondary"><i class="ph ph-upload-simple"></i> Import</button></div><div style="font-size:12px;color:var(--color-neutral-400);margin-top:10px">Letztes Backup: heute 03:00</div></div>
+</div></div>
+</sc-if>
+
+<sc-if value="{{ is.config }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;max-width:760px"><div class="seg"><sc-for list="{{ cfgTabs }}" as="c" hint-placeholder-count="2"><button class="seg-opt" onClick="{{ c.set }}" style="{{ c.style }}">{{ c.label }}</button></sc-for></div><button class="btn btn-secondary" style="height:32px" onClick="{{ copyCfg }}"><i class="ph ph-copy"></i> {{ copyLabel }}</button></div>
+<pre style="margin:0;padding:18px;max-width:760px;box-sizing:border-box;background:var(--color-neutral-800);border:1px solid var(--color-neutral-700);border-radius:12px;font:13px/1.65 ui-monospace,Menlo,monospace;color:var(--color-neutral-200);overflow:auto;min-height:360px">{{ yaml }}</pre>
+</sc-if>
+</main></div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { sec: 'overview', sel: 0, cfg: 'ha', copied: false, q: '', tf: 'Alle', picked: [], rg: 'Bereich', rr: 'Woche', lf: 'Alle', ham: false, test: false, round: '15 min', chan: 'Push', intv: '30 s', sig: true,
+    ents: [1, 1, 1, 0, 1], notif: [1, 1, 0, 1], widgets: [1, 1, 1, 0, 1], trules: [1, 0, 1],
+    tickets: [
+      { id: 1, title: 'Wärmepumpe: Filter reinigen', area: 'Zuhause', pr: 'Haus & Technik', status: 'In Arbeit', prio: 'Hoch', who: 'Max', due: 'Heute', h: 0.4, ha: 1 },
+      { id: 2, title: 'Steuererklärung 2025 abgeben', area: 'Zuhause', pr: 'Finanzen', status: 'In Arbeit', prio: 'Hoch', who: 'Max', due: 'Heute', h: 0.75 },
+      { id: 3, title: 'Sprint-Review vorbereiten', area: 'Arbeit', pr: 'Sprint 42', status: 'Offen', prio: 'Normal', who: 'Anna', due: 'Heute', h: 1.5 },
+      { id: 4, title: 'Rauchmelder Batterien tauschen', area: 'Zuhause', pr: 'Haus & Technik', status: 'Offen', prio: 'Normal', who: 'Max', due: 'Sa', h: 0 },
+      { id: 5, title: 'API-Doku Auth-Flow ergänzen', area: 'Arbeit', pr: 'Plattform / Auth', status: 'In Arbeit', prio: 'Normal', who: 'Jonas', due: 'Fr', h: 6.5 },
+      { id: 6, title: 'Hecke schneiden', area: 'Zuhause', pr: 'Garten', status: 'Erledigt', prio: 'Normal', who: 'Max', due: '–', h: 1 },
+      { id: 7, title: 'Code-Review PR #482', area: 'Arbeit', pr: 'Plattform / Auth', status: 'Erledigt', prio: 'Normal', who: 'Anna', due: '–', h: 0.5 },
+      { id: 8, title: 'NAS überhitzt', area: 'Arbeit', pr: 'Plattform / Auth', status: 'Offen', prio: 'Hoch', who: 'Jonas', due: 'Heute', h: 0.2, ha: 1 }],
+    areas: [{ name: 'Arbeit', icon: 'ph ph-briefcase', prio: 'Normal', projects: [['Plattform / Auth', 4], ['Sprint 42', 3]] }, { name: 'Zuhause', icon: 'ph ph-house', prio: 'Normal', projects: [['Haus & Technik', 3], ['Garten', 2], ['Finanzen', 1]] }],
+    rules: [
+      { name: 'Filterdruck zu hoch', ent: 'sensor.filterdruck', cond: '> 1.8', join: 'UND', cond2: '', win: '00:00–23:59', title: 'Wärmepumpe: Filter reinigen', area: 'Zuhause', prio: 'Hoch', close: 'Schließen', dd: 1, on: 1 },
+      { name: 'Müllabfuhr morgen', ent: 'calendar.muell', cond: 'in 1 Tag', join: 'UND', cond2: '', win: '17:00–21:00', title: 'Müll rausstellen', area: 'Zuhause', prio: 'Normal', close: 'Schließen', dd: 1, on: 1 },
+      { name: 'Fenster lange offen', ent: 'binary_sensor.fenster', cond: 'on > 2 h', join: 'UND', cond2: 'sensor.aussen_temp < 5', win: '00:00–23:59', title: 'Fenster schließen', area: 'Zuhause', prio: 'Normal', close: 'Offen lassen', dd: 0, on: 0 },
+      { name: 'Server-Alarm', ent: 'sensor.nas_temp', cond: '> 60', join: 'ODER', cond2: 'sensor.nas_fan = 0', win: '00:00–23:59', title: 'NAS überhitzt', area: 'Arbeit', prio: 'Hoch', close: 'Schließen', dd: 1, on: 1 }],
+    users: [{ name: 'Max Mustermann', mail: 'max@example.com', group: 'tasklog-admins', role: 'Admin', seen: 'jetzt' }, { name: 'Anna Beispiel', mail: 'anna@example.com', group: 'tasklog-team', role: 'Mitglied', seen: 'vor 12 min' }, { name: 'Jonas Test', mail: 'jonas@example.com', group: 'tasklog-team', role: 'Mitglied', seen: 'gestern' }, { name: 'Lea Gast', mail: 'lea@example.com', group: 'tasklog-guests', role: 'Lesen', seen: 'vor 3 Tagen' }],
+    sessions: [{ d: 'iPhone 15 · Tasklog App', w: 'Max · Berlin · jetzt', i: 'ph ph-device-mobile' }, { d: 'Chrome · Admin UI', w: 'Max · Berlin · jetzt', i: 'ph ph-desktop' }, { d: 'Wanddisplay · Monitor-Link', w: 'Flur · seit 12 Tagen', i: 'ph ph-monitor' }],
+    tokens: [{ n: 'Home Assistant', k: 'tl_live_8f3c••••', s: 'tickets:write' }, { n: 'Monitor', k: 'tl_ro_9d2e••••', s: 'read' }],
+    logs: [
+      { t: '13:30', d: 'in', w: 'Webhook: ungültiges Token', st: 'Abgelehnt', err: 1 }, { t: '12:03', d: 'out', w: 'sensor.tasklog_open_tickets = 12', st: 'Gesendet' }, { t: '09:15', d: 'in', w: 'Regel „Fenster lange offen“ übersprungen (deaktiviert)', st: 'Ignoriert' },
+      { t: '08:40', d: 'out', w: 'binary_sensor.tasklog_timer_running = on', st: 'Gesendet' }, { t: '07:12', d: 'in', w: 'Ticket „Wärmepumpe: Filter reinigen“ erstellt', st: 'Erledigt' }, { t: '06:58', d: 'out', w: 'sensor.tasklog_next_due: Zeitüberschreitung', st: 'Fehler', err: 1 }] };
+  entDefs = [['sensor.tasklog_open_tickets', 'Anzahl offener Tickets'], ['sensor.tasklog_today_time', 'Heute erfasste Zeit (h)'], ['binary_sensor.tasklog_timer_running', 'Timer läuft'], ['binary_sensor.tasklog_overdue', 'Überfällige Tickets vorhanden'], ['sensor.tasklog_next_due', 'Nächstes fälliges Ticket']];
+  notifDefs = [['Push bei Fälligkeit', 'Eine Stunde vor dem Termin'], ['Von Home Assistant erstellte Tickets', 'Sofort melden, wenn eine Regel auslöst'], ['Wöchentlicher Bericht', 'Montag 08:00 per E-Mail'], ['Tagesübersicht', 'Jeden Morgen um 07:00']];
+  widgetDefs = ['Uhr & Datum', 'Aktueller Timer', 'Als Nächstes', 'Später heute', 'Home-Assistant-Sensoren'];
+  trDefs = [['Auto-Stopp um Mitternacht', 'Laufende Timer werden beendet'], ['Erinnerung bei langem Timer', 'Nach 4 Stunden nachfragen'], ['Nur ein Timer gleichzeitig', 'Start stoppt den laufenden']];
+  sw(on) { return { bg: on ? 'var(--color-accent-800)' : 'transparent', l: on ? 21 : 3, k: on ? 'var(--color-accent)' : 'var(--color-neutral-500)' }; }
+  flip(key, i) { this.setState(s => ({ [key]: s[key].map((v, j) => j === i ? (v ? 0 : 1) : v) })); }
+  upd(p) { this.setState(s => ({ rules: s.rules.map((r, i) => i === s.sel ? { ...r, ...p } : r), test: false })); }
+  renderVals() {
+    const s = this.state, R = s.rules, sel = R[s.sel] || R[0], T = s.tickets;
+    const seg = on => 'font:inherit;cursor:pointer;flex:1;' + (on ? 'background:var(--color-accent-800);color:var(--color-text);' : '');
+    const opts = (list, cur, fn) => list.map(l => ({ label: l, style: seg(cur === l), set: () => fn(l) }));
+    const fmtH = h => { const m = Math.round(h * 60); return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0') + ' h'; };
+    const secs = [['overview', 'Betrieb', 'ph-squares-four', 'Übersicht', 'Zustand des Systems und der Home-Assistant-Anbindung.'], ['tickets', '', 'ph-list-checks', 'Tickets', 'Alle Tickets durchsuchen, filtern und in Massen bearbeiten.'], ['areas', '', 'ph-folders', 'Bereiche & Projekte', 'Struktur für Arbeit und Zuhause – gilt auch in der App.'], ['reports', '', 'ph-chart-bar', 'Zeit-Berichte', 'Erfasste Zeit nach Bereich, Projekt oder Person.'],
+      ['ha', 'Home Assistant', 'ph-house-line', 'Verbindung', 'Zwei Richtungen: HA füttert Tasklog mit Tickets, Tasklog meldet Zustände zurück an HA.'], ['rules', '', 'ph-flow-arrow', 'Regeln', 'Wenn in Home Assistant etwas passiert, entsteht ein Ticket – oder wird geschlossen.'], ['notify', '', 'ph-bell', 'Benachrichtigungen', 'Wann und worüber du informiert wirst.'], ['monitor', 'Monitor', 'ph-monitor', 'Tagesmonitor', 'Was auf dem Wanddisplay oder im Browser angezeigt wird.'],
+      ['users', 'System', 'ph-users', 'Benutzer & Rollen', 'Zugriff über OIDC-Gruppen steuern.'], ['log', '', 'ph-scroll', 'Protokoll', 'Alle Ereignisse zwischen Home Assistant und Tasklog.'], ['system', '', 'ph-gear', 'Einstellungen', 'Status, Zeiterfassung, Tokens, Sicherheit und Backup.'], ['config', '', 'ph-code', 'Konfiguration', 'Aus den Regeln erzeugt – in Home Assistant einfügen oder per API pflegen.']];
+    const cur = secs.find(x => x[0] === s.sec);
+    const go = k => () => this.setState({ sec: k });
+    const is = {}; secs.forEach(x => is[x[0]] = s.sec === x[0]);
+    const tagFor = st => st === 'Erledigt' ? 'tag-neutral' : st === 'In Arbeit' ? 'tag-accent' : 'tag-outline';
+    const ltag = st => st === 'Gesendet' || st === 'Erledigt' ? 'tag-accent' : st === 'Ignoriert' ? 'tag-neutral' : 'tag-outline';
+    const logRow = (e, i) => ({ t: e.t, dir: e.d === 'in' ? 'HA → Tasklog' : 'Tasklog → HA', icon: e.d === 'in' ? 'ph ph-arrow-right' : 'ph ph-arrow-left', what: e.w, st: e.st, tag: ltag(e.st), err: !!e.err, retry: () => this.setState(st => ({ logs: st.logs.map((x, j) => j === i ? { ...x, st: 'Gesendet', err: 0 } : x) })) });
+    const tr = T.filter(t => (s.tf === 'Alle' || (s.tf === 'HA' ? t.ha : t.area === s.tf)) && t.title.toLowerCase().includes(s.q.toLowerCase()));
+    const key = s.rg === 'Bereich' ? 'area' : s.rg === 'Projekt' ? 'pr' : 'who', mult = s.rr === 'Monat' ? 4.2 : 1;
+    const gm = {}; T.forEach(t => gm[t[key]] = (gm[t[key]] || 0) + t.h * mult * 3);
+    const gr = Object.entries(gm).sort((a, b) => b[1] - a[1]), gmax = gr[0] ? gr[0][1] : 1;
+    const roles = ['Admin', 'Mitglied', 'Lesen'], rtag = r => r === 'Admin' ? 'tag-accent' : r === 'Mitglied' ? 'tag-outline' : 'tag-neutral';
+    const lrows = s.logs.map(logRow).filter((e, i) => s.lf === 'Alle' || (s.lf === 'Fehler' ? s.logs[i].err : s.lf === 'HA →' ? s.logs[i].d === 'in' : s.logs[i].d === 'out'));
+    const yamlHa = 'rest_command:\n  tasklog_ticket:\n    url: "https://tasks.example.com/api/hooks/ha/8f3c"\n    method: POST\n    headers:\n      Authorization: "Bearer !secret tasklog_token"\n    payload: >\n      {"title": "{{ title }}", "area": "{{ area }}", "prio": "{{ prio }}"}\n\nautomation:\n' + R.filter(r => r.on).map(r => '  - alias: "' + r.name + '"\n    trigger:\n      - platform: numeric_state\n        entity_id: ' + r.ent + '\n        # ' + r.cond + (r.cond2 ? ' ' + r.join + ' ' + r.cond2 : '') + '\n    condition:\n      - condition: time\n        # ' + r.win + '\n    action:\n      - service: rest_command.tasklog_ticket\n        data:\n          title: "' + r.title + '"\n          area: "' + r.area + '"\n          prio: "' + r.prio + '"').join('\n') + '\n';
+    const yamlTl = 'version: 1\nhomeassistant:\n  url: http://homeassistant.local:8123\n  token: !secret ha_token\nrules:\n' + R.map(r => '  - name: ' + r.name + '\n    when: "' + r.ent + ' ' + r.cond + (r.cond2 ? ' ' + r.join + ' ' + r.cond2 : '') + '"\n    window: "' + r.win + '"\n    ticket: { title: "' + r.title + '", area: ' + r.area + ', prio: ' + r.prio + ' }\n    dedupe: ' + !!r.dd + '\n    on_end: ' + r.close + '\n    enabled: ' + !!r.on).join('\n') + '\npublish:\n' + this.entDefs.filter((e, i) => s.ents[i]).map(e => '  - ' + e[0]).join('\n') + '\n';
+    return {
+      title: cur[3], sub: cur[4], is,
+      nav: secs.map((x, i) => ({ group: x[1], hd: x[1] ? 'block' : 'none', pad: i ? '16px 10px 6px' : '0 10px 6px', label: x[3], icon: (s.sec === x[0] ? 'ph-fill ' : 'ph ') + x[2], go: go(x[0]), color: s.sec === x[0] ? 'var(--color-text)' : 'var(--color-neutral-300)', bg: s.sec === x[0] ? 'var(--color-accent-800)' : 'transparent' })),
+      stats: [{ l: 'Offene Tickets', v: String(T.filter(t => t.status !== 'Erledigt').length), n: '4 heute fällig' }, { l: 'Von HA erstellt', v: '27', n: 'letzte 30 Tage' }, { l: 'Aktive Regeln', v: String(R.filter(r => r.on).length), n: 'von ' + R.length }, { l: 'Webhook', v: 'OK', n: 'letzter Aufruf 07:12' }],
+      recent: s.logs.slice(0, 5).map(logRow),
+      q: s.q, onQ: e => this.setState({ q: e.target.value }), tFilters: opts(['Alle', 'Arbeit', 'Zuhause', 'HA'], s.tf, v => this.setState({ tf: v })),
+      hasSel: s.picked.length > 0, selCount: s.picked.length,
+      bulkDone: () => this.setState(st => ({ tickets: st.tickets.map(t => st.picked.includes(t.id) ? { ...t, status: 'Erledigt' } : t), picked: [] })),
+      bulkDel: () => this.setState(st => ({ tickets: st.tickets.filter(t => !st.picked.includes(t.id)), picked: [] })),
+      tRows: tr.map(t => ({ title: t.title, ha: !!t.ha, where: t.area + ' / ' + t.pr, status: t.status, tag: tagFor(t.status), prio: t.prio, who: t.who, due: t.due, time: fmtH(t.h), chk: s.picked.includes(t.id) ? 'ph-fill ph-check-square' : 'ph ph-square', pick: () => this.setState(st => ({ picked: st.picked.includes(t.id) ? st.picked.filter(x => x !== t.id) : [...st.picked, t.id] })), cycle: () => this.setState(st => ({ tickets: st.tickets.map(x => x.id === t.id ? { ...x, status: { 'Offen': 'In Arbeit', 'In Arbeit': 'Erledigt', 'Erledigt': 'Offen' }[x.status] } : x) })) })),
+      areas: s.areas.map((a, ai) => ({ name: a.name, icon: a.icon, prio: a.prio, projects: a.projects.map((p, pi) => ({ n: p[0], c: p[1], color: ['var(--color-accent)', 'var(--color-accent-400)', 'var(--color-neutral-400)'][pi % 3] })), add: () => this.setState(st => ({ areas: st.areas.map((x, j) => j === ai ? { ...x, projects: [...x.projects, ['Neues Projekt ' + (x.projects.length + 1), 0]] } : x) })) })),
+      rGroups: opts(['Bereich', 'Projekt', 'Person'], s.rg, v => this.setState({ rg: v })), rRanges: opts(['Woche', 'Monat'], s.rr, v => this.setState({ rr: v })),
+      rTotal: fmtH(gr.reduce((a, g) => a + g[1], 0) / 3), rRows: gr.map(g => ({ n: g[0], w: Math.round(g[1] / gmax * 100), v: fmtH(g[1] / 3) })),
+      haState: s.ham === 'busy' ? 'Prüfe …' : s.ham === 'ok' ? 'Verbindung OK' : 'Online',
+      testHa: () => { this.setState({ ham: 'busy' }); setTimeout(() => this.setState({ ham: 'ok' }), 900); },
+      entities: this.entDefs.map((e, i) => ({ n: e[0], d: e[1], ...this.sw(s.ents[i]), toggle: () => this.flip('ents', i) })),
+      rules: R.map((r, i) => ({ name: r.name, when: r.ent + ' ' + r.cond, st: r.on ? 'Aktiv' : 'Aus', tag: r.on ? 'tag-accent' : 'tag-neutral', bg: i === s.sel ? 'var(--color-accent-900)' : 'transparent', pick: () => this.setState({ sel: i, test: false }) })),
+      addRule: () => this.setState(st => ({ rules: [...st.rules, { name: 'Neue Regel', ent: 'sensor.beispiel', cond: '> 0', join: 'UND', cond2: '', win: '00:00–23:59', title: 'Neues Ticket', area: 'Zuhause', prio: 'Normal', close: 'Schließen', dd: 1, on: 0 }], sel: st.rules.length, test: false })),
+      sel, dd: this.sw(sel.dd),
+      f: { name: e => this.upd({ name: e.target.value }), ent: e => this.upd({ ent: e.target.value }), cond: e => this.upd({ cond: e.target.value }), cond2: e => this.upd({ cond2: e.target.value }), win: e => this.upd({ win: e.target.value }), title: e => this.upd({ title: e.target.value }), dedupe: () => this.upd({ dd: sel.dd ? 0 : 1 }), active: () => this.upd({ on: sel.on ? 0 : 1 }), del: () => R.length > 1 && this.setState({ rules: R.filter((r, i) => i !== s.sel), sel: 0 }) },
+      joinOpts: opts(['UND', 'ODER'], sel.join, v => this.upd({ join: v })), areaOpts: opts(['Arbeit', 'Zuhause'], sel.area, v => this.upd({ area: v })), prioOpts: opts(['Normal', 'Hoch'], sel.prio, v => this.upd({ prio: v })), endOpts: opts(['Schließen', 'Offen lassen'], sel.close, v => this.upd({ close: v })),
+      activeBtn: sel.on ? 'Deaktivieren' : 'Aktivieren', runTest: () => this.setState({ test: true }), showTest: s.test,
+      notifs: this.notifDefs.map((n, i) => ({ n: n[0], d: n[1], ...this.sw(s.notif[i]), toggle: () => this.flip('notif', i) })), chanOpts: opts(['Push', 'HA-Notify', 'E-Mail'], s.chan, v => this.setState({ chan: v })),
+      widgets: this.widgetDefs.map((n, i) => ({ n, ...this.sw(s.widgets[i]), toggle: () => this.flip('widgets', i) })), intOpts: opts(['15 s', '30 s', '60 s'], s.intv, v => this.setState({ intv: v })), intLabel: s.intv,
+      preview: [['15:30', 'Sprint-Review vorbereiten'], ['17:00', 'Steuererklärung abgeben'], ['18:30', 'Rauchmelder tauschen'], ['20:00', 'Müll rausstellen']].map(p => ({ at: p[0], t: p[1] })),
+      users: s.users.map((u, i) => ({ ...u, tag: rtag(u.role), cycle: () => this.setState(st => ({ users: st.users.map((x, j) => j === i ? { ...x, role: roles[(roles.indexOf(x.role) + 1) % 3] } : x) })) })),
+      groupMap: [['tasklog-admins', 'Admin'], ['tasklog-team', 'Mitglied'], ['tasklog-guests', 'Lesen']].map(g => ({ g: g[0], r: g[1], tag: rtag(g[1]) })),
+      sessions: s.sessions.map((x, i) => ({ d: x.d, w: x.w, icon: x.i, revoke: () => this.setState(st => ({ sessions: st.sessions.filter((_, j) => j !== i) })) })),
+      lFilters: opts(['Alle', 'Fehler', 'HA →', '→ HA'], s.lf, v => this.setState({ lf: v })), lRows: lrows,
+      status: [{ l: 'Version', v: '1.4.2' }, { l: 'Datenbank', v: 'PostgreSQL 16' }, { l: 'Hintergrund-Jobs', v: '3 aktiv' }, { l: 'Home Assistant', v: 'Verbunden' }],
+      timeRules: this.trDefs.map((n, i) => ({ n: n[0], d: n[1], ...this.sw(s.trules[i]), toggle: () => this.flip('trules', i) })), roundOpts: opts(['Keine', '5 min', '15 min'], s.round, v => this.setState({ round: v })),
+      tokens: s.tokens.map((t, i) => ({ ...t, revoke: () => this.setState(st => ({ tokens: st.tokens.filter((_, j) => j !== i) })) })),
+      addToken: () => this.setState(st => ({ tokens: [...st.tokens, { n: 'Neuer Token', k: 'tl_new_' + Math.random().toString(36).slice(2, 6) + '••••', s: 'read' }] })),
+      sig: this.sw(s.sig), toggleSig: () => this.setState({ sig: !s.sig }),
+      cfgTabs: [['ha', 'Home Assistant (YAML)'], ['tl', 'Tasklog (YAML)']].map(c => ({ label: c[1], style: 'font:inherit;cursor:pointer;' + (s.cfg === c[0] ? 'background:var(--color-accent-800);color:var(--color-text);' : ''), set: () => this.setState({ cfg: c[0] }) })),
+      yaml: s.cfg === 'ha' ? yamlHa : yamlTl,
+      copyCfg: () => { try { navigator.clipboard.writeText(s.cfg === 'ha' ? yamlHa : yamlTl); } catch (e) {} this.setState({ copied: true }); setTimeout(() => this.setState({ copied: false }), 1500); },
+      copyLabel: s.copied ? 'Kopiert' : 'Kopieren'
+    };
+  }
+}
+</script>
+</body>
+</html>

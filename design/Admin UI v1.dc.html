@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/nocturne-493ae4f7-e752-4f4b-8ed1-5e6c04648b60/styles.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<style>body{margin:0;background:var(--color-bg)}</style>
+</helmet>
+<div style="display:flex;min-height:100vh;font-family:var(--font-body);color:var(--color-text);background:radial-gradient(ellipse at 100% 0%,var(--color-accent-900),transparent 45%),var(--color-bg)">
+<aside style="width:230px;flex:none;border-right:1px solid var(--color-neutral-800);padding:24px 14px;display:flex;flex-direction:column;gap:4px;box-sizing:border-box">
+<div style="display:flex;align-items:center;gap:10px;padding:0 10px 22px"><span style="width:30px;height:30px;border-radius:8px;border:1px solid var(--color-accent);display:flex;align-items:center;justify-content:center;color:var(--color-accent)"><i class="ph ph-check-square-offset"></i></span><span style="font-size:17px">Tasklog <span style="color:var(--color-neutral-400);font-size:12px">Admin</span></span></div>
+<sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+<button onClick="{{ n.go }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:14px;color:{{ n.color }};background:{{ n.bg }}"><i class="{{ n.icon }}" style="font-size:18px"></i>{{ n.label }}</button>
+</sc-for>
+<div style="flex:1"></div>
+<div style="padding:10px;font-size:12px;color:var(--color-neutral-400);display:flex;gap:10px;align-items:center"><span style="width:28px;height:28px;border-radius:50%;background:var(--color-accent-800);display:flex;align-items:center;justify-content:center;color:var(--color-text)">M</span>max@example.com</div>
+</aside>
+<main style="flex:1;min-width:0;padding:32px 40px 56px;box-sizing:border-box">
+
+<sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
+<h1 style="font-size:28px;font-weight:500;margin:0 0 6px">Übersicht</h1>
+<div style="font-size:14px;color:var(--color-neutral-300);margin-bottom:28px">Zustand des Systems und der Home-Assistant-Anbindung.</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px">
+<sc-for list="{{ stats }}" as="s" hint-placeholder-count="4"><div class="card" style="padding:18px"><div style="font-size:12px;color:var(--color-neutral-400)">{{ s.l }}</div><div style="font-size:32px;margin-top:6px">{{ s.v }}</div><div style="font-size:12px;color:var(--color-neutral-400);margin-top:4px">{{ s.n }}</div></div></sc-for>
+</div>
+<div style="font-size:14px;font-weight:500;margin-bottom:8px">Letzte Ereignisse</div>
+<table class="table" style="width:100%"><thead><tr><th style="text-align:left">Zeit</th><th style="text-align:left">Richtung</th><th style="text-align:left">Ereignis</th><th style="text-align:left">Status</th></tr></thead><tbody>
+<sc-for list="{{ events }}" as="e" hint-placeholder-count="5"><tr><td>{{ e.t }}</td><td><i class="{{ e.icon }}" style="color:var(--color-accent)"></i> {{ e.dir }}</td><td>{{ e.what }}</td><td><span class="tag {{ e.tag }}">{{ e.st }}</span></td></tr></sc-for>
+</tbody></table>
+</sc-if>
+
+<sc-if value="{{ isHa }}" hint-placeholder-val="{{ false }}">
+<h1 style="font-size:28px;font-weight:500;margin:0 0 6px">Home Assistant</h1>
+<div style="font-size:14px;color:var(--color-neutral-300);margin-bottom:28px">Zwei Richtungen: HA füttert Tasklog mit Tickets, Tasklog meldet Zustände zurück an HA.</div>
+<div style="display:grid;grid-template-columns:1fr 90px 1fr;gap:0;align-items:stretch;margin-bottom:28px">
+<div class="card" style="padding:20px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:16px"><i class="ph ph-house-line" style="color:var(--color-accent)"></i> Home Assistant</span><span class="tag tag-accent">Online</span></div>
+<div style="font-size:13px;color:var(--color-neutral-300);margin:10px 0 14px">homeassistant.local:8123 · v2025.10</div>
+<div class="field"><label>Long-Lived Access Token</label><input class="input" value="••••••••••••••••••••" readonly="readonly"></div></div>
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--color-accent);font-size:11px"><span>Tickets</span><i class="ph ph-arrow-right" style="font-size:22px"></i><i class="ph ph-arrow-left" style="font-size:22px"></i><span>Zustände</span></div>
+<div class="card" style="padding:20px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:16px"><i class="ph ph-check-square-offset" style="color:var(--color-accent)"></i> Tasklog</span><span class="tag tag-accent">Bereit</span></div>
+<div style="font-size:13px;color:var(--color-neutral-300);margin:10px 0 14px">REST-API + Webhook · OIDC-geschützt</div>
+<div class="field"><label>Webhook-URL (HA → Tasklog)</label><input class="input" value="https://tasks.example.com/api/hooks/ha/8f3c…" readonly="readonly"></div></div>
+</div>
+<div style="font-size:14px;font-weight:500;margin-bottom:4px">Tasklog → Home Assistant · veröffentlichte Entitäten</div>
+<div style="font-size:12px;color:var(--color-neutral-400);margin-bottom:10px">Als Sensoren in HA sichtbar, nutzbar in Automationen und Dashboards.</div>
+<div class="card" style="padding:4px 18px">
+<sc-for list="{{ entities }}" as="x" hint-placeholder-count="5">
+<div onClick="{{ x.toggle }}" style="display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--color-neutral-800);cursor:pointer"><div style="flex:1"><div style="font-size:14px;font-family:ui-monospace,Menlo,monospace">{{ x.id }}</div><div style="font-size:12px;color:var(--color-neutral-400);margin-top:2px">{{ x.d }}</div></div><span style="width:40px;height:22px;border-radius:999px;border:1px solid var(--color-accent);position:relative;background:{{ x.bg }}"><span style="position:absolute;top:2px;left:{{ x.l }}px;width:16px;height:16px;border-radius:50%;background:{{ x.k }}"></span></span></div>
+</sc-for></div>
+</sc-if>
+
+<sc-if value="{{ isRules }}" hint-placeholder-val="{{ false }}">
+<h1 style="font-size:28px;font-weight:500;margin:0 0 6px">Regeln</h1>
+<div style="font-size:14px;color:var(--color-neutral-300);margin-bottom:24px">Wenn in Home Assistant etwas passiert, entsteht ein Ticket – oder wird geschlossen.</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px;align-items:start">
+<div class="card" style="padding:4px 16px">
+<sc-for list="{{ rules }}" as="r" hint-placeholder-count="4">
+<div onClick="{{ r.pick }}" style="display:flex;gap:12px;align-items:center;padding:14px 8px;margin:0 -8px;border-bottom:1px solid var(--color-neutral-800);cursor:pointer;border-radius:8px;background:{{ r.bg }}"><div style="flex:1;min-width:0"><div style="font-size:14px">{{ r.name }}</div><div style="font-size:12px;color:var(--color-neutral-400);margin-top:3px;font-family:ui-monospace,Menlo,monospace">{{ r.when }}</div></div><span class="tag {{ r.tag }}">{{ r.st }}</span></div>
+</sc-for>
+<button class="btn btn-secondary btn-block" style="margin:14px 0" onClick="{{ addRule }}"><i class="ph ph-plus"></i> Neue Regel</button></div>
+<div class="card" style="padding:20px;display:flex;flex-direction:column;gap:16px">
+<div style="font-size:12px;color:var(--color-accent)">REGEL BEARBEITEN</div>
+<div class="field"><label>Name</label><input class="input" value="{{ sel.name }}" onInput="{{ onName }}"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div class="field"><label>Auslöser (Entität)</label><input class="input" value="{{ sel.ent }}" onInput="{{ onEnt }}"></div>
+<div class="field"><label>Bedingung</label><input class="input" value="{{ sel.cond }}" onInput="{{ onCond }}"></div></div>
+<div class="field"><label>Ticket-Titel</label><input class="input" value="{{ sel.title }}" onInput="{{ onTitle }}"></div>
+<div><div style="font-size:13px;color:var(--color-neutral-300);margin-bottom:6px">Bereich</div><div class="seg"><sc-for list="{{ areaOpts }}" as="a" hint-placeholder-count="2"><button class="seg-opt" onClick="{{ a.set }}" style="{{ a.style }}">{{ a.label }}</button></sc-for></div></div>
+<div><div style="font-size:13px;color:var(--color-neutral-300);margin-bottom:6px">Wenn Bedingung endet</div><div class="seg"><sc-for list="{{ endOpts }}" as="a" hint-placeholder-count="2"><button class="seg-opt" onClick="{{ a.set }}" style="{{ a.style }}">{{ a.label }}</button></sc-for></div></div>
+<div style="display:flex;gap:10px"><button class="btn btn-primary" onClick="{{ toggleActive }}">{{ activeBtn }}</button><button class="btn btn-ghost" onClick="{{ delRule }}"><i class="ph ph-trash"></i> Löschen</button></div>
+</div></div>
+</sc-if>
+
+<sc-if value="{{ isConfig }}" hint-placeholder-val="{{ false }}">
+<h1 style="font-size:28px;font-weight:500;margin:0 0 6px">Konfiguration</h1>
+<div style="font-size:14px;color:var(--color-neutral-300);margin-bottom:24px">Aus den Regeln erzeugt – in Home Assistant einfügen oder per API pflegen.</div>
+<div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;align-items:start">
+<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="seg"><sc-for list="{{ cfgTabs }}" as="c" hint-placeholder-count="2"><button class="seg-opt" onClick="{{ c.set }}" style="{{ c.style }}">{{ c.label }}</button></sc-for></div><button class="btn btn-secondary" style="height:32px" onClick="{{ copyCfg }}"><i class="ph ph-copy"></i> {{ copyLabel }}</button></div>
+<pre style="margin:0;padding:18px;background:var(--color-neutral-800);border:1px solid var(--color-neutral-700);border-radius:12px;font:13px/1.65 ui-monospace,Menlo,monospace;color:var(--color-neutral-200);overflow:auto;min-height:360px">{{ yaml }}</pre></div>
+<div style="display:flex;flex-direction:column;gap:20px">
+<div class="card" style="padding:18px;display:flex;flex-direction:column;gap:14px"><div style="font-size:14px">API &amp; Webhooks</div>
+<div class="field"><label>API-Basis</label><input class="input" value="https://tasks.example.com/api/v1" readonly="readonly"></div>
+<div class="field"><label>Service-Token (HA)</label><input class="input" value="tl_live_••••••••••••" readonly="readonly"></div>
+<button class="btn btn-secondary"><i class="ph ph-arrows-clockwise"></i> Token erneuern</button></div>
+<div class="card" style="padding:18px;display:flex;flex-direction:column;gap:14px"><div style="font-size:14px">Zugang · OIDC</div>
+<div class="field"><label>Issuer</label><input class="input" value="https://auth.example.com" readonly="readonly"></div>
+<div class="field"><label>Client-ID</label><input class="input" value="tasklog-app" readonly="readonly"></div>
+<div class="field"><label>Admin-Gruppe</label><input class="input" value="tasklog-admins" readonly="readonly"></div></div>
+</div></div>
+</sc-if>
+</main></div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { sec: 'overview', sel: 0, cfg: 'ha', copied: false,
+    ents: [true, true, true, false, true],
+    rules: [
+      { name: 'Filterdruck zu hoch', ent: 'sensor.filterdruck', cond: '> 1.8', title: 'Wärmepumpe: Filter reinigen', area: 'Zuhause', close: 'Schließen', on: true },
+      { name: 'Müllabfuhr morgen', ent: 'calendar.muell', cond: 'in 1 Tag', title: 'Müll rausstellen', area: 'Zuhause', close: 'Schließen', on: true },
+      { name: 'Fenster lange offen', ent: 'binary_sensor.fenster', cond: 'on > 2 h', title: 'Fenster schließen', area: 'Zuhause', close: 'Offen lassen', on: false },
+      { name: 'Server-Alarm', ent: 'sensor.nas_temp', cond: '> 60', title: 'NAS überhitzt', area: 'Arbeit', close: 'Schließen', on: true }
+    ] };
+  entDefs = [
+    ['sensor.tasklog_open_tickets', 'Anzahl offener Tickets'], ['sensor.tasklog_today_time', 'Heute erfasste Zeit (h)'],
+    ['binary_sensor.tasklog_timer_running', 'Timer läuft'], ['binary_sensor.tasklog_overdue', 'Überfällige Tickets vorhanden'], ['sensor.tasklog_next_due', 'Nächstes fälliges Ticket']];
+  upd(p) { this.setState(s => ({ rules: s.rules.map((r, i) => i === s.sel ? { ...r, ...p } : r) })); }
+  renderVals() {
+    const s = this.state, R = s.rules, sel = R[s.sel] || R[0];
+    const go = k => () => this.setState({ sec: k });
+    const seg = on => 'font:inherit;cursor:pointer;flex:1;' + (on ? 'background:var(--color-accent-800);color:var(--color-text);' : '');
+    const navD = [['overview', 'ph-squares-four', 'Übersicht'], ['ha', 'ph-house-line', 'Home Assistant'], ['rules', 'ph-flow-arrow', 'Regeln'], ['config', 'ph-code', 'Konfiguration']];
+    const yamlHa = 'rest_command:\n  tasklog_ticket:\n    url: "https://tasks.example.com/api/hooks/ha/8f3c"\n    method: POST\n    headers:\n      Authorization: "Bearer !secret tasklog_token"\n    payload: >\n      {"title": "{{ title }}", "area": "{{ area }}"}\n\nautomation:\n' + R.filter(r => r.on).map(r => '  - alias: "' + r.name + '"\n    trigger:\n      - platform: numeric_state\n        entity_id: ' + r.ent + '\n        # ' + r.cond + '\n    action:\n      - service: rest_command.tasklog_ticket\n        data:\n          title: "' + r.title + '"\n          area: "' + r.area + '"').join('\n') + '\n';
+    const yamlTl = 'version: 1\nhomeassistant:\n  url: http://homeassistant.local:8123\n  token: !secret ha_token\nrules:\n' + R.map(r => '  - name: ' + r.name + '\n    entity: ' + r.ent + '\n    condition: "' + r.cond + '"\n    ticket: { title: "' + r.title + '", area: ' + r.area + ' }\n    on_end: ' + r.close + '\n    enabled: ' + r.on).join('\n') + '\npublish:\n' + this.entDefs.filter((e, i) => s.ents[i]).map(e => '  - ' + e[0]).join('\n') + '\n';
+    return {
+      nav: navD.map(n => ({ label: n[2], icon: (s.sec === n[0] ? 'ph-fill ' : 'ph ') + n[1], go: go(n[0]), color: s.sec === n[0] ? 'var(--color-text)' : 'var(--color-neutral-300)', bg: s.sec === n[0] ? 'var(--color-accent-800)' : 'transparent' })),
+      isOverview: s.sec === 'overview', isHa: s.sec === 'ha', isRules: s.sec === 'rules', isConfig: s.sec === 'config',
+      stats: [{ l: 'Offene Tickets', v: '12', n: '3 heute fällig' }, { l: 'Von HA erstellt', v: '27', n: 'letzte 30 Tage' }, { l: 'Aktive Regeln', v: String(R.filter(r => r.on).length), n: 'von ' + R.length }, { l: 'Webhook', v: 'OK', n: 'letzter Aufruf 07:12' }],
+      events: [{ t: '07:12', dir: 'HA → Tasklog', icon: 'ph ph-arrow-right', what: 'Ticket „Wärmepumpe: Filter reinigen“ erstellt', st: 'Erledigt', tag: 'tag-accent' }, { t: '08:40', dir: 'Tasklog → HA', icon: 'ph ph-arrow-left', what: 'binary_sensor.tasklog_timer_running = on', st: 'Gesendet', tag: 'tag-accent' }, { t: '09:15', dir: 'HA → Tasklog', icon: 'ph ph-arrow-right', what: 'Regel „Fenster lange offen“ übersprungen (deaktiviert)', st: 'Ignoriert', tag: 'tag-neutral' }, { t: '12:03', dir: 'Tasklog → HA', icon: 'ph ph-arrow-left', what: 'sensor.tasklog_open_tickets = 12', st: 'Gesendet', tag: 'tag-accent' }, { t: '13:30', dir: 'HA → Tasklog', icon: 'ph ph-arrow-right', what: 'Webhook: ungültiges Token', st: 'Abgelehnt', tag: 'tag-outline' }],
+      entities: this.entDefs.map((e, i) => ({ id: e[0], d: e[1], bg: s.ents[i] ? 'var(--color-accent-800)' : 'transparent', l: s.ents[i] ? 21 : 3, k: s.ents[i] ? 'var(--color-accent)' : 'var(--color-neutral-500)', toggle: () => this.setState(st => ({ ents: st.ents.map((v, j) => j === i ? !v : v) })) })),
+      rules: R.map((r, i) => ({ name: r.name, when: r.ent + ' ' + r.cond, st: r.on ? 'Aktiv' : 'Aus', tag: r.on ? 'tag-accent' : 'tag-neutral', bg: i === s.sel ? 'var(--color-accent-900)' : 'transparent', pick: () => this.setState({ sel: i }) })),
+      addRule: () => this.setState(st => ({ rules: [...st.rules, { name: 'Neue Regel', ent: 'sensor.beispiel', cond: '> 0', title: 'Neues Ticket', area: 'Zuhause', close: 'Schließen', on: false }], sel: st.rules.length })),
+      sel, onName: e => this.upd({ name: e.target.value }), onEnt: e => this.upd({ ent: e.target.value }), onCond: e => this.upd({ cond: e.target.value }), onTitle: e => this.upd({ title: e.target.value }),
+      areaOpts: ['Arbeit', 'Zuhause'].map(l => ({ label: l, style: seg(sel.area === l), set: () => this.upd({ area: l }) })),
+      endOpts: ['Schließen', 'Offen lassen'].map(l => ({ label: l, style: seg(sel.close === l), set: () => this.upd({ close: l }) })),
+      activeBtn: sel.on ? 'Deaktivieren' : 'Aktivieren', toggleActive: () => this.upd({ on: !sel.on }),
+      delRule: () => R.length > 1 && this.setState({ rules: R.filter((r, i) => i !== s.sel), sel: 0 }),
+      cfgTabs: [['ha', 'Home Assistant (YAML)'], ['tl', 'Tasklog (YAML)']].map(c => ({ label: c[1], style: 'font:inherit;cursor:pointer;' + (s.cfg === c[0] ? 'background:var(--color-accent-800);color:var(--color-text);' : ''), set: () => this.setState({ cfg: c[0] }) })),
+      yaml: s.cfg === 'ha' ? yamlHa : yamlTl,
+      copyCfg: () => { try { navigator.clipboard.writeText(s.cfg === 'ha' ? yamlHa : yamlTl); } catch (e) {} this.setState({ copied: true }); setTimeout(() => this.setState({ copied: false }), 1500); },
+      copyLabel: s.copied ? 'Kopiert' : 'Kopieren'
+    };
+  }
+}
+</script>
+</body>
+</html>

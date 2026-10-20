@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/nocturne-493ae4f7-e752-4f4b-8ed1-5e6c04648b60/styles.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<style>body{margin:0;background:var(--color-neutral-900);}input::placeholder{color:var(--color-neutral-500)}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;gap:48px;padding:32px;flex-wrap:wrap;font-family:var(--font-body);color:var(--color-text)">
+<div style="width:390px;height:800px;background:var(--color-bg);border-radius:44px;border:1px solid var(--color-neutral-700);box-shadow:var(--shadow-lg);position:relative;overflow:hidden;display:flex;flex-direction:column;flex:none">
+<div style="height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:13px;font-weight:500"><span>9:41</span><span style="display:flex;gap:6px;font-size:15px"><i class="ph ph-cell-signal-full"></i><i class="ph ph-wifi-high"></i><i class="ph ph-battery-full"></i></span></div>
+
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:48px 28px 32px;background:radial-gradient(ellipse at 20% 0%,var(--color-accent-900),transparent 60%)">
+<div style="width:44px;height:44px;border-radius:12px;border:1px solid var(--color-accent);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--color-accent);box-shadow:0 0 24px var(--color-accent-800)"><i class="ph ph-check-square-offset"></i></div>
+<h1 style="font-size:34px;font-weight:500;margin:28px 0 8px;letter-spacing:-.02em">Tasklog</h1>
+<p style="color:var(--color-neutral-300);margin:0;font-size:15px;line-height:1.5;max-width:280px">Aufgaben und Zeit – bei der Arbeit und zuhause an einem Ort.</p>
+<div style="flex:1"></div>
+<div class="field"><label>OIDC-Provider</label><input class="input" value="https://auth.example.com" readonly="readonly"></div>
+<div style="height:14px"></div>
+<button class="btn btn-primary btn-block" onClick="{{ doLogin }}"><i class="ph ph-key"></i> Mit SSO anmelden</button>
+<p style="font-size:12px;color:var(--color-neutral-400);margin:14px 0 0">Anmeldung via OpenID Connect (Authorization Code + PKCE).</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;overflow:auto;padding:12px 20px 16px">
+<div style="font-size:13px;color:var(--color-neutral-400)">{{ dateLabel }}</div>
+<h1 style="font-size:26px;font-weight:500;margin:4px 0 18px;letter-spacing:-.01em">Hallo Max</h1>
+<div style="border:1px solid var(--color-neutral-700);border-radius:var(--radius-lg,12px);padding:16px;background:linear-gradient(160deg,var(--color-accent-900),var(--color-neutral-800) 70%)">
+<div style="font-size:12px;color:var(--color-neutral-300);display:flex;justify-content:space-between"><span>Heute erfasst</span><span>{{ runningHint }}</span></div>
+<div style="font-size:40px;font-weight:500;margin:6px 0 2px;font-variant-numeric:tabular-nums">{{ todayLabel }}</div>
+<div style="display:flex;gap:16px;font-size:12px;color:var(--color-neutral-300)"><span><i class="ph ph-briefcase"></i> Arbeit {{ todayWork }}</span><span><i class="ph ph-house"></i> Zuhause {{ todayHome }}</span></div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin:24px 0 8px"><span style="font-size:14px;font-weight:500">Heute fällig</span><a style="font-size:12px;color:var(--color-accent);cursor:pointer" onClick="{{ goList }}">Alle Tickets</a></div>
+<sc-for list="{{ dueRows }}" as="t" hint-placeholder-count="3">
+<div onClick="{{ t.open }}" style="display:flex;align-items:center;gap:12px;padding:12px 0;cursor:pointer;border-bottom:1px solid var(--color-neutral-800)">
+<span style="width:8px;height:8px;border-radius:50%;background:{{ t.dot }};flex:none"></span>
+<div style="flex:1;min-width:0"><div style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</div><div style="font-size:12px;color:var(--color-neutral-400);margin-top:2px">{{ t.area }} · {{ t.time }}</div></div>
+<button class="btn btn-icon btn-ghost" onClick="{{ t.toggle }}"><i class="{{ t.icon }}"></i></button>
+</div>
+</sc-for>
+<div style="margin-top:22px;border:1px dashed var(--color-neutral-600);border-radius:12px;padding:14px;display:flex;gap:12px;align-items:flex-start">
+<i class="ph ph-house-line" style="font-size:22px;color:var(--color-accent)"></i>
+<div style="flex:1"><div style="font-size:13px;font-weight:500">Vorschlag von Home Assistant</div><div style="font-size:12px;color:var(--color-neutral-300);margin:4px 0 10px;line-height:1.4">Filter im Wärmepumpen-Kreislauf: Wartung in 3 Tagen fällig.</div>
+<button class="btn btn-secondary" style="height:32px" onClick="{{ acceptHa }}">{{ haBtn }}</button></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;overflow:auto;padding:12px 20px 16px">
+<h1 style="font-size:26px;font-weight:500;margin:4px 0 14px">Tickets</h1>
+<div style="display:flex;gap:8px;margin-bottom:10px">
+<sc-for list="{{ filters }}" as="f" hint-placeholder-count="3">
+<button onClick="{{ f.set }}" style="font:inherit;font-size:13px;padding:6px 14px;border-radius:999px;cursor:pointer;color:{{ f.color }};background:{{ f.bg }};border:1px solid {{ f.border }}">{{ f.label }}</button>
+</sc-for>
+</div>
+<sc-for list="{{ listRows }}" as="t" hint-placeholder-count="5">
+<div onClick="{{ t.open }}" style="display:flex;align-items:center;gap:12px;padding:13px 0;cursor:pointer;border-bottom:1px solid var(--color-neutral-800)">
+<span style="width:8px;height:8px;border-radius:50%;background:{{ t.dot }};flex:none"></span>
+<div style="flex:1;min-width:0"><div style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</div>
+<div style="font-size:12px;color:var(--color-neutral-400);margin-top:3px">{{ t.area }} · {{ t.status }} · {{ t.time }}</div></div>
+<button class="btn btn-icon btn-ghost" onClick="{{ t.toggle }}"><i class="{{ t.icon }}"></i></button>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;overflow:auto;padding:4px 20px 16px">
+<button class="btn btn-ghost" style="margin-left:-12px" onClick="{{ goList }}"><i class="ph ph-caret-left"></i> Tickets</button>
+<div style="display:flex;gap:8px;margin:10px 0 10px"><span class="tag tag-accent">{{ cur.area }}</span><sc-if value="{{ cur.fromHa }}" hint-placeholder-val="{{ false }}"><span class="tag tag-outline"><i class="ph ph-house-line"></i> Home Assistant</span></sc-if></div>
+<h1 style="font-size:24px;font-weight:500;margin:0 0 10px;line-height:1.25">{{ cur.title }}</h1>
+<p style="font-size:14px;line-height:1.5;color:var(--color-neutral-300);margin:0 0 18px">{{ cur.desc }}</p>
+<div class="seg" style="margin-bottom:20px">
+<sc-for list="{{ statusOpts }}" as="s" hint-placeholder-count="3"><button class="seg-opt" onClick="{{ s.set }}" style="{{ s.style }}">{{ s.label }}</button></sc-for>
+</div>
+<div style="border:1px solid var(--color-neutral-700);border-radius:12px;padding:16px;background:var(--color-neutral-800)">
+<div style="font-size:12px;color:var(--color-neutral-400)">Erfasste Zeit</div>
+<div style="font-size:36px;font-weight:500;font-variant-numeric:tabular-nums;margin:4px 0 14px">{{ cur.time }}</div>
+<button class="btn btn-primary btn-block" onClick="{{ cur.toggle }}"><i class="{{ cur.icon }}"></i> {{ cur.btn }}</button>
+<div style="display:flex;gap:8px;margin-top:10px">
+<button class="btn btn-secondary" style="flex:1" onClick="{{ add15 }}">+ 15 min</button>
+<button class="btn btn-secondary" style="flex:1" onClick="{{ add30 }}">+ 30 min</button>
+<button class="btn btn-secondary" style="flex:1" onClick="{{ add60 }}">+ 1 h</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isNew }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;overflow:auto;padding:4px 20px 16px">
+<button class="btn btn-ghost" style="margin-left:-12px" onClick="{{ goHome }}"><i class="ph ph-x"></i> Abbrechen</button>
+<h1 style="font-size:26px;font-weight:500;margin:10px 0 18px">Neues Ticket</h1>
+<div class="field"><label>Titel</label><input class="input" placeholder="Was ist zu tun?" value="{{ newTitle }}" onInput="{{ onTitle }}"></div>
+<div style="height:16px"></div>
+<div class="field"><label>Bereich</label></div>
+<div class="seg" style="margin-top:6px">
+<sc-for list="{{ areaOpts }}" as="a" hint-placeholder-count="2"><button class="seg-opt" onClick="{{ a.set }}" style="{{ a.style }}">{{ a.label }}</button></sc-for>
+</div>
+<div style="height:16px"></div>
+<div class="field"><label>Beschreibung</label><input class="input" placeholder="Optional" value="{{ newDesc }}" onInput="{{ onDesc }}"></div>
+<div style="height:24px"></div>
+<button class="btn btn-primary btn-block" onClick="{{ createTicket }}">Ticket anlegen</button>
+<button class="btn btn-secondary btn-block" style="margin-top:10px" onClick="{{ createAndStart }}"><i class="ph ph-play"></i> Anlegen und starten</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ isTime }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;overflow:auto;padding:12px 20px 16px">
+<h1 style="font-size:26px;font-weight:500;margin:4px 0 4px">Zeit</h1>
+<div style="font-size:13px;color:var(--color-neutral-400)">Diese Woche · {{ weekLabel }}</div>
+<div style="display:flex;align-items:flex-end;gap:10px;height:150px;margin:22px 0 8px">
+<sc-for list="{{ bars }}" as="b" hint-placeholder-count="7">
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px">
+<div style="width:100%;height:{{ b.h }}px;border-radius:6px;background:{{ b.bg }};min-height:3px"></div>
+<span style="font-size:12px;color:{{ b.lc }}">{{ b.d }}</span></div>
+</sc-for>
+</div>
+<div style="display:flex;gap:12px;margin-top:20px">
+<div class="card" style="flex:1;padding:14px"><div style="font-size:12px;color:var(--color-neutral-400)"><i class="ph ph-briefcase"></i> Arbeit</div><div style="font-size:22px;margin-top:4px">{{ weekWork }}</div></div>
+<div class="card" style="flex:1;padding:14px"><div style="font-size:12px;color:var(--color-neutral-400)"><i class="ph ph-house"></i> Zuhause</div><div style="font-size:22px;margin-top:4px">{{ weekHome }}</div></div>
+</div>
+<div style="font-size:14px;font-weight:500;margin:24px 0 4px">Meiste Zeit</div>
+<sc-for list="{{ topRows }}" as="t" hint-placeholder-count="4">
+<div style="display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--color-neutral-800);font-size:14px"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span><span style="color:var(--color-neutral-300);font-variant-numeric:tabular-nums">{{ t.time }}</span></div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;overflow:auto;padding:12px 20px 16px">
+<h1 style="font-size:26px;font-weight:500;margin:4px 0 18px">Einstellungen</h1>
+<div style="font-size:12px;color:var(--color-neutral-400);margin-bottom:8px">KONTO · OIDC</div>
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:12px"><div style="width:38px;height:38px;border-radius:50%;background:var(--color-accent-800);display:flex;align-items:center;justify-content:center;font-weight:500">M</div><div style="flex:1"><div style="font-size:14px">Max Mustermann</div><div style="font-size:12px;color:var(--color-neutral-400)">max@example.com</div></div><span class="tag tag-accent">Verbunden</span></div>
+<div style="font-size:12px;color:var(--color-neutral-400);line-height:1.6">Issuer: auth.example.com<br>Scopes: openid profile email</div>
+</div>
+<div style="font-size:12px;color:var(--color-neutral-400);margin:22px 0 8px">INTEGRATION · HOME ASSISTANT</div>
+<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:14px">homeassistant.local:8123</div><div style="font-size:12px;color:var(--color-neutral-400);margin-top:2px">Long-Lived Access Token</div></div><span class="tag tag-accent">Online</span></div>
+<div onClick="{{ toggleHa }}" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:12px"><span style="font-size:14px">Tickets aus Automationen vorschlagen</span><span style="width:40px;height:22px;border-radius:999px;border:1px solid var(--color-accent);position:relative;flex:none;background:{{ haSwBg }}"><span style="position:absolute;top:2px;left:{{ haSwLeft }}px;width:16px;height:16px;border-radius:50%;background:var(--color-accent);transition:left .15s"></span></span></div>
+</div>
+<button class="btn btn-secondary btn-block" style="margin-top:24px" onClick="{{ logout }}"><i class="ph ph-sign-out"></i> Abmelden</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ showMini }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ openRunning }}" style="margin:0 12px 8px;padding:10px 12px;border-radius:12px;border:1px solid var(--color-accent);background:var(--color-accent-900);display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 0 20px var(--color-accent-900)">
+<span style="width:8px;height:8px;border-radius:50%;background:var(--color-accent);flex:none"></span>
+<span style="flex:1;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ runningTitle }}</span>
+<span style="font-size:14px;font-variant-numeric:tabular-nums">{{ runningClock }}</span>
+<button class="btn btn-icon btn-ghost" onClick="{{ stopRunning }}"><i class="ph-fill ph-stop"></i></button>
+</div>
+</sc-if>
+
+<sc-if value="{{ showTabs }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;height:76px;display:flex;justify-content:space-around;align-items:flex-start;padding-top:8px;border-top:1px solid var(--color-neutral-800)">
+<sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+<button onClick="{{ t.go }}" style="all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;width:64px;font-size:11px;color:{{ t.color }}"><i class="{{ t.icon }}" style="font-size:24px"></i>{{ t.label }}</button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+<div style="max-width:300px;font-size:13px;line-height:1.6;color:var(--color-neutral-300)">
+<div style="font-size:18px;color:var(--color-text);margin-bottom:10px">Klickbarer Prototyp</div>
+Login → Heute → Tickets → Detail mit Timer. Der Timer läuft weiter, auch beim Wechseln der Screens. „Neu“ legt echte Tickets an; in den Einstellungen sind OIDC und Home-Assistant als Platzhalter vorbereitet.
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { screen: 'login', cur: null, filter: 'Alle', run: null, now: Date.now(), ha: true, haDone: false, newTitle: '', newDesc: '', newArea: 'Arbeit',
+    tickets: [
+      { id: 1, title: 'Steuererklärung 2025 abgeben', area: 'Zuhause', status: 'In Arbeit', sec: 2700, due: true, desc: 'Belege sortieren und in Elster eintragen.' },
+      { id: 2, title: 'Sprint-Review vorbereiten', area: 'Arbeit', status: 'Offen', sec: 5400, due: true, desc: 'Demo-Daten und Folien aktualisieren.' },
+      { id: 3, title: 'Rauchmelder Batterien tauschen', area: 'Zuhause', status: 'Offen', sec: 0, due: true, desc: 'Flur, Küche, Schlafzimmer.' },
+      { id: 4, title: 'API-Doku Auth-Flow ergänzen', area: 'Arbeit', status: 'In Arbeit', sec: 9000, due: false, desc: 'OIDC-Redirect und Token-Refresh beschreiben.' },
+      { id: 5, title: 'Garten: Hecke schneiden', area: 'Zuhause', status: 'Erledigt', sec: 3600, due: false, desc: '' },
+      { id: 6, title: 'Code-Review PR #482', area: 'Arbeit', status: 'Erledigt', sec: 1800, due: false, desc: '' }
+    ],
+    week: [{ d: 'Mo', s: 25200 }, { d: 'Di', s: 21600 }, { d: 'Mi', s: 28800 }, { d: 'Do', s: 0 }, { d: 'Fr', s: 0 }, { d: 'Sa', s: 0 }, { d: 'So', s: 0 }] };
+  componentDidMount() { this.iv = setInterval(() => this.state.run && this.setState({ now: Date.now() }), 1000); }
+  componentWillUnmount() { clearInterval(this.iv); }
+  fmt(s) { s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h + ':' + String(m).padStart(2, '0') + ' h'; }
+  clock(s) { s = Math.max(0, Math.floor(s)); const p = n => String(n).padStart(2, '0'); return p(Math.floor(s / 3600)) + ':' + p(Math.floor(s % 3600 / 60)) + ':' + p(s % 60); }
+  liveSec(t) { const r = this.state.run; return t.sec + (r && r.id === t.id ? (this.state.now - r.start) / 1000 : 0); }
+  toggle(id) { const r = this.state.run; if (r) this.stop(); if (!r || r.id !== id) this.setState(s => ({ run: { id, start: Date.now() }, now: Date.now(), tickets: s.tickets.map(t => t.id === id && t.status === 'Offen' ? { ...t, status: 'In Arbeit' } : t) })); }
+  stop() { const r = this.state.run; if (!r) return; const el = (Date.now() - r.start) / 1000; this.setState(s => ({ run: null, tickets: s.tickets.map(t => t.id === r.id ? { ...t, sec: t.sec + el } : t) })); }
+  add(id, sec) { this.setState(s => ({ tickets: s.tickets.map(t => t.id === id ? { ...t, sec: t.sec + sec } : t) })); }
+  create(start) { const s = this.state; const id = Date.now(); const t = { id, title: s.newTitle.trim() || 'Neues Ticket', area: s.newArea, status: 'Offen', sec: 0, due: true, desc: s.newDesc }; this.setState({ tickets: [t, ...s.tickets], newTitle: '', newDesc: '', screen: 'detail', cur: id }, () => start && this.toggle(id)); }
+  renderVals() {
+    const s = this.state, go = k => () => this.setState({ screen: k });
+    const dot = t => t.status === 'Erledigt' ? 'var(--color-neutral-600)' : t.status === 'In Arbeit' ? 'var(--color-accent)' : 'var(--color-neutral-400)';
+    const row = t => { const run = s.run && s.run.id === t.id; return { title: t.title, area: t.area, status: t.status, dot: dot(t), time: this.fmt(this.liveSec(t)), icon: run ? 'ph-fill ph-pause' : 'ph ph-play', open: () => this.setState({ screen: 'detail', cur: t.id }), toggle: e => { e.stopPropagation(); run ? this.stop() : this.toggle(t.id); } }; };
+    const T = s.tickets, ct = T.find(t => t.id === s.cur) || T[0];
+    const cr = ct ? row(ct) : {};
+    const sum = a => a.reduce((x, t) => x + this.liveSec(t), 0);
+    const todayAll = 5400 + (s.run ? 0 : 0) + sum(T.filter(t => t.due)) ;
+    const wk = s.week.map((d, i) => i === 3 ? { ...d, s: todayAll } : d);
+    const wkTot = wk.reduce((x, d) => x + d.s, 0), max = Math.max(...wk.map(d => d.s), 1);
+    const wWork = sum(T.filter(t => t.area === 'Arbeit')) + 75600, wHome = sum(T.filter(t => t.area === 'Zuhause'));
+    const seg = on => 'font:inherit;cursor:pointer;flex:1;' + (on ? 'background:var(--color-accent-800);color:var(--color-text);' : '');
+    const run = s.run && T.find(t => t.id === s.run.id);
+    const inApp = s.screen !== 'login';
+    const tab = (k, icon, label, on) => ({ go: go(k), icon: (on ? 'ph-fill ' : 'ph ') + icon, label, color: on ? 'var(--color-accent)' : 'var(--color-neutral-400)' });
+    return {
+      isLogin: s.screen === 'login', isHome: s.screen === 'home', isList: s.screen === 'list', isDetail: s.screen === 'detail', isNew: s.screen === 'new', isTime: s.screen === 'time', isSettings: s.screen === 'settings',
+      showTabs: inApp, showMini: inApp && !!run && !(s.screen === 'detail' && s.cur === run.id),
+      runningTitle: run ? run.title : '', runningClock: run ? this.clock(this.liveSec(run) - run.sec) : '',
+      runningHint: run ? 'läuft …' : '', openRunning: () => this.setState({ screen: 'detail', cur: s.run.id }), stopRunning: e => { e.stopPropagation(); this.stop(); },
+      doLogin: go('home'), logout: go('login'), goList: go('list'), goHome: go('home'),
+      dateLabel: 'Dienstag, 20. Oktober', todayLabel: this.fmt(todayAll), todayWork: this.fmt(sum(T.filter(t => t.due && t.area === 'Arbeit')) + 5400), todayHome: this.fmt(sum(T.filter(t => t.due && t.area === 'Zuhause'))),
+      dueRows: T.filter(t => t.due && t.status !== 'Erledigt').map(row),
+      acceptHa: () => this.setState({ haDone: true, tickets: s.haDone ? T : [{ id: 99, title: 'Wärmepumpe: Filter reinigen', area: 'Zuhause', status: 'Offen', sec: 0, due: true, desc: 'Automatisch vorgeschlagen von Home Assistant (Sensor: Filterdruck).', fromHa: true }, ...T] }),
+      haBtn: s.haDone ? 'Ticket erstellt' : 'Ticket erstellen',
+      filters: ['Alle', 'Arbeit', 'Zuhause'].map(f => ({ label: f, set: () => this.setState({ filter: f }), color: s.filter === f ? 'var(--color-text)' : 'var(--color-neutral-300)', bg: s.filter === f ? 'var(--color-accent-800)' : 'transparent', border: s.filter === f ? 'var(--color-accent)' : 'var(--color-neutral-700)' })),
+      listRows: T.filter(t => s.filter === 'Alle' || t.area === s.filter).map(row),
+      cur: { ...cr, fromHa: !!(ct && ct.fromHa), desc: ct && ct.desc || 'Keine Beschreibung.', btn: s.run && ct && s.run.id === ct.id ? 'Timer stoppen' : 'Timer starten' },
+      statusOpts: ['Offen', 'In Arbeit', 'Erledigt'].map(l => ({ label: l, style: seg(ct && ct.status === l), set: () => this.setState({ tickets: T.map(t => t.id === ct.id ? { ...t, status: l } : t) }) })),
+      add15: () => this.add(ct.id, 900), add30: () => this.add(ct.id, 1800), add60: () => this.add(ct.id, 3600),
+      newTitle: s.newTitle, newDesc: s.newDesc, onTitle: e => this.setState({ newTitle: e.target.value }), onDesc: e => this.setState({ newDesc: e.target.value }),
+      areaOpts: ['Arbeit', 'Zuhause'].map(l => ({ label: l, style: seg(s.newArea === l), set: () => this.setState({ newArea: l }) })),
+      createTicket: () => this.create(false), createAndStart: () => this.create(true),
+      weekLabel: this.fmt(wkTot), bars: wk.map((d, i) => ({ d: d.d, h: Math.round(d.s / max * 110), bg: i === 3 ? 'var(--color-accent)' : 'var(--color-neutral-700)', lc: i === 3 ? 'var(--color-text)' : 'var(--color-neutral-400)' })),
+      weekWork: this.fmt(wWork), weekHome: this.fmt(wHome),
+      topRows: [...T].sort((a, b) => this.liveSec(b) - this.liveSec(a)).slice(0, 4).map(t => ({ title: t.title, time: this.fmt(this.liveSec(t)) })),
+      haSwBg: s.ha ? 'var(--color-accent-800)' : 'transparent', haSwLeft: s.ha ? 21 : 3, toggleHa: () => this.setState({ ha: !s.ha }),
+      tabs: [tab('home', 'ph-house', 'Heute', s.screen === 'home'), tab('list', 'ph-list-checks', 'Tickets', s.screen === 'list' || s.screen === 'detail'), tab('new', 'ph-plus-circle', 'Neu', s.screen === 'new'), tab('time', 'ph-chart-bar', 'Zeit', s.screen === 'time'), tab('settings', 'ph-gear', 'Mehr', s.screen === 'settings')]
+    };
+  }
+}
+</script>
+</body>
+</html>
