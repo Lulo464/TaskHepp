@@ -411,6 +411,8 @@
     "dueOn": "fällig {{date}}",
     "createdFrom": "Ticket ab {{date}}",
     "ticketDeleted": "Ticket gelöscht",
-    "noEvents": "Keine Termine in den nächsten 60 Tagen."
+    "noEvents": "Keine Termine in den nächsten 60 Tagen.",
+    "types": "Abfallarten",
+    "typesHint": "Ausgeschaltete Arten bekommen keine Tickets; offene Tickets dieser Art werden entfernt."
   }
 }
