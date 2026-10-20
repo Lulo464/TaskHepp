@@ -1,0 +1,375 @@
+{
+  "brand": {
+    "name": "Tasklog",
+    "suffix": "Admin"
+  },
+  "nav": {
+    "groups": {
+      "ops": "Betrieb",
+      "ha": "Home Assistant",
+      "monitor": "Monitor",
+      "system": "System"
+    }
+  },
+  "sections": {
+    "overview": {
+      "label": "Übersicht",
+      "sub": "Zustand des Systems und der Home-Assistant-Anbindung."
+    },
+    "tickets": {
+      "label": "Tickets",
+      "sub": "Alle Tickets durchsuchen, filtern und in Massen bearbeiten."
+    },
+    "areas": {
+      "label": "Bereiche & Projekte",
+      "sub": "Struktur für Arbeit und Zuhause – gilt auch in der App."
+    },
+    "reports": {
+      "label": "Zeit-Berichte",
+      "sub": "Erfasste Zeit nach Bereich, Projekt oder Person."
+    },
+    "ha": {
+      "label": "Verbindung",
+      "sub": "Zwei Richtungen: HA füttert Tasklog mit Tickets, Tasklog meldet Zustände zurück an HA."
+    },
+    "rules": {
+      "label": "Regeln",
+      "sub": "Wenn in Home Assistant etwas passiert, entsteht ein Ticket – oder wird geschlossen."
+    },
+    "notify": {
+      "label": "Benachrichtigungen",
+      "sub": "Wann und worüber du informiert wirst."
+    },
+    "monitor": {
+      "label": "Tagesmonitor",
+      "sub": "Was auf dem Wanddisplay oder im Browser angezeigt wird."
+    },
+    "users": {
+      "label": "Benutzer & Rollen",
+      "sub": "Zugriff über OIDC-Gruppen steuern."
+    },
+    "log": {
+      "label": "Protokoll",
+      "sub": "Alle Ereignisse zwischen Home Assistant und Tasklog."
+    },
+    "system": {
+      "label": "Einstellungen",
+      "sub": "Status, Zeiterfassung, Tokens, Sicherheit und Backup."
+    },
+    "config": {
+      "label": "Konfiguration",
+      "sub": "Aus den Regeln erzeugt – in Home Assistant einfügen oder per API pflegen."
+    }
+  },
+  "common": {
+    "all": "Alle",
+    "delete": "Löschen",
+    "dirIn": "HA → Tasklog",
+    "dirOut": "Tasklog → HA",
+    "loading": "Lädt …",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "done": "Fertig",
+    "close": "Schließen"
+  },
+  "status": {
+    "open": "Offen",
+    "inProgress": "In Arbeit",
+    "done": "Erledigt"
+  },
+  "prio": {
+    "normal": "Normal",
+    "high": "Hoch"
+  },
+  "role": {
+    "admin": "Admin",
+    "member": "Mitglied",
+    "read": "Lesen"
+  },
+  "logStatus": {
+    "rejected": "Abgelehnt",
+    "sent": "Gesendet",
+    "ignored": "Ignoriert",
+    "done": "Erledigt",
+    "error": "Fehler"
+  },
+  "overview": {
+    "openTickets": "Offene Tickets",
+    "dueToday": "{{count}} heute fällig",
+    "fromHa": "Von HA erstellt",
+    "last30Days": "letzte 30 Tage",
+    "activeRules": "Aktive Regeln",
+    "ofTotal": "von {{total}}",
+    "webhook": "Webhook",
+    "webhookOk": "OK",
+    "lastCall": "letzter Aufruf {{time}}",
+    "recent": "Letzte Ereignisse",
+    "webhookError": "Fehler",
+    "noCalls": "noch keine Aufrufe"
+  },
+  "tickets": {
+    "search": "Suchen …",
+    "filterHa": "HA",
+    "selected": "{{count}} ausgewählt",
+    "markDone": "Erledigt",
+    "select": "Auswählen",
+    "fromHa": "Von Home Assistant erstellt",
+    "cycleStatus": "Status weiterschalten",
+    "col": {
+      "title": "Titel",
+      "where": "Bereich / Projekt",
+      "status": "Status",
+      "prio": "Prio",
+      "assignee": "Zugewiesen",
+      "due": "Fällig",
+      "time": "Zeit"
+    },
+    "empty": "Keine Tickets gefunden.",
+    "running": "Timer läuft"
+  },
+  "areas": {
+    "defaultPrio": "Standard-Prio: {{prio}}",
+    "openCount": "{{count}} offen",
+    "addProject": "Projekt hinzufügen",
+    "newProject": "Neues Projekt {{n}}",
+    "projectName": "Name des neuen Projekts"
+  },
+  "reports": {
+    "byArea": "Bereich",
+    "byProject": "Projekt",
+    "byPerson": "Person",
+    "week": "Woche",
+    "month": "Monat",
+    "export": "CSV exportieren",
+    "totalWeek": "Gesamt diese Woche",
+    "totalMonth": "Gesamt diesen Monat",
+    "empty": "In diesem Zeitraum wurde noch keine Zeit erfasst."
+  },
+  "ha": {
+    "title": "Home Assistant",
+    "token": "Long-Lived Access Token",
+    "test": "Verbindung testen",
+    "state": {
+      "idle": "Eingerichtet",
+      "busy": "Prüfe …",
+      "ok": "Verbindung OK",
+      "unconfigured": "Nicht eingerichtet",
+      "error": "Fehler"
+    },
+    "flowTickets": "Tickets",
+    "flowStates": "Zustände",
+    "tasklog": "Tasklog",
+    "ready": "Bereit",
+    "tasklogDesc": "REST-API + Webhook · OIDC-geschützt",
+    "webhookUrl": "Webhook-URL (HA → Tasklog)",
+    "entitiesTitle": "Tasklog → Home Assistant · veröffentlichte Entitäten",
+    "entitiesSub": "Als Sensoren in HA sichtbar, nutzbar in Automationen und Dashboards.",
+    "entity": {
+      "openTickets": "Anzahl offener Tickets",
+      "todayTime": "Heute erfasste Zeit (h)",
+      "timerRunning": "Timer läuft",
+      "overdue": "Überfällige Tickets vorhanden",
+      "nextDue": "Nächstes fälliges Ticket",
+      "unknown": "Unbekannte Entität"
+    },
+    "noUrl": "Noch keine Adresse hinterlegt",
+    "url": "Adresse",
+    "tokenPlaceholder": "In HA unter Profil → Sicherheit erstellen",
+    "webhookHint": "Home Assistant ruft diese Adresse mit einem API-Token (Recht tickets:write) auf. Die fertige Konfiguration steht unter System → Konfiguration.",
+    "lastState": "zuletzt {{state}}"
+  },
+  "rules": {
+    "active": "Aktiv",
+    "off": "Aus",
+    "add": "Neue Regel",
+    "newName": "Neue Regel",
+    "newTitle": "Neues Ticket",
+    "edit": "Regel bearbeiten",
+    "name": "Name",
+    "when": "Wenn",
+    "entity": "Entität",
+    "condition": "Bedingung",
+    "and": "UND",
+    "or": "ODER",
+    "extraCondition": "Zusatzbedingung (optional)",
+    "window": "Zeitfenster",
+    "then": "Dann",
+    "ticketTitle": "Ticket-Titel (Vorlage)",
+    "area": "Bereich",
+    "prio": "Priorität",
+    "onEnd": "Wenn Bedingung endet",
+    "close": "Schließen",
+    "keepOpen": "Offen lassen",
+    "dedupe": "Kein Duplikat, solange ein Ticket offen ist",
+    "activate": "Aktivieren",
+    "deactivate": "Deaktivieren",
+    "test": "Testen",
+    "testTitle": "Testlauf · Vorschau des Tickets",
+    "testMeta": "{{area}} · Prio {{prio}} · heute fällig · von Home Assistant",
+    "notTranslatable": "Diese Bedingung kann nicht automatisch in einen Home-Assistant-Trigger übersetzt werden. Unterstützt: „> 1.8“, „= on“, „on > 2 h“, „in 1 Tag“ und als Zusatz „sensor.x < 5“.",
+    "testDisabled": "Die Regel ist deaktiviert und würde gerade kein Ticket erstellen.",
+    "testDuplicate": "Kein neues Ticket: „{{title}}“ ist noch offen (Duplikat-Schutz)."
+  },
+  "notify": {
+    "dueSoon": {
+      "title": "Push bei Fälligkeit",
+      "desc": "Eine Stunde vor dem Termin"
+    },
+    "haCreated": {
+      "title": "Von Home Assistant erstellte Tickets",
+      "desc": "Sofort melden, wenn eine Regel auslöst"
+    },
+    "weeklyReport": {
+      "title": "Wöchentlicher Bericht",
+      "desc": "Montag 08:00 per E-Mail"
+    },
+    "dailyDigest": {
+      "title": "Tagesübersicht",
+      "desc": "Jeden Morgen um 07:00"
+    },
+    "channel": "Kanal",
+    "push": "Push",
+    "haNotify": "HA-Notify",
+    "email": "E-Mail",
+    "quietFrom": "Ruhezeit von",
+    "quietTo": "bis",
+    "channelPending": "Push und E-Mail sind noch nicht angebunden. Bis dahin kommen Benachrichtigungen nur über HA-Notify (notify.notify) an."
+  },
+  "monitor": {
+    "widget": {
+      "clock": "Uhr & Datum",
+      "timer": "Aktueller Timer",
+      "next": "Als Nächstes",
+      "later": "Später heute",
+      "haSensors": "Home-Assistant-Sensoren"
+    },
+    "refresh": "Aktualisierung",
+    "seconds": "{{n}} s",
+    "publicLink": "Öffentlicher Link (nur lesen)",
+    "renewLink": "Link erneuern",
+    "preview": "Vorschau · alle {{n}} s",
+    "open": "Öffnen",
+    "renewConfirm": "Neuen Link erzeugen? Der alte Link funktioniert danach nicht mehr.",
+    "nothingToday": "Heute steht nichts mehr an."
+  },
+  "users": {
+    "col": {
+      "user": "Benutzer",
+      "group": "OIDC-Gruppe",
+      "role": "Rolle",
+      "seen": "Zuletzt aktiv"
+    },
+    "cycleRole": "Rolle wechseln",
+    "groupMap": "Gruppen-Zuordnung",
+    "sessions": "Aktive Sitzungen",
+    "revoke": "Beenden",
+    "followGroups": "Rolle wurde von Hand gesetzt – klicken, damit wieder die OIDC-Gruppe zählt",
+    "groupName": "Name der OIDC-Gruppe",
+    "addGroup": "Gruppe hinzufügen",
+    "thisSession": "diese Sitzung"
+  },
+  "log": {
+    "errors": "Fehler",
+    "in": "HA →",
+    "out": "→ HA",
+    "col": {
+      "time": "Zeit",
+      "dir": "Richtung",
+      "event": "Ereignis",
+      "status": "Status"
+    },
+    "retry": "Wiederholen",
+    "empty": "Keine Einträge."
+  },
+  "system": {
+    "version": "Version",
+    "database": "Datenbank",
+    "jobs": "Hintergrund-Jobs",
+    "jobsValue": "{{count}} aktiv",
+    "ha": "Home Assistant",
+    "general": "Allgemein",
+    "language": "Sprache",
+    "languageValue": "Deutsch",
+    "timezone": "Zeitzone",
+    "timeTracking": "Zeiterfassung",
+    "timeRule": {
+      "autoStop": {
+        "title": "Auto-Stopp um Mitternacht",
+        "desc": "Laufende Timer werden beendet"
+      },
+      "longTimer": {
+        "title": "Erinnerung bei langem Timer",
+        "desc": "Nach 4 Stunden nachfragen"
+      },
+      "singleTimer": {
+        "title": "Nur ein Timer gleichzeitig",
+        "desc": "Start stoppt den laufenden"
+      }
+    },
+    "roundTo": "Runden auf",
+    "roundNone": "Keine",
+    "roundMin": "{{n}} min",
+    "oidc": "Zugang · OIDC",
+    "issuer": "Issuer",
+    "clientId": "Client-ID",
+    "tokens": "API-Tokens",
+    "newToken": "Neuer Token",
+    "createToken": "Token erstellen",
+    "revokeToken": "Token widerrufen",
+    "signature": "Webhook-Signatur (HMAC) erzwingen",
+    "signatureDesc": "Unsignierte Aufrufe werden abgelehnt.",
+    "backup": "Backup & Export",
+    "exportAll": "Alles exportieren",
+    "import": "Import",
+    "lastBackup": "Letztes Backup: {{when}}",
+    "haConfigured": "Eingerichtet",
+    "haMissing": "Nicht eingerichtet",
+    "devMode": "Entwicklungsmodus (AUTH_MODE=dev): Jeder Besucher ist als Admin angemeldet. Nicht öffentlich betreiben!",
+    "oidcHint": "Wird über Umgebungsvariablen gesetzt (OIDC_ISSUER, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET).",
+    "tokenUsed": "benutzt {{when}}",
+    "revokeConfirm": "Token „{{name}}“ widerrufen? Geräte, die ihn nutzen, verlieren den Zugriff.",
+    "tokenOnce": "Token jetzt kopieren – er wird nur dieses eine Mal angezeigt.",
+    "tokenName": "Name",
+    "signatureSecret": "Signatur-Schlüssel (HMAC-SHA256 über den Body, Header X-Tasklog-Signature: sha256=…)",
+    "showSecret": "Schlüssel anzeigen",
+    "importConfirm": "Alle Daten durch das Backup ersetzen? Alle Sitzungen werden beendet.",
+    "noBackup": "Noch kein Backup erstellt."
+  },
+  "config": {
+    "ha": "Home Assistant (YAML)",
+    "tasklog": "Tasklog (YAML)",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "download": "Herunterladen",
+    "haHint": "In Home Assistant als Package einbinden (packages/tasklog.yaml) und in secrets.yaml „tasklog_auth: \"Bearer <Token>\"“ eintragen. Der Token braucht das Recht tickets:write."
+  },
+  "account": {
+    "logout": "Abmelden",
+    "notAdmin": "Du bist kein Admin: Du kannst alles ansehen, aber nur Tickets und Zeiten ändern."
+  },
+  "due": {
+    "today": "Heute",
+    "tomorrow": "Morgen",
+    "overdue": "Überfällig"
+  },
+  "ago": {
+    "now": "jetzt",
+    "minutes": "vor {{n}} min",
+    "hours": "vor {{n}} h",
+    "yesterday": "gestern",
+    "days": "vor {{n}} Tagen"
+  },
+  "display": {
+    "trackedToday": "Erfasst heute",
+    "stillOpen": "Noch offen",
+    "tickets_one": "{{count}} Ticket",
+    "tickets_other": "{{count}} Tickets",
+    "now": "Jetzt",
+    "noTimer": "Kein Timer läuft.",
+    "homeAssistant": "Home Assistant",
+    "next": "Als Nächstes",
+    "later": "Später heute",
+    "allDone": "Für heute ist alles erledigt.",
+    "offline": "Keine Verbindung – zeige den letzten Stand."
+  }
+}
