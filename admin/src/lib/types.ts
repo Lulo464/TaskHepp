@@ -175,8 +175,15 @@ export interface CalendarSource {
   prio: Prio;
   autoClose: boolean;
   enabled: boolean;
+  excludedTypes: string[];
   lastSyncAt: string | null;
   lastError: string | null;
+}
+
+export interface CalendarPreview {
+  events: CalendarEventPreview[];
+  /** All event titles in the next weeks, with whether they are switched off. */
+  types: { name: string; excluded: boolean }[];
 }
 
 export interface CalendarEventPreview {

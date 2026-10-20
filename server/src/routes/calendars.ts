@@ -15,11 +15,12 @@ const sourceInput = z.object({
   prio: z.enum(['normal', 'high']),
   autoClose: z.boolean(),
   enabled: z.boolean(),
+  excludedTypes: z.array(z.string().trim().min(1).max(200)).max(50),
 });
 
 const COLUMNS: Record<keyof z.infer<typeof sourceInput>, string> = {
   entityId: 'entity_id', name: 'name', areaId: 'area_id', titleTemplate: 'title_template', leadDays: 'lead_days',
-  lookaheadDays: 'lookahead_days', prio: 'prio', autoClose: 'auto_close', enabled: 'enabled',
+  lookaheadDays: 'lookahead_days', prio: 'prio', autoClose: 'auto_close', enabled: 'enabled', excludedTypes: 'excluded_types',
 };
 
 /** HA errors become a readable 502 instead of a 500. */
@@ -48,7 +49,7 @@ export function calendarRoutes(app: FastifyInstance, ctx: AppContext) {
   app.get('/api/calendars', async () => (await db.query<CalendarSource>(`${SOURCE_SELECT} ORDER BY name`)).rows);
 
   app.post('/api/calendars', async (req, reply) => {
-    const body = parse(sourceInput, req.body);
+    const body = parse(sourceInput.extend({ excludedTypes: sourceInput.shape.excludedTypes.default([]) }), req.body);
     const keys = Object.keys(COLUMNS) as (keyof typeof COLUMNS)[];
     try {
       const { rows } = await db.query<{ id: number }>(
@@ -77,8 +78,10 @@ export function calendarRoutes(app: FastifyInstance, ctx: AppContext) {
       if (!rowCount) throw notFound('Kalender nicht gefunden');
     }
     const source = await getSource(id);
-    if (keys.some(k => k === 'titleTemplate' || k === 'leadDays' || k === 'areaId' || k === 'prio')) await reapplySource(ctx, source);
-    return source;
+    if (keys.some(k => k === 'titleTemplate' || k === 'leadDays' || k === 'areaId' || k === 'prio' || k === 'excludedTypes')) await reapplySource(ctx, source);
+    // A type switched back on gets its tickets right away.
+    if (keys.includes('excludedTypes') && source.enabled) await syncSource(ctx, source).catch(() => {});
+    return getSource(id);
   });
 
   /** Removes the link; tickets that were already created stay. */

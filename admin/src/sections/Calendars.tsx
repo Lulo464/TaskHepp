@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Field, Icon, LabeledSeg, Loading, Note, ToggleRow } from '../components/ui';
+import { Field, Icon, LabeledSeg, Loading, Note, ToggleList, ToggleRow } from '../components/ui';
 import { api, del, patch, post, useAction, useApi } from '../lib/api';
 import { formatAgo, ticketTag } from '../lib/format';
-import type { Area, CalendarEventPreview, CalendarSource } from '../lib/types';
+import type { Area, CalendarPreview, CalendarSource } from '../lib/types';
 
 type Editable = Partial<Omit<CalendarSource, 'id' | 'lastSyncAt' | 'lastError'>>;
 
@@ -24,7 +24,8 @@ export function Calendars() {
   const [syncInfo, setSyncInfo] = useState<string | null>(null);
 
   const selected = sources?.find(s => s.id === selectedId) ?? sources?.[0] ?? null;
-  const events = useApi<CalendarEventPreview[]>(selected ? `/api/calendars/${selected.id}/events` : null);
+  const preview = useApi<CalendarPreview>(selected ? `/api/calendars/${selected.id}/events` : null);
+  const events = preview?.events;
   const [draft, setDraft] = useState({ name: '', titleTemplate: '' });
   useEffect(() => {
     if (selected) setDraft({ name: selected.name, titleTemplate: selected.titleTemplate });
@@ -145,6 +146,23 @@ export function Calendars() {
             </div>
             {selected.lastError && <Note>{selected.lastError}</Note>}
           </div>
+
+          {preview && preview.types.length > 0 && (
+            <div>
+              <div className="section-title" style={{ marginBottom: 4 }}>{t('calendars.types')}</div>
+              <div className="section-hint" style={{ marginTop: 0 }}>{t('calendars.typesHint')}</div>
+              <ToggleList
+                items={preview.types.map(x => ({ title: x.name, on: !x.excluded }))}
+                onToggle={i => {
+                  const name = preview.types[i].name;
+                  const excluded = selected.excludedTypes.includes(name)
+                    ? selected.excludedTypes.filter(n => n !== name)
+                    : [...selected.excludedTypes, name];
+                  void save({ excludedTypes: excluded });
+                }}
+              />
+            </div>
+          )}
 
           <div>
             <div className="section-title">{t('calendars.upcoming')}</div>

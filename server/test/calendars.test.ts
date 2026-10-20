@@ -59,7 +59,8 @@ describe('calendar import', () => {
   });
 
   it('previews events with their ticket state', async () => {
-    const events = (await call('GET', `/api/calendars/${id}/events`)).json();
+    const { events, types } = (await call('GET', `/api/calendars/${id}/events`)).json();
+    expect(types.map((x: { name: string }) => x.name)).toEqual(['Biotonne', 'Gelber Sack', 'Papier', 'Restmüll']);
     expect(events.map((e: { summary: string }) => e.summary)).toEqual(['Papier', 'Restmüll', 'Gelber Sack', 'Biotonne']);
     expect(events[3]).toMatchObject({ imported: false, ticketTitle: 'Biotonne rausstellen', createFrom: day(26) });
     expect(events[1]).toMatchObject({ imported: true, ticketStatus: 'open' });
@@ -89,8 +90,37 @@ describe('calendar import', () => {
     expect((await call('GET', '/api/calendars')).json()[0].lastError).toBeNull();
   });
 
+  it('skips excluded waste types and brings them back when switched on again', async () => {
+    const before = (await call('GET', '/api/tickets?q=Gelber Sack')).json();
+    expect(before).toHaveLength(1);
+    const res = await call('PATCH', `/api/calendars/${id}`, { excludedTypes: ['Gelber Sack'] });
+    expect(res.json().excludedTypes).toEqual(['Gelber Sack']);
+    expect((await call('GET', '/api/tickets?q=Gelber Sack')).json()).toHaveLength(0);
+    expect((await call('POST', `/api/calendars/${id}/sync`)).json().created).toBe(0);
+    const preview = (await call('GET', `/api/calendars/${id}/events`)).json();
+    expect(preview.events.some((e: { summary: string }) => e.summary === 'Gelber Sack')).toBe(false);
+    expect(preview.types.find((x: { name: string }) => x.name === 'Gelber Sack').excluded).toBe(true);
+
+    await call('PATCH', `/api/calendars/${id}`, { excludedTypes: [] });
+    expect((await call('GET', '/api/tickets?q=Gelber Sack')).json()).toHaveLength(1);
+  });
+
   it('rejects linking the same calendar twice', async () => {
     expect((await call('POST', '/api/calendars', source)).statusCode).toBe(409);
+  });
+});
+
+describe('due date', () => {
+  it('is the day before the pickup, for all-day and timed events', async () => {
+    ha.calendars.set('calendar.zweiter', [
+      { summary: 'Restabfall', start: { date: day(7) } },
+      // Timed event at local midnight, as some calendars deliver all-day dates
+      { summary: 'Papier', start: { dateTime: `${day(8)}T00:00:00+01:00` } },
+    ]);
+    await call('POST', '/api/calendars', { ...source, entityId: 'calendar.zweiter', name: 'Zweiter', titleTemplate: '{title} 2' });
+    const tickets = (await call('GET', '/api/tickets?q= 2')).json();
+    expect(tickets.find((x: { title: string }) => x.title === 'Restabfall 2').due).toBe(day(6));
+    expect(tickets.find((x: { title: string }) => x.title === 'Papier 2').due).toBe(day(7));
   });
 });
 

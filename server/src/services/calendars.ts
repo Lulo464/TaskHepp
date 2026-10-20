@@ -14,6 +14,8 @@ export interface CalendarSource {
   prio: 'normal' | 'high';
   autoClose: boolean;
   enabled: boolean;
+  /** Event titles that never become tickets. */
+  excludedTypes: string[];
   lastSyncAt: string | null;
   lastError: string | null;
 }
@@ -21,7 +23,7 @@ export interface CalendarSource {
 export const SOURCE_SELECT = `
   SELECT id, entity_id AS "entityId", name, area_id AS "areaId", title_template AS "titleTemplate",
          lead_days AS "leadDays", lookahead_days AS "lookaheadDays", prio, auto_close AS "autoClose",
-         enabled, last_sync_at AS "lastSyncAt", last_error AS "lastError"
+         enabled, excluded_types AS "excludedTypes", last_sync_at AS "lastSyncAt", last_error AS "lastError"
     FROM calendar_sources`;
 
 /** Calendar date of an event in the household's time zone. */
@@ -74,6 +76,7 @@ export async function syncSource(ctx: AppContext, source: CalendarSource): Promi
     const { today: t, events } = await fetchEvents(ctx, source, source.lookaheadDays);
     let created = 0;
     for (const e of events) {
+      if (source.excludedTypes.includes(e.summary)) continue;
       const inserted = await withTransaction(ctx.db, async c => {
         const { rowCount } = await c.query(
           `INSERT INTO calendar_imports (source_id, event_key, event_date) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
@@ -110,7 +113,7 @@ export async function syncSource(ctx: AppContext, source: CalendarSource): Promi
       await ctx.log.add('in', `Kalender „${source.name}“: ${parts.join(', ')}`, 'done');
       ctx.publisher.schedule();
     }
-    return { events: events.length, created, closed };
+    return { events: events.filter(e => !source.excludedTypes.includes(e.summary)).length, created, closed };
   } catch (err) {
     const message = (err as Error).message;
     if (message !== source.lastError) await ctx.log.add('in', `Kalender „${source.name}“: ${message}`, 'error');
@@ -130,6 +133,12 @@ export async function reapplySource(ctx: AppContext, source: CalendarSource): Pr
   );
   for (const r of rows) {
     const summary = r.eventKey.slice(r.eventKey.indexOf('|') + 1);
+    if (source.excludedTypes.includes(summary)) {
+      // Unwanted type: drop the open ticket and forget the import, so switching it back on recreates it.
+      await ctx.db.query('DELETE FROM tickets WHERE id = $1', [r.ticketId]);
+      await ctx.db.query('DELETE FROM calendar_imports WHERE source_id = $1 AND event_key = $2', [source.id, r.eventKey]);
+      continue;
+    }
     const due = addDays(r.eventDate, -source.leadDays);
     await ctx.db.query(
       'UPDATE tickets SET title = $2, due_date = $3, area_id = $4, prio = $5, updated_at = now() WHERE id = $1',
@@ -142,14 +151,16 @@ export async function reapplySource(ctx: AppContext, source: CalendarSource): Pr
 
 /** The next events with the ticket each one gets (or already has). */
 export async function previewSource(ctx: AppContext, source: CalendarSource, limit = 10) {
-  const { today: t, events } = await fetchEvents(ctx, source, Math.max(source.lookaheadDays, 60));
+  const { today: t, events: all } = await fetchEvents(ctx, source, Math.max(source.lookaheadDays, 60));
+  const types = [...new Set([...all.map(e => e.summary), ...source.excludedTypes])].sort((a, b) => a.localeCompare(b, 'de'));
+  const events = all.filter(e => !source.excludedTypes.includes(e.summary));
   const { rows } = await ctx.db.query<{ eventKey: string; ticketId: number | null; status: string | null }>(
     `SELECT i.event_key AS "eventKey", i.ticket_id AS "ticketId", t.status
        FROM calendar_imports i LEFT JOIN tickets t ON t.id = i.ticket_id WHERE i.source_id = $1`,
     [source.id],
   );
   const imported = new Map(rows.map(r => [r.eventKey, r]));
-  return events.slice(0, limit).map(e => {
+  const upcoming = events.slice(0, limit).map(e => {
     const imp = imported.get(`${e.date}|${e.summary}`);
     return {
       date: e.date,
@@ -163,6 +174,7 @@ export async function previewSource(ctx: AppContext, source: CalendarSource, lim
       createFrom: addDays(e.date, -source.lookaheadDays),
     };
   });
+  return { events: upcoming, types: types.map(name => ({ name, excluded: source.excludedTypes.includes(name) })) };
 }
 
 /** Background job: sync every enabled source at most every `minutes`. */
