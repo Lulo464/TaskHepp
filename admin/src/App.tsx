@@ -65,6 +65,11 @@ export function App() {
   const { error, clear } = useApiError();
   const View = current.view;
 
+  // The admin UI is for admins; everyone else uses the app.
+  useEffect(() => {
+    if (me?.kind === 'user' && me.role !== 'admin') window.location.replace('/');
+  }, [me]);
+
   const logout = async () => {
     await post('/api/logout');
     window.location.href = '/auth/login';
@@ -93,8 +98,9 @@ export function App() {
             </div>
           ))}
         </nav>
+        <a className="nav-item" href="/" style={{ marginTop: 'auto' }}><Icon name="device-mobile" />{t('account.toApp')}</a>
         {me?.kind === 'user' && (
-          <div className="account">
+          <div className="account" style={{ marginTop: 0 }}>
             <span className="avatar">{(me.name ?? me.email ?? '?').charAt(0).toUpperCase()}</span>
             <span className="grow" title={me.email}>{me.email}</span>
             <button type="button" className="icon-btn" aria-label={t('account.logout')} title={t('account.logout')} onClick={logout}><Icon name="sign-out" /></button>
@@ -110,7 +116,6 @@ export function App() {
             <button type="button" className="icon-btn" aria-label={t('common.close')} onClick={clear}><Icon name="x" /></button>
           </div>
         )}
-        {me?.kind === 'user' && me.role !== 'admin' && <div className="error-banner muted-banner"><Icon name="info" /> {t('account.notAdmin')}</div>}
         <View />
       </main>
     </div>

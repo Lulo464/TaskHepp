@@ -44,13 +44,26 @@ export async function buildApp(ctx: AppContext, opts: { logger?: boolean | objec
   adminRoutes(app, ctx);
   systemRoutes(app, ctx);
 
-  // Serve the built admin UI; unknown non-API paths fall back to index.html (e.g. /monitor).
+  // Serve the built web frontends: the app (PWA) at /, the admin UI at /admin, the wall display at /monitor.
   const dist = ctx.config.ADMIN_DIST && path.resolve(ctx.config.ADMIN_DIST);
   if (dist && existsSync(path.join(dist, 'index.html'))) {
-    await app.register(fastifyStatic, { root: dist, wildcard: false });
+    await app.register(fastifyStatic, {
+      root: dist,
+      wildcard: false,
+      // The service worker and pages must not be cached, or updates never arrive; hashed assets may be.
+      setHeaders: (res, file) => {
+        if (/\.(html|webmanifest)$|sw\.js$/.test(file)) res.header('Cache-Control', 'no-cache');
+        else if (file.includes(`${path.sep}assets${path.sep}`)) res.header('Cache-Control', 'public, max-age=31536000, immutable');
+      },
+    });
+    const hasAdmin = existsSync(path.join(dist, 'admin.html'));
     app.setNotFoundHandler((req, reply) => {
-      if (req.method === 'GET' && !req.url.startsWith('/api/') && !req.url.startsWith('/auth/')) return reply.sendFile('index.html');
-      return reply.code(404).send({ error: 'Nicht gefunden' });
+      if (req.method !== 'GET' || req.url.startsWith('/api/') || req.url.startsWith('/auth/')) {
+        return reply.code(404).send({ error: 'Nicht gefunden' });
+      }
+      const page = hasAdmin && /^\/(admin|monitor)(\/|\?|$)/.test(req.url) ? 'admin.html' : 'index.html';
+      reply.header('Cache-Control', 'no-cache');
+      return reply.sendFile(page);
     });
   }
 

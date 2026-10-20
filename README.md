@@ -4,8 +4,11 @@ Ticket- und Zeiterfassungssystem für Arbeit und Zuhause, mit Home-Assistant-Anb
 
 ## Inhalt
 
-- `server/` – API-Server (Node.js, TypeScript, Fastify, **PostgreSQL**), liefert auch die Admin-UI aus
-- `admin/` – Admin-Oberfläche (React + Vite + TypeScript, Design-System „Nocturne“) und der Tagesmonitor unter `/monitor`
+- `server/` – API-Server (Node.js, TypeScript, Fastify, **PostgreSQL**), liefert auch die Web-Oberflächen aus
+- `admin/` – Web-Oberflächen (React + Vite + TypeScript, Design-System „Nocturne“):
+  - **App** (PWA) unter `/` – Heute, Tickets, Timer, Zeit; installierbar aufs Handy
+  - **Admin-UI** unter `/admin`
+  - **Tagesmonitor** unter `/monitor?t=…`
 - `design/` – Export aus Claude Design: klickbare Prototypen (`*.dc.html`), Design-System (`_ds/`) und der Chat-Verlauf (`chats/`) als Referenz
 
 ## Betrieb mit Docker
@@ -17,6 +20,19 @@ docker compose up -d      # startet PostgreSQL 16 und Tasklog auf Port 8080
 
 Beim Start legt Tasklog das Datenbankschema selbst an bzw. aktualisiert es (`server/migrations/`). Nächtliche Backups landen in `./backups`.
 
+## Die App aufs Handy
+
+Die App unter `<PUBLIC_URL>/` ist eine PWA:
+
+- **Android (Chrome):** Seite öffnen → Menü ⋮ → **„App installieren“** bzw. „Zum Startbildschirm hinzufügen“
+- **iPhone (Safari):** Seite öffnen → Teilen-Symbol → **„Zum Home-Bildschirm“**
+
+Danach startet Tasklog im Vollbild mit eigenem Icon, wie eine normale App.
+
+**Wichtig:** Die volle Installation (eigenes App-Fenster, Start auch ohne Netz) gibt es nur über **HTTPS**. Unter `http://192.168…` läuft die App im Browser; Android legt dann nur eine Verknüpfung an, das iPhone startet sie ohne Offline-Funktion. Für HTTPS Tasklog hinter einen Reverse Proxy mit Zertifikat stellen (z. B. Nginx Proxy Manager, Caddy, Traefik oder ein Cloudflare-Tunnel) und `PUBLIC_URL` auf die `https://`-Adresse setzen.
+
+Admins kommen über **Mehr → Admin-Oberfläche** zur Verwaltung, alle anderen sehen nur die App.
+
 ## Entwicklung
 
 Voraussetzung: Node.js 22 und eine PostgreSQL-Datenbank.
@@ -27,7 +43,7 @@ cd server
 npm install
 DATABASE_URL=postgres://tasklog:tasklog@localhost:5432/tasklog AUTH_MODE=dev SEED_DEMO=true npm run dev
 
-# Admin-UI (Port 5173, leitet /api und /auth an den Server weiter)
+# App unter http://localhost:5173/, Admin unter /admin (leitet /api und /auth an den Server weiter)
 cd admin
 npm install
 npm run dev

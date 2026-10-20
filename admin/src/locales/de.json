@@ -354,7 +354,8 @@
   },
   "account": {
     "logout": "Abmelden",
-    "notAdmin": "Du bist kein Admin: Du kannst alles ansehen, aber nur Tickets und Zeiten ändern."
+    "notAdmin": "Du bist kein Admin: Du kannst alles ansehen, aber nur Tickets und Zeiten ändern.",
+    "toApp": "Zur App"
   },
   "due": {
     "today": "Heute",
@@ -414,5 +415,83 @@
     "noEvents": "Keine Termine in den nächsten 60 Tagen.",
     "types": "Abfallarten",
     "typesHint": "Ausgeschaltete Arten bekommen keine Tickets; offene Tickets dieser Art werden entfernt."
+  },
+  "app": {
+    "tagline": "Aufgaben und Zeit – bei der Arbeit und zuhause an einem Ort.",
+    "navigation": "Navigation",
+    "tab": {
+      "today": "Heute",
+      "tickets": "Tickets",
+      "new": "Neu",
+      "time": "Zeit",
+      "more": "Mehr"
+    },
+    "startTimer": "Timer starten",
+    "stopTimer": "Timer stoppen",
+    "login": {
+      "provider": "OIDC-Provider",
+      "button": "Mit SSO anmelden",
+      "hint": "Anmeldung via OpenID Connect (Authorization Code + PKCE).",
+      "devHint": "Entwicklungsmodus: Anmeldung ohne Passwort."
+    },
+    "today": {
+      "hello": "Hallo {{name}}",
+      "tracked": "Heute erfasst",
+      "running": "läuft …",
+      "nothingTracked": "Noch nichts erfasst",
+      "due": "Heute fällig",
+      "allTickets": "Alle Tickets",
+      "nothingDue": "Für heute ist nichts fällig.",
+      "fromHa": "Automatisch von Home Assistant",
+      "fromHaText": "{{title}} – Ticket erstellt {{time}}"
+    },
+    "detail": {
+      "noDescription": "Keine Beschreibung.",
+      "due": "Fällig: {{when}}",
+      "tracked": "Erfasste Zeit",
+      "trackedRunning": "Läuft · gesamt {{total}}",
+      "history": "Verlauf",
+      "delete": "Ticket löschen",
+      "deleteConfirm": "Ticket wirklich löschen?"
+    },
+    "history": {
+      "created": "Ticket erstellt",
+      "createdByHa": "Ticket von Home Assistant erstellt",
+      "timerStarted": "Timer gestartet {{user}}",
+      "timerStopped": "Timer gestoppt ({{minutes}} min)",
+      "timeAdded": "+{{minutes}} min nachgetragen {{user}}",
+      "done": "Erledigt"
+    },
+    "new": {
+      "title": "Neues Ticket",
+      "what": "Titel",
+      "placeholder": "Was ist zu tun?",
+      "description": "Beschreibung",
+      "optional": "Optional",
+      "create": "Ticket anlegen",
+      "createAndStart": "Anlegen und starten"
+    },
+    "time": {
+      "thisWeek": "Diese Woche · {{total}}",
+      "chartLabel": "Erfasste Zeit pro Tag dieser Woche",
+      "top": "Meiste Zeit",
+      "nothing": "Diese Woche noch keine Zeit erfasst."
+    },
+    "more": {
+      "title": "Mehr",
+      "account": "Konto · OIDC",
+      "issuer": "Angemeldet über {{issuer}}",
+      "devMode": "Entwicklungsmodus (ohne OIDC)",
+      "ha": "Home Assistant · automatische Tickets",
+      "haOnline": "Verbunden",
+      "haMissing": "Nicht eingerichtet",
+      "noRules": "Noch keine Regeln.",
+      "areas": "Bereiche",
+      "admin": "Admin-Oberfläche",
+      "monitor": "Tagesmonitor öffnen"
+    },
+    "areas": {
+      "week": "{{time}} diese Woche"
+    }
   }
 }

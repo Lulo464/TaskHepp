@@ -6,9 +6,15 @@ export class ApiError extends Error {
   }
 }
 
-function redirectToLogin() {
+export function redirectToLogin() {
   const returnTo = window.location.pathname + window.location.search + window.location.hash;
   window.location.href = `/auth/login?returnTo=${encodeURIComponent(returnTo)}`;
+}
+
+/** What happens on 401. The admin UI goes straight to the login; the app shows its own login screen. */
+let onUnauthorized: () => void = redirectToLogin;
+export function setOnUnauthorized(handler: () => void) {
+  onUnauthorized = handler;
 }
 
 /** JSON (or text) request against the Tasklog API. A 401 sends the browser to the login. */
@@ -20,7 +26,7 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
     body: init.body === undefined ? undefined : JSON.stringify(init.body),
   });
   if (res.status === 401 && !init.noLoginRedirect) {
-    redirectToLogin();
+    onUnauthorized();
     throw new ApiError(401, 'Nicht angemeldet');
   }
   if (!res.ok) {
@@ -94,6 +100,11 @@ export function useAction() {
       invalidate();
     }
   }, [invalidate, setError]);
+}
+
+/** Reload all data, e.g. when the app comes back to the foreground. */
+export function useRefresh() {
+  return useApiState().invalidate;
 }
 
 export function useApiError() {

@@ -22,7 +22,7 @@ export async function startTimer(db: Queryable, ticketId: number, userId: number
 
 export async function addManualTime(db: Queryable, ticketId: number, userId: number | null, minutes: number) {
   await db.query(
-    'INSERT INTO time_entries (ticket_id, user_id, started_at, ended_at) VALUES ($1, $2, now() - make_interval(mins => $3), now())',
+    'INSERT INTO time_entries (ticket_id, user_id, started_at, ended_at, manual) VALUES ($1, $2, now() - make_interval(mins => $3), now(), true)',
     [ticketId, userId, minutes],
   );
 }

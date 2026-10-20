@@ -17,6 +17,7 @@ export interface Me {
 export interface Ticket {
   id: number;
   title: string;
+  description: string;
   status: TicketStatus;
   prio: Prio;
   due: string | null;
@@ -29,6 +30,8 @@ export interface Ticket {
   assignee: string | null;
   minutes: number;
   running: boolean;
+  createdAt: string;
+  doneAt: string | null;
 }
 
 export interface Area {
@@ -195,4 +198,29 @@ export interface CalendarEventPreview {
   ticketId: number | null;
   ticketStatus: TicketStatus | null;
   createFrom: string;
+}
+
+export interface RunningTimer {
+  id: number;
+  ticketId: number;
+  title: string;
+  startedAt: string;
+}
+
+export interface HistoryEvent {
+  at: string;
+  kind: 'created' | 'createdByHa' | 'timerStarted' | 'timerStopped' | 'timeAdded' | 'done';
+  user?: string | null;
+  minutes?: number;
+}
+
+export interface MyTime {
+  today: { total: number; byArea: { name: string; icon: string; minutes: number }[] };
+  week: { total: number; days: { date: string; minutes: number }[]; byArea: { name: string; icon: string; minutes: number }[] };
+  top: { id: number; title: string; minutes: number }[];
+}
+
+export interface AuthInfo {
+  mode: 'oidc' | 'dev';
+  issuer: string | null;
 }

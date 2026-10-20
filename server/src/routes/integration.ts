@@ -83,7 +83,7 @@ export function integrationRoutes(app: FastifyInstance, ctx: AppContext) {
   });
 
   // — connection —
-  app.get('/api/ha', async () => {
+  app.get('/api/ha', { config: { access: 'admin' } }, async () => {
     const s = await settings.get();
     return { url: s.ha.url, hasToken: Boolean(s.ha.token), webhookUrl: webhookUrl(config.PUBLIC_URL, s.webhookId), enforceSignature: s.enforceSignature };
   });
