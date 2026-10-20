@@ -1,0 +1,150 @@
+/* Tasklog app (PWA). Values follow design/Ticket App.dc.html and design/Ticket App Screens.dc.html. */
+
+html, body, #root { height: 100%; }
+body { background: var(--color-bg); overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+
+.pwa {
+  height: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column;
+  font-family: var(--font-body); color: var(--color-text); background: var(--color-bg);
+  padding-top: env(safe-area-inset-top);
+}
+@media (min-width: 560px) {
+  .pwa { border-left: 1px solid var(--color-neutral-800); border-right: 1px solid var(--color-neutral-800); }
+}
+.pwa-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.pwa-screen { padding: 12px 20px 24px; }
+.pwa-ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.pwa-num { font-variant-numeric: tabular-nums; }
+
+.pwa-splash { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--color-accent); background: var(--color-bg); }
+
+/* — type — */
+.pwa-h1 { font-size: 26px; font-weight: 500; margin: 4px 0 14px; letter-spacing: -.01em; line-height: 1.2; }
+.pwa-date { font-size: 13px; color: var(--color-neutral-400); }
+.pwa-kicker { font-size: 12px; color: var(--color-neutral-400); margin: 20px 0 8px; text-transform: uppercase; }
+.pwa-label { font-size: 12px; color: var(--color-neutral-400); }
+.pwa-empty { font-size: 14px; color: var(--color-neutral-400); padding: 14px 0; }
+.pwa-section-head { display: flex; justify-content: space-between; align-items: baseline; margin: 24px 0 8px; font-size: 14px; font-weight: 500; }
+.pwa-section-head a { font-size: 12px; font-weight: 400; color: var(--color-accent); text-decoration: none; }
+
+/* — login — */
+.pwa-login {
+  height: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column;
+  padding: calc(48px + env(safe-area-inset-top)) 28px calc(32px + env(safe-area-inset-bottom));
+  font-family: var(--font-body); color: var(--color-text);
+  background: radial-gradient(ellipse at 20% 0%, var(--color-accent-900), transparent 60%), var(--color-bg);
+}
+.pwa-logo {
+  width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--color-accent); color: var(--color-accent);
+  display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 0 24px var(--color-accent-800);
+}
+.pwa-login-title { font-size: 34px; font-weight: 500; margin: 28px 0 8px; letter-spacing: -.02em; }
+.pwa-login-text { color: var(--color-neutral-300); margin: 0; font-size: 15px; line-height: 1.5; max-width: 280px; }
+.pwa-login-hint { font-size: 12px; color: var(--color-neutral-400); margin: 14px 0 0; }
+
+/* — today — */
+.pwa-hero {
+  border: 1px solid var(--color-neutral-700); border-radius: 12px; padding: 16px;
+  background: linear-gradient(160deg, var(--color-accent-900), var(--color-neutral-800) 70%);
+}
+.pwa-hero-top { font-size: 12px; color: var(--color-neutral-300); display: flex; justify-content: space-between; }
+.pwa-hero-value { font-size: 40px; font-weight: 500; margin: 6px 0 2px; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.pwa-hero-areas { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--color-neutral-300); }
+.pwa-ha-card {
+  margin-top: 22px; border: 1px dashed var(--color-neutral-600); border-radius: 12px; padding: 14px;
+  display: flex; gap: 12px; align-items: flex-start; cursor: pointer;
+}
+.pwa-ha-card > i { font-size: 22px; color: var(--color-accent); }
+.pwa-ha-title { font-size: 13px; font-weight: 500; }
+.pwa-ha-text { font-size: 12px; color: var(--color-neutral-300); margin-top: 4px; line-height: 1.4; }
+
+/* — ticket rows — */
+.pwa-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; cursor: pointer; border-bottom: 1px solid var(--color-neutral-800); min-height: 52px; }
+.pwa-row:focus-visible, .pwa-ha-card:focus-visible, .pwa-top-row:focus-visible, .pwa-mini:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.pwa-row .dot { width: 8px; height: 8px; }
+.pwa-row-title { font-size: 14px; }
+.pwa-row-meta { font-size: 12px; color: var(--color-neutral-400); margin-top: 2px; }
+.pwa-row .btn-icon { width: 44px; height: 44px; font-size: 20px; flex: none; }
+
+.pwa-search { margin-bottom: 10px; }
+.pwa-chips { display: flex; gap: 8px; margin-bottom: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.pwa-chips::-webkit-scrollbar { display: none; }
+.pwa-chip {
+  font: inherit; font-size: 13px; padding: 6px 14px; border-radius: 999px; cursor: pointer; white-space: nowrap; flex: none;
+  color: var(--color-neutral-300); background: transparent; border: 1px solid var(--color-neutral-700);
+}
+.pwa-chip.is-active { color: var(--color-text); background: var(--color-accent-800); border-color: var(--color-accent); }
+.pwa-chip:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+/* — detail — */
+.pwa-back { margin-left: -12px; text-decoration: none; }
+.pwa-detail-title { font-size: 24px; margin: 0 0 10px; line-height: 1.25; }
+.pwa-desc { font-size: 14px; line-height: 1.5; color: var(--color-neutral-300); margin: 0 0 18px; white-space: pre-wrap; }
+.pwa-seg { display: flex; margin-bottom: 20px; }
+.pwa-seg .seg-btn { padding: 10px 12px; }
+.pwa-seg .seg-btn:disabled { opacity: 1; cursor: default; }
+.pwa-time-card { border: 1px solid var(--color-neutral-700); border-radius: 12px; padding: 16px; background: var(--color-neutral-800); }
+.pwa-time-value { font-size: 36px; font-weight: 500; margin: 4px 0 14px; line-height: 1.2; }
+.pwa-time-card .btn-block { margin-top: 0; height: 44px; }
+.pwa-add-time { margin-top: 10px; flex-wrap: nowrap; gap: 8px; }
+.pwa-add-time .btn { flex: 1; height: 40px; }
+.pwa-history { font-size: 13px; color: var(--color-neutral-300); line-height: 1.8; }
+.pwa-history .pwa-num { color: var(--color-neutral-400); margin-right: 6px; }
+.pwa-delete { margin-top: 24px; margin-left: -6px; }
+
+/* — time — */
+.pwa-bars { display: flex; align-items: flex-end; gap: 10px; height: 150px; margin: 22px 0 8px; }
+.pwa-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 6px; font-size: 12px; color: var(--color-neutral-400); }
+.pwa-bar-col .is-today { color: var(--color-text); }
+.pwa-bar { width: 100%; min-height: 3px; border-radius: 6px; background: var(--color-neutral-700); transition: height .2s; }
+.pwa-bar.is-today { background: var(--color-accent); }
+.pwa-area-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 20px; }
+.pwa-area-card { padding: 14px; gap: 0; }
+.pwa-area-value { font-size: 22px; margin-top: 4px; }
+.pwa-top-row { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--color-neutral-800); font-size: 14px; cursor: pointer; }
+
+/* — more / areas — */
+.pwa-card { padding: 14px; gap: 10px; }
+.pwa-account { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+.pwa-avatar { width: 38px; height: 38px; font-weight: 500; }
+.pwa-rule {
+  all: unset; box-sizing: border-box; width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding-top: 12px; border-top: 1px solid var(--color-neutral-800); cursor: pointer;
+}
+.pwa-rule:disabled { cursor: default; }
+.pwa-rule:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.pwa-rule-name { display: block; font-size: 14px; }
+.pwa-rule .pwa-row-meta { display: block; }
+.pwa-area-icon { font-size: 24px; }
+.pwa-area-name { font-size: 17px; }
+.pwa-project { display: flex; justify-content: space-between; padding: 10px 0 0; border-top: 1px solid var(--color-neutral-800); font-size: 14px; }
+a.btn { text-decoration: none; }
+
+/* — mini player + tabs — */
+.pwa-mini {
+  margin: 0 12px 8px; padding: 6px 6px 6px 12px; border-radius: 12px; border: 1px solid var(--color-accent);
+  background: var(--color-accent-900); display: flex; align-items: center; gap: 12px; cursor: pointer;
+  box-shadow: 0 0 20px var(--color-accent-900); font-size: 13px; flex: none;
+}
+.pwa-mini .dot { width: 8px; height: 8px; }
+.pwa-mini .pwa-num { font-size: 14px; }
+.pwa-tabs {
+  flex: none; display: flex; justify-content: space-around; align-items: flex-start;
+  padding: 8px 0 calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--color-neutral-800); background: var(--color-bg);
+}
+.pwa-tab {
+  display: flex; flex-direction: column; align-items: center; gap: 3px; width: 64px; padding: 4px 0;
+  font-size: 11px; color: var(--color-neutral-400); text-decoration: none; border-radius: var(--radius-md);
+}
+.pwa-tab i { font-size: 24px; }
+.pwa-tab.is-active { color: var(--color-accent); }
+.pwa-tab:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+.pwa-toast {
+  position: fixed; top: calc(10px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 10;
+  width: min(480px, calc(100% - 24px)); display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer;
+  border: 1px solid var(--color-accent); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--shadow-md); font-size: 14px;
+}
+.pwa-toast > i:first-child { color: var(--color-accent); }
+
+textarea.input { min-height: 80px; }

@@ -129,6 +129,12 @@ export function registerAuthRoutes(app: FastifyInstance, ctx: AppContext) {
     return { ok: true };
   });
 
+  /** For the login screen: how sign-in works here. */
+  app.get('/api/auth/info', { config: { access: 'public' } }, async () => ({
+    mode: config.AUTH_MODE,
+    issuer: config.AUTH_MODE === 'oidc' ? config.OIDC_ISSUER ?? null : null,
+  }));
+
   app.get('/api/me', async req => {
     const p = req.principal!;
     return p.kind === 'user'

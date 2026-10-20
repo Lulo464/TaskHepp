@@ -232,3 +232,46 @@ describe('configuration and backup', () => {
     expect((await call('POST', '/api/tickets', cookie, { title: 'Neue ID', areaId: 1 })).statusCode).toBe(201);
   });
 });
+
+describe('app endpoints', () => {
+  // Earlier tests restore a backup, which ends all sessions: sign in afresh.
+  let member: string;
+  beforeAll(async () => { member = await t.login('member'); });
+
+  it('stores a description and makes the creator the assignee', async () => {
+    const me = (await call('GET', '/api/me', member)).json();
+    const res = await call('POST', '/api/tickets', member, { title: 'Mit Beschreibung', description: 'Flur, Küche', areaId: 1 });
+    expect(res.json()).toMatchObject({ description: 'Flur, Küche', assigneeId: me.id });
+  });
+
+  it('returns a ticket history', async () => {
+    const ticket = (await call('POST', '/api/tickets', member, { title: 'Verlauf', areaId: 1 })).json();
+    await call('POST', `/api/tickets/${ticket.id}/time`, member, { minutes: 20 });
+    const history = (await call('GET', `/api/tickets/${ticket.id}/history`, member)).json();
+    expect(history.map((h: { kind: string }) => h.kind)).toEqual(['created', 'timeAdded']);
+    expect(history[1].minutes).toBe(20);
+    await call('POST', `/api/tickets/${ticket.id}/timer`, member, {});
+    await call('POST', '/api/timer/stop', member, {});
+    const after = (await call('GET', `/api/tickets/${ticket.id}/history`, member)).json();
+    expect(after.map((h: { kind: string }) => h.kind)).toEqual(['created', 'timeAdded', 'timerStarted', 'timerStopped']);
+  });
+
+  it('sums the own time for today and the week', async () => {
+    const cookie = await t.login('member');
+    const ticket = (await call('POST', '/api/tickets', cookie, { title: 'Meine Zeit', areaId: 2 })).json();
+    await call('POST', `/api/tickets/${ticket.id}/time`, cookie, { minutes: 30 });
+    const time = (await call('GET', '/api/me/time', cookie)).json();
+    expect(time.today).toEqual({ total: 30, byArea: [{ name: 'Zuhause', icon: 'house', minutes: 30 }] });
+    expect(time.week.days).toHaveLength(7);
+    expect(time.week.total).toBe(30);
+    expect(time.top[0]).toMatchObject({ title: 'Meine Zeit', minutes: 30 });
+  });
+
+  it('tells the login screen how sign-in works, without a session', async () => {
+    expect((await call('GET', '/api/auth/info')).json()).toEqual({ mode: 'dev', issuer: null });
+  });
+
+  it('keeps the HA connection details for admins', async () => {
+    expect((await call('GET', '/api/ha', member)).statusCode).toBe(403);
+  });
+});

@@ -13,6 +13,7 @@ const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 const ticketInput = z.object({
   title: z.string().trim().min(1).max(200),
+  description: z.string().trim().max(4000).optional(),
   areaId: z.number().int(),
   projectId: z.number().int().nullable().optional(),
   status: status.optional(),
@@ -59,7 +60,8 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
 
   app.post('/api/tickets', { config: { access: 'member' } }, async (req, reply) => {
     const body = parse(ticketInput, req.body);
-    const id = await createTicket(db, body);
+    // Tickets created by a person are theirs unless assigned otherwise.
+    const id = await createTicket(db, { ...body, assigneeId: body.assigneeId === undefined ? userId(req) : body.assigneeId });
     publisher.schedule();
     reply.code(201);
     return getTicket(db, id);
@@ -68,7 +70,7 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
   app.patch('/api/tickets/:id', { config: { access: 'member' } }, async req => {
     const { id } = parse(idParam, req.params);
     const body = parse(ticketInput.partial(), req.body);
-    const cols: Record<string, string> = { title: 'title', areaId: 'area_id', projectId: 'project_id', prio: 'prio', assigneeId: 'assignee_id', due: 'due_date', source: 'source' };
+    const cols: Record<string, string> = { title: 'title', description: 'description', areaId: 'area_id', projectId: 'project_id', prio: 'prio', assigneeId: 'assignee_id', due: 'due_date', source: 'source' };
     await withTransaction(db, async c => {
       const sets: string[] = [];
       const params: unknown[] = [id];
@@ -104,6 +106,69 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
     });
     publisher.schedule();
     return { affected };
+  });
+
+  /** What happened to a ticket: creation, timers, manual time, completion. Newest last. */
+  app.get('/api/tickets/:id/history', async req => {
+    const { id } = parse(idParam, req.params);
+    const ticket = await getTicket(db, id);
+    if (!ticket) throw notFound('Ticket nicht gefunden');
+    const { rows: entries } = await db.query<{ startedAt: string; endedAt: string | null; user: string | null; manual: boolean }>(
+      `SELECT e.started_at AS "startedAt", e.ended_at AS "endedAt", u.name AS "user", e.manual
+         FROM time_entries e LEFT JOIN users u ON u.id = e.user_id WHERE e.ticket_id = $1 ORDER BY e.started_at`,
+      [id],
+    );
+    const events: { at: string; kind: string; user?: string | null; minutes?: number }[] = [
+      { at: ticket.createdAt, kind: ticket.source === 'ha' ? 'createdByHa' : 'created' },
+    ];
+    const minutes = (e: { startedAt: string; endedAt: string | null }) => Math.round((Date.parse(e.endedAt!) - Date.parse(e.startedAt)) / 60000);
+    for (const e of entries) {
+      if (e.manual) {
+        events.push({ at: e.endedAt!, kind: 'timeAdded', user: e.user, minutes: minutes(e) });
+        continue;
+      }
+      events.push({ at: e.startedAt, kind: 'timerStarted', user: e.user });
+      if (e.endedAt) events.push({ at: e.endedAt, kind: 'timerStopped', user: e.user, minutes: minutes(e) });
+    }
+    if (ticket.doneAt) events.push({ at: ticket.doneAt, kind: 'done' });
+    return events.sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
+  });
+
+  /** The signed-in user's own tracked time: today, this week per day, per area, and the top tickets. */
+  app.get('/api/me/time', async req => {
+    const uid = userId(req);
+    // Minutes of entry e inside [from, from + span), running timers counted up to now.
+    const clipped = (from: string, span: string) =>
+      `GREATEST(extract(epoch FROM (LEAST(COALESCE(e.ended_at, now()), now(), ${from} + interval '${span}') - GREATEST(e.started_at, ${from}))), 0) / 60`;
+    const mine = 'e.user_id IS NOT DISTINCT FROM $1';
+    const week = "date_trunc('week', now())";
+    const today = "date_trunc('day', now())";
+
+    const { rows: days } = await db.query<{ date: string; minutes: number }>(
+      `SELECT d::date::text AS date,
+              COALESCE((SELECT round(sum(${clipped('d', '1 day')}))::int FROM time_entries e WHERE ${mine}), 0) AS minutes
+         FROM generate_series(${week}, ${week} + interval '6 days', interval '1 day') d ORDER BY d`,
+      [uid],
+    );
+    const perArea = async (from: string, span: string) => (await db.query<{ name: string; icon: string; minutes: number }>(
+      `SELECT a.name, a.icon, round(sum(${clipped(from, span)}))::int AS minutes
+         FROM time_entries e JOIN tickets t ON t.id = e.ticket_id JOIN areas a ON a.id = t.area_id
+        WHERE ${mine} GROUP BY a.id ORDER BY a.position, a.id`,
+      [uid],
+    )).rows.filter(r => r.minutes > 0);
+    const { rows: top } = await db.query<{ id: number; title: string; minutes: number }>(
+      `SELECT t.id, t.title, round(sum(${clipped(week, '7 days')}))::int AS minutes
+         FROM time_entries e JOIN tickets t ON t.id = e.ticket_id
+        WHERE ${mine} GROUP BY t.id ORDER BY 3 DESC, t.id LIMIT 5`,
+      [uid],
+    );
+
+    const todayAreas = await perArea(today, '1 day');
+    return {
+      today: { total: todayAreas.reduce((s, r) => s + r.minutes, 0), byArea: todayAreas },
+      week: { total: days.reduce((s, d) => s + d.minutes, 0), days, byArea: await perArea(week, '7 days') },
+      top: top.filter(r => r.minutes > 0),
+    };
   });
 
   // — time tracking —
