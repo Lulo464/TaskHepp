@@ -7,6 +7,7 @@ import { HttpError, parse } from '../lib/http.js';
 import { safeEqual } from '../lib/crypto.js';
 import type { Settings } from '../services/settings.js';
 import { listRules } from './rules.js';
+import { OVERDUE_SQL } from '../services/tickets.js';
 
 const { version } = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')) as { version: string };
 
@@ -39,11 +40,11 @@ async function monitorData(ctx: AppContext, s: Settings) {
             (SELECT COALESCE(round(sum(extract(epoch FROM (COALESCE(ended_at, now()) - GREATEST(started_at, date_trunc('day', now()))))) / 60), 0)::int
                FROM time_entries WHERE COALESCE(ended_at, now()) > date_trunc('day', now())) AS "todayMinutes"`,
   );
-  const { rows: today } = await db.query<{ id: number; title: string; prio: string; area: string; overdue: boolean }>(
-    `SELECT t.id, t.title, t.prio, a.name AS area, t.due_date < current_date AS overdue
+  const { rows: today } = await db.query<{ id: number; title: string; prio: string; area: string; overdue: boolean; dueTime: string | null }>(
+    `SELECT t.id, t.title, t.prio, a.name AS area, ${OVERDUE_SQL} AS overdue, to_char(t.due_time, 'HH24:MI') AS "dueTime"
        FROM tickets t JOIN areas a ON a.id = t.area_id
       WHERE t.status <> 'done' AND t.due_date <= current_date
-      ORDER BY t.due_date < current_date DESC, t.prio = 'high' DESC, t.id`,
+      ORDER BY t.due_date < current_date DESC, t.due_time NULLS LAST, t.prio = 'high' DESC, t.id`,
   );
 
   // Sensor values for the entities the rules watch.

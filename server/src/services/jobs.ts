@@ -30,7 +30,7 @@ function daily(at: string, run: Job): Job {
 
 const remindedEntries = new Set<number>();
 
-const jobs: Record<string, Job> = {
+export const jobs: Record<string, Job> = {
   publishEntities: async ctx => {
     await ctx.publisher.publishAll();
   },
@@ -73,9 +73,24 @@ const jobs: Record<string, Job> = {
     if (rows.length) await ctx.notifier.notify('dailyDigest', `Heute: ${rows.length} Ticket${rows.length === 1 ? '' : 's'}`, rows.map(r => `• ${r.title}`).join('\n'));
   }),
 
+  /** Tickets with a time: one reminder an hour before. */
+  dueSoon: async ctx => {
+    const { rows } = await ctx.db.query<{ id: number; title: string; at: string }>(
+      `SELECT id, title, to_char(due_time, 'HH24:MI') AS at FROM tickets
+        WHERE status <> 'done' AND due_time IS NOT NULL AND due_notified_at IS NULL
+          AND due_date + due_time > localtimestamp AND due_date + due_time <= localtimestamp + interval '60 minutes'
+        ORDER BY due_date + due_time`,
+    );
+    for (const r of rows) {
+      await ctx.db.query('UPDATE tickets SET due_notified_at = now() WHERE id = $1', [r.id]);
+      await ctx.notifier.notify('dueSoon', `Um ${r.at} fällig`, r.title);
+    }
+  },
+
+  /** Tickets without a time: in the morning. */
   dueToday: daily('09:00', async ctx => {
     const { rows } = await ctx.db.query<{ title: string }>(
-      "SELECT title FROM tickets WHERE status <> 'done' AND due_date = current_date ORDER BY prio = 'high' DESC, id LIMIT 10",
+      "SELECT title FROM tickets WHERE status <> 'done' AND due_date = current_date AND due_time IS NULL ORDER BY prio = 'high' DESC, id LIMIT 10",
     );
     if (rows.length) await ctx.notifier.notify('dueSoon', 'Heute fällig', rows.map(r => `• ${r.title}`).join('\n'));
   }),

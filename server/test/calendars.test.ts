@@ -129,3 +129,13 @@ describe('ticketTitle', () => {
     expect(ticketTitle('{title} am {date} rausstellen', 'Papier', '2026-11-03')).toBe('Papier am 03.11. rausstellen');
   });
 });
+
+describe('calendar due time', () => {
+  it('gives the calendar tickets a time of day', async () => {
+    const [source] = (await call('GET', '/api/calendars')).json();
+    await call('PATCH', `/api/calendars/${source.id}`, { dueTime: '19:00' });
+    const open = (await call('GET', '/api/tickets?q=rausstellen&open=true')).json();
+    expect(open.length).toBeGreaterThan(0);
+    expect(open.every((x: { dueTime: string }) => x.dueTime === '19:00')).toBe(true);
+  });
+});

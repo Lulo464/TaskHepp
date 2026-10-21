@@ -10,6 +10,8 @@ export interface TicketRow {
   status: TicketStatus;
   prio: Prio;
   due: string | null;
+  /** 'HH:MM' or null for the whole day. */
+  dueTime: string | null;
   source: 'manual' | 'app' | 'ha';
   ruleId: number | null;
   areaId: number;
@@ -25,7 +27,7 @@ export interface TicketRow {
 }
 
 export const TICKET_SELECT = `
-  SELECT t.id, t.title, t.description, t.status, t.prio, t.due_date AS due, t.source, t.rule_id AS "ruleId",
+  SELECT t.id, t.title, t.description, t.status, t.prio, t.due_date AS due, to_char(t.due_time, 'HH24:MI') AS "dueTime", t.source, t.rule_id AS "ruleId",
          t.area_id AS "areaId", a.name AS area, t.project_id AS "projectId", p.name AS project,
          t.assignee_id AS "assigneeId", u.name AS assignee,
          COALESCE(tm.minutes, 0)::int AS minutes, COALESCE(tm.running, false) AS running,
@@ -40,7 +42,7 @@ export const TICKET_SELECT = `
         FROM time_entries e WHERE e.ticket_id = t.id
     ) tm ON true`;
 
-export const TICKET_ORDER = `ORDER BY CASE t.status WHEN 'inProgress' THEN 0 WHEN 'open' THEN 1 ELSE 2 END, t.due_date NULLS LAST, t.prio = 'high' DESC, t.id`;
+export const TICKET_ORDER = `ORDER BY CASE t.status WHEN 'inProgress' THEN 0 WHEN 'open' THEN 1 ELSE 2 END, t.due_date NULLS LAST, t.due_time NULLS LAST, t.prio = 'high' DESC, t.id`;
 
 export async function getTicket(db: Queryable, id: number): Promise<TicketRow | null> {
   const { rows } = await db.query<TicketRow>(`${TICKET_SELECT} WHERE t.id = $1`, [id]);
@@ -56,15 +58,16 @@ export interface NewTicket {
   prio?: Prio;
   assigneeId?: number | null;
   due?: string | null;
+  dueTime?: string | null;
   source?: 'manual' | 'app' | 'ha';
   ruleId?: number | null;
 }
 
 export async function createTicket(db: Queryable, t: NewTicket): Promise<number> {
   const { rows } = await db.query<{ id: number }>(
-    `INSERT INTO tickets (title, area_id, project_id, status, prio, assignee_id, due_date, source, rule_id, description, done_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CASE WHEN $4 = 'done' THEN now() END) RETURNING id`,
-    [t.title, t.areaId, t.projectId ?? null, t.status ?? 'open', t.prio ?? 'normal', t.assigneeId ?? null, t.due ?? null, t.source ?? 'manual', t.ruleId ?? null, t.description ?? ''],
+    `INSERT INTO tickets (title, area_id, project_id, status, prio, assignee_id, due_date, source, rule_id, description, due_time, done_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CASE WHEN $4 = 'done' THEN now() END) RETURNING id`,
+    [t.title, t.areaId, t.projectId ?? null, t.status ?? 'open', t.prio ?? 'normal', t.assigneeId ?? null, t.due ?? null, t.source ?? 'manual', t.ruleId ?? null, t.description ?? '', t.dueTime ?? null],
   );
   return rows[0].id;
 }
@@ -80,3 +83,6 @@ export async function setStatus(db: Queryable, ids: number[], status: TicketStat
   if (status === 'done') await db.query('UPDATE time_entries SET ended_at = now() WHERE ended_at IS NULL AND ticket_id = ANY($1::int[])', [ids]);
   return rowCount ?? 0;
 }
+
+/** SQL condition: ticket `t` is past its due date, or due today and past its time. */
+export const OVERDUE_SQL = "(t.due_date < current_date OR (t.due_date = current_date AND t.due_time < localtime))";

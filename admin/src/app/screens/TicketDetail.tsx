@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Icon, Loading } from '../../components/ui';
 import { del, patch, post, useAction, useApi } from '../../lib/api';
-import { formatDue, formatMinutes, formatTime } from '../../lib/format';
+import { formatDue, formatMinutes, formatTime, isOverdue } from '../../lib/format';
 import type { HistoryEvent, Ticket, TicketStatus } from '../../lib/types';
 import { href, navigate } from '../router';
 import { clock, useNow, type Timers } from '../timer';
@@ -20,6 +20,7 @@ export function TicketDetail({ id, timers, canEdit }: { id: number; timers: Time
 
   const addTime = (minutes: number) => act(() => post(`/api/tickets/${id}/time`, { minutes }));
   const setStatus = (status: TicketStatus) => act(() => patch(`/api/tickets/${id}`, { status }));
+  const setDue = (body: { due?: string | null; dueTime?: string | null }) => act(() => patch(`/api/tickets/${id}`, body));
   const remove = () => window.confirm(t('app.detail.deleteConfirm')) && act(async () => {
     await del(`/api/tickets/${id}`);
     navigate({ name: 'tickets' }, true);
@@ -37,7 +38,18 @@ export function TicketDetail({ id, timers, canEdit }: { id: number; timers: Time
       </div>
       <h1 className="pwa-h1 pwa-detail-title">{ticket.title}</h1>
       <p className="pwa-desc">{ticket.description || t('app.detail.noDescription')}</p>
-      {ticket.due && <p className="pwa-row-meta" style={{ margin: '-10px 0 18px' }}><Icon name="calendar-blank" /> {t('app.detail.due', { when: formatDue(ticket.due) })}{ticket.assignee ? ` · ${ticket.assignee}` : ''}</p>}
+      {canEdit ? (
+        <div className="pwa-due-edit">
+          <Icon name="calendar-blank" />
+          <input className="input" type="date" aria-label={t('tickets.col.due')} value={ticket.due ?? ''} onChange={e => setDue({ due: e.target.value || null, ...(e.target.value ? {} : { dueTime: null }) })} />
+          <input className="input" type="time" aria-label={t('app.new.time')} key={ticket.dueTime ?? ''} defaultValue={ticket.dueTime ?? ''} disabled={!ticket.due}
+            onBlur={e => (e.target.value || null) !== ticket.dueTime && setDue({ dueTime: e.target.value || null })} />
+          {isOverdue(ticket.due, ticket.dueTime) && <span className="tag tag-outline">{t('due.overdue')}</span>}
+        </div>
+      ) : ticket.due && (
+        <p className="pwa-row-meta" style={{ margin: '-10px 0 18px' }}><Icon name="calendar-blank" /> {t('app.detail.due', { when: formatDue(ticket.due, ticket.dueTime) })}</p>
+      )}
+      {ticket.assignee && <p className="pwa-row-meta" style={{ margin: '-10px 0 18px' }}><Icon name="user" /> {ticket.assignee}</p>}
 
       <div className="seg pwa-seg" role="radiogroup" aria-label={t('tickets.col.status')}>
         {STATUSES.map(s => (

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../components/ui';
-import { formatDue, formatMinutes } from '../../lib/format';
+import { formatDue, formatMinutes, isOverdue } from '../../lib/format';
 import type { Ticket } from '../../lib/types';
 import { navigate } from '../router';
 import type { Timers } from '../timer';
@@ -9,13 +9,14 @@ const dotColor = (t: Ticket) =>
   t.status === 'done' ? 'var(--color-neutral-600)' : t.status === 'inProgress' ? 'var(--color-accent)' : 'var(--color-neutral-400)';
 
 /** One ticket with status dot, meta line and play/pause. */
-export function TicketRow({ ticket, timers, canEdit, showStatus, showDue }: { ticket: Ticket; timers: Timers; canEdit: boolean; showStatus?: boolean; showDue?: boolean }) {
+export function TicketRow({ ticket, timers, canEdit, showStatus, showDue, showTime }: { ticket: Ticket; timers: Timers; canEdit: boolean; showStatus?: boolean; showDue?: boolean; showTime?: boolean }) {
   const { t } = useTranslation();
   const running = Boolean(timers.runningFor(ticket.id));
   const meta = [
     ticket.area,
     showStatus && t(`status.${ticket.status}`),
-    showDue && ticket.due && formatDue(ticket.due),
+    showDue && ticket.due && formatDue(ticket.due, ticket.dueTime),
+    showTime && (isOverdue(ticket.due, ticket.dueTime) ? t('due.overdue') : ticket.dueTime),
     formatMinutes(ticket.minutes),
   ].filter(Boolean).join(' · ');
 

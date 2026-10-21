@@ -13,18 +13,28 @@ const dayDiff = (iso: string) => {
   return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())) / 86400000);
 };
 
-/** Due date as "Heute", "Morgen", "Sa", "überfällig" … */
-export function formatDue(iso: string | null): string {
+/** Due date as "Heute", "Morgen 19:00", "Sa", "Überfällig" … */
+export function formatDue(iso: string | null, time?: string | null): string {
   if (!iso) return '–';
   const diff = dayDiff(iso);
-  if (diff < 0) return i18n.t('due.overdue');
-  if (diff === 0) return i18n.t('due.today');
-  if (diff === 1) return i18n.t('due.tomorrow');
+  if (diff < 0 || (diff === 0 && time && time < nowHHMM())) return i18n.t('due.overdue');
+  const at = time ? ` ${time}` : '';
+  if (diff === 0) return i18n.t('due.today') + at;
+  if (diff === 1) return i18n.t('due.tomorrow') + at;
   const [y, m, d] = iso.split('-').map(Number);
   const date = new Date(y, m - 1, d);
-  return diff < 7
+  return (diff < 7
     ? date.toLocaleDateString(i18n.language, { weekday: 'short' }).replace('.', '')
-    : date.toLocaleDateString(i18n.language, { day: '2-digit', month: '2-digit' });
+    : date.toLocaleDateString(i18n.language, { day: '2-digit', month: '2-digit' })) + at;
+}
+
+const nowHHMM = () => new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+
+/** Whether a ticket is past its due date (or today's due time). */
+export function isOverdue(iso: string | null, time?: string | null): boolean {
+  if (!iso) return false;
+  const diff = dayDiff(iso);
+  return diff < 0 || (diff === 0 && Boolean(time) && time! < nowHHMM());
 }
 
 /** "jetzt", "vor 12 min", "gestern", "vor 3 Tagen" */

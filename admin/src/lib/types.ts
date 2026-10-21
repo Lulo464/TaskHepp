@@ -21,6 +21,8 @@ export interface Ticket {
   status: TicketStatus;
   prio: Prio;
   due: string | null;
+  /** 'HH:MM', or null for the whole day. */
+  dueTime: string | null;
   source: 'manual' | 'app' | 'ha';
   areaId: number;
   area: string;
@@ -162,8 +164,8 @@ export interface MonitorData {
   openTickets: number;
   todayMinutes: number;
   timer: { title: string; area: string; source: string; startedAt: string; user: string | null } | null;
-  next: { id: number; title: string; area: string; prio: Prio; overdue: boolean }[];
-  later: { id: number; title: string; area: string; prio: Prio; overdue: boolean }[];
+  next: MonitorItem[];
+  later: MonitorItem[];
   sensors: { entity: string; state: string; unit?: string; name?: string }[];
 }
 
@@ -174,6 +176,7 @@ export interface CalendarSource {
   areaId: number;
   titleTemplate: string;
   leadDays: number;
+  dueTime: string | null;
   lookaheadDays: number;
   prio: Prio;
   autoClose: boolean;
@@ -194,6 +197,7 @@ export interface CalendarEventPreview {
   summary: string;
   ticketTitle: string;
   due: string;
+  dueTime: string | null;
   imported: boolean;
   ticketId: number | null;
   ticketStatus: TicketStatus | null;
@@ -223,4 +227,13 @@ export interface MyTime {
 export interface AuthInfo {
   mode: 'oidc' | 'dev';
   issuer: string | null;
+}
+
+export interface MonitorItem {
+  id: number;
+  title: string;
+  area: string;
+  prio: Prio;
+  overdue: boolean;
+  dueTime: string | null;
 }

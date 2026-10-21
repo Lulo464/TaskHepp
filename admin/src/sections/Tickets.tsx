@@ -86,7 +86,7 @@ export function Tickets() {
                   </td>
                   <td>{t(`prio.${x.prio}`)}</td>
                   <td>{firstName(x.assignee)}</td>
-                  <td>{formatDue(x.due)}</td>
+                  <td>{formatDue(x.due, x.dueTime)}</td>
                   <td className="right">{formatMinutes(x.minutes)}</td>
                 </tr>
               );

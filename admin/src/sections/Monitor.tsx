@@ -46,7 +46,7 @@ export function Monitor() {
           <div className="monitor-row"><span className="at"><Icon name="timer" /></span><span>{preview.timer.title}</span></div>
         )}
         {items.map(p => (
-          <div key={p.id} className="monitor-row"><span className="at">{p.overdue ? '!' : p.prio === 'high' ? '↑' : '·'}</span><span>{p.title}</span></div>
+          <div key={p.id} className="monitor-row"><span className="at">{p.overdue ? '!' : p.dueTime ?? (p.prio === 'high' ? '↑' : '·')}</span><span>{p.title}</span></div>
         ))}
         {preview && items.length === 0 && <div className="muted">{t('monitor.nothingToday')}</div>}
       </div>

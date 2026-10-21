@@ -14,6 +14,7 @@ export const webhookBodySchema = z.object({
   area: z.string().optional(),
   prio: z.enum(['normal', 'high']).optional(),
   due: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  dueTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
 }).refine(b => b.rule !== undefined || b.title, { message: '„rule“ oder „title“ fehlt' });
 
 export type WebhookBody = z.infer<typeof webhookBodySchema>;
@@ -51,7 +52,7 @@ export class WebhookProcessor {
     );
     if (!rows[0]) throw new Error('Es gibt noch keinen Bereich für neue Tickets');
     const title = body.title!;
-    const ticketId = await createTicket(this.db, { title, areaId: rows[0].id, prio: body.prio, due: body.due ?? null, source: 'ha' });
+    const ticketId = await createTicket(this.db, { title, areaId: rows[0].id, prio: body.prio, due: body.due ?? null, dueTime: body.dueTime ?? null, source: 'ha' });
     if (!replay) await this.log.add('in', `Ticket „${title}“ erstellt`, 'done', { kind: 'webhook', body });
     await this.notifier.notify('haCreated', 'Neues Ticket von Home Assistant', title);
     return { result: 'created', ticketId };
