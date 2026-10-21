@@ -10,6 +10,7 @@ import { addManualTime, startTimer, stopEntries } from '../services/time.js';
 const status = z.enum(['open', 'inProgress', 'done']);
 const prio = z.enum(['normal', 'high']);
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Uhrzeit im Format HH:MM');
 
 const ticketInput = z.object({
   title: z.string().trim().min(1).max(200),
@@ -20,6 +21,7 @@ const ticketInput = z.object({
   prio: prio.optional(),
   assigneeId: z.number().int().nullable().optional(),
   due: date.nullable().optional(),
+  dueTime: hhmm.nullable().optional(),
   source: z.enum(['manual', 'app']).optional(),
 });
 
@@ -70,7 +72,7 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
   app.patch('/api/tickets/:id', { config: { access: 'member' } }, async req => {
     const { id } = parse(idParam, req.params);
     const body = parse(ticketInput.partial(), req.body);
-    const cols: Record<string, string> = { title: 'title', description: 'description', areaId: 'area_id', projectId: 'project_id', prio: 'prio', assigneeId: 'assignee_id', due: 'due_date', source: 'source' };
+    const cols: Record<string, string> = { title: 'title', description: 'description', areaId: 'area_id', projectId: 'project_id', prio: 'prio', assigneeId: 'assignee_id', due: 'due_date', dueTime: 'due_time', source: 'source' };
     await withTransaction(db, async c => {
       const sets: string[] = [];
       const params: unknown[] = [id];
@@ -80,6 +82,8 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
           sets.push(`${col} = $${params.length}`);
         }
       }
+      // A new due date/time gets its own "due soon" reminder.
+      if ('due' in body || 'dueTime' in body) sets.push('due_notified_at = NULL');
       if (sets.length) {
         const { rowCount } = await c.query(`UPDATE tickets SET ${sets.join(', ')}, updated_at = now() WHERE id = $1`, params);
         if (!rowCount) throw notFound('Ticket nicht gefunden');

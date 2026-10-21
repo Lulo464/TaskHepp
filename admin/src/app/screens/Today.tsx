@@ -15,7 +15,9 @@ export function Today({ me, timers, canEdit }: { me: Me; timers: Timers; canEdit
   const time = useApi<MyTime>('/api/me/time');
   const today = isoToday();
 
-  const due = tickets?.filter(x => x.due && x.due <= today) ?? [];
+  // Overdue days first, then by time of day; tickets without a time after the timed ones.
+  const due = (tickets?.filter(x => x.due && x.due <= today) ?? [])
+    .sort((a, b) => a.due!.localeCompare(b.due!) || (a.dueTime ?? '99').localeCompare(b.dueTime ?? '99'));
   // Newest ticket Home Assistant created today, as in the design's HA card.
   const fromHa = tickets?.filter(x => x.source === 'ha' && new Date(x.createdAt).toLocaleDateString('sv-SE') >= today).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
 
@@ -40,7 +42,7 @@ export function Today({ me, timers, canEdit }: { me: Me; timers: Timers; canEdit
         <span>{t('app.today.due')}</span>
         <a href={href({ name: 'tickets' })}>{t('app.today.allTickets')}</a>
       </div>
-      {!tickets ? <Loading /> : due.map(x => <TicketRow key={x.id} ticket={x} timers={timers} canEdit={canEdit} />)}
+      {!tickets ? <Loading /> : due.map(x => <TicketRow key={x.id} ticket={x} timers={timers} canEdit={canEdit} showTime />)}
       {tickets && due.length === 0 && <div className="pwa-empty">{t('app.today.nothingDue')}</div>}
 
       {fromHa && (

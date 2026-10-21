@@ -65,6 +65,9 @@ export async function seedDemo(db: Db): Promise<boolean> {
       }
     }
 
+    await c.query("UPDATE tickets SET due_time = '15:30' WHERE title = 'Sprint-Review vorbereiten'");
+    await c.query("UPDATE tickets SET due_time = '17:00' WHERE title = 'Steuererklärung 2025 abgeben'");
+
     const log = (minutesAgo: number, dir: string, message: string, status: string, payload: unknown = null) =>
       c.query('INSERT INTO event_log (at, direction, message, status, payload) VALUES (now() - make_interval(mins => $1), $2, $3, $4, $5)', [minutesAgo, dir, message, status, payload && JSON.stringify(payload)]);
     await log(400, 'out', 'sensor.tasklog_next_due: Zeitüberschreitung', 'error', { kind: 'state', entityId: 'sensor.tasklog_next_due', state: 'Sprint-Review vorbereiten', attributes: {} });

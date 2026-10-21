@@ -11,6 +11,7 @@ const sourceInput = z.object({
   areaId: z.number().int(),
   titleTemplate: z.string().trim().min(1).max(200),
   leadDays: z.number().int().min(0).max(14),
+  dueTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Uhrzeit im Format HH:MM').nullable(),
   lookaheadDays: z.number().int().min(1).max(90),
   prio: z.enum(['normal', 'high']),
   autoClose: z.boolean(),
@@ -19,7 +20,7 @@ const sourceInput = z.object({
 });
 
 const COLUMNS: Record<keyof z.infer<typeof sourceInput>, string> = {
-  entityId: 'entity_id', name: 'name', areaId: 'area_id', titleTemplate: 'title_template', leadDays: 'lead_days',
+  entityId: 'entity_id', name: 'name', areaId: 'area_id', titleTemplate: 'title_template', leadDays: 'lead_days', dueTime: 'due_time',
   lookaheadDays: 'lookahead_days', prio: 'prio', autoClose: 'auto_close', enabled: 'enabled', excludedTypes: 'excluded_types',
 };
 
@@ -49,7 +50,7 @@ export function calendarRoutes(app: FastifyInstance, ctx: AppContext) {
   app.get('/api/calendars', async () => (await db.query<CalendarSource>(`${SOURCE_SELECT} ORDER BY name`)).rows);
 
   app.post('/api/calendars', async (req, reply) => {
-    const body = parse(sourceInput.extend({ excludedTypes: sourceInput.shape.excludedTypes.default([]) }), req.body);
+    const body = parse(sourceInput.extend({ excludedTypes: sourceInput.shape.excludedTypes.default([]), dueTime: sourceInput.shape.dueTime.default(null) }), req.body);
     const keys = Object.keys(COLUMNS) as (keyof typeof COLUMNS)[];
     try {
       const { rows } = await db.query<{ id: number }>(
@@ -78,7 +79,7 @@ export function calendarRoutes(app: FastifyInstance, ctx: AppContext) {
       if (!rowCount) throw notFound('Kalender nicht gefunden');
     }
     const source = await getSource(id);
-    if (keys.some(k => k === 'titleTemplate' || k === 'leadDays' || k === 'areaId' || k === 'prio' || k === 'excludedTypes')) await reapplySource(ctx, source);
+    if (keys.some(k => k === 'titleTemplate' || k === 'leadDays' || k === 'dueTime' || k === 'areaId' || k === 'prio' || k === 'excludedTypes')) await reapplySource(ctx, source);
     // A type switched back on gets its tickets right away.
     if (keys.includes('excludedTypes') && source.enabled) await syncSource(ctx, source).catch(() => {});
     return getSource(id);

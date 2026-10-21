@@ -89,7 +89,7 @@ export function MonitorDisplay() {
             <div className="ms-kicker">{t('display.next')}</div>
             {data.next.map(x => (
               <div key={x.id} className="ms-item">
-                <div className="ms-item-at accent">{x.overdue ? t('due.overdue') : x.prio === 'high' ? t('prio.high') : t('due.today')}</div>
+                <div className="ms-item-at accent">{x.overdue ? t('due.overdue') : x.dueTime ?? (x.prio === 'high' ? t('prio.high') : t('due.today'))}</div>
                 <div className="ms-item-title">{x.title}</div>
                 <div className="ms-item-area">{x.area}</div>
               </div>
@@ -102,6 +102,7 @@ export function MonitorDisplay() {
             <div className="ms-kicker">{t('display.later')}</div>
             {data.later.map(x => (
               <div key={x.id} className="ms-item">
+                {x.dueTime && <div className="ms-item-at">{x.dueTime}</div>}
                 <div className="ms-item-title soft">{x.title}</div>
                 <div className="ms-item-area">{x.area}</div>
               </div>

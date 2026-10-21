@@ -14,6 +14,7 @@ export function NewTicket({ timers }: { timers: Timers }) {
   const [description, setDescription] = useState('');
   const [areaId, setAreaId] = useState<number | null>(null);
   const [due, setDue] = useState(() => new Date().toLocaleDateString('sv-SE'));
+  const [dueTime, setDueTime] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => { if (areas?.length && areaId === null) setAreaId(areas[0].id); }, [areas, areaId]);
@@ -23,7 +24,7 @@ export function NewTicket({ timers }: { timers: Timers }) {
   const create = async (start: boolean) => {
     if (!title.trim() || areaId === null || busy) return;
     setBusy(true);
-    const ticket = await act(() => post<Ticket>('/api/tickets', { title: title.trim(), description: description.trim(), areaId, due: due || null, source: 'app' }));
+    const ticket = await act(() => post<Ticket>('/api/tickets', { title: title.trim(), description: description.trim(), areaId, due: due || null, dueTime: due && dueTime ? dueTime : null, source: 'app' }));
     setBusy(false);
     if (!ticket) return;
     if (start) await timers.start(ticket.id);
@@ -44,9 +45,14 @@ export function NewTicket({ timers }: { timers: Timers }) {
             <Seg options={areas.map(a => ({ value: a.id, label: a.name }))} value={areaId ?? areas[0].id} onChange={setAreaId} label={t('rules.area')} />
           </div>
         )}
-        <Field label={t('tickets.col.due')}>
-          <input className="input" type="date" value={due} onChange={e => setDue(e.target.value)} />
-        </Field>
+        <div className="pwa-due-grid">
+          <Field label={t('tickets.col.due')}>
+            <input className="input" type="date" value={due} onChange={e => setDue(e.target.value)} />
+          </Field>
+          <Field label={t('app.new.time')}>
+            <input className="input" type="time" value={dueTime} disabled={!due} onChange={e => setDueTime(e.target.value)} />
+          </Field>
+        </div>
         <Field label={t('app.new.description')}>
           <textarea className="input" rows={3} placeholder={t('app.new.optional')} value={description} onChange={e => setDescription(e.target.value)} />
         </Field>

@@ -1,4 +1,5 @@
 import type { Queryable } from '../db.js';
+import { OVERDUE_SQL } from './tickets.js';
 
 export interface EntityState {
   state: string;
@@ -30,16 +31,16 @@ export const entityCalculators: Record<string, Calculator> = {
     return { state: rows[0] ? 'on' : 'off', attributes: { friendly_name: 'Tasklog Timer läuft', icon: 'mdi:timer-play-outline', ticket: rows[0]?.title ?? null } };
   },
   'binary_sensor.tasklog_overdue': async db => {
-    const { rows } = await db.query<{ n: number }>("SELECT count(*)::int AS n FROM tickets WHERE status <> 'done' AND due_date < current_date");
+    const { rows } = await db.query<{ n: number }>(`SELECT count(*)::int AS n FROM tickets t WHERE status <> 'done' AND ${OVERDUE_SQL}`);
     return { state: rows[0].n > 0 ? 'on' : 'off', attributes: { friendly_name: 'Tasklog überfällige Tickets', icon: 'mdi:alert-circle-outline', count: rows[0].n } };
   },
   'sensor.tasklog_next_due': async db => {
-    const { rows } = await db.query<{ title: string; due: string }>(
-      `SELECT title, due_date AS due FROM tickets
+    const { rows } = await db.query<{ title: string; due: string; dueTime: string | null }>(
+      `SELECT title, due_date AS due, to_char(due_time, 'HH24:MI') AS "dueTime" FROM tickets
         WHERE status <> 'done' AND due_date >= current_date
-        ORDER BY due_date, prio = 'high' DESC, id LIMIT 1`,
+        ORDER BY due_date, due_time NULLS LAST, prio = 'high' DESC, id LIMIT 1`,
     );
-    return { state: rows[0]?.title.slice(0, 250) ?? 'keins', attributes: { friendly_name: 'Tasklog nächstes Ticket', icon: 'mdi:calendar-clock', due: rows[0]?.due ?? null } };
+    return { state: rows[0]?.title.slice(0, 250) ?? 'keins', attributes: { friendly_name: 'Tasklog nächstes Ticket', icon: 'mdi:calendar-clock', due: rows[0]?.due ?? null, due_time: rows[0]?.dueTime ?? null } };
   },
 };
 

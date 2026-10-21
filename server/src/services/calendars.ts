@@ -10,6 +10,8 @@ export interface CalendarSource {
   areaId: number;
   titleTemplate: string;
   leadDays: number;
+  /** 'HH:MM' for the created tickets, or null for the whole day. */
+  dueTime: string | null;
   lookaheadDays: number;
   prio: 'normal' | 'high';
   autoClose: boolean;
@@ -22,7 +24,7 @@ export interface CalendarSource {
 
 export const SOURCE_SELECT = `
   SELECT id, entity_id AS "entityId", name, area_id AS "areaId", title_template AS "titleTemplate",
-         lead_days AS "leadDays", lookahead_days AS "lookaheadDays", prio, auto_close AS "autoClose",
+         lead_days AS "leadDays", to_char(due_time, 'HH24:MI') AS "dueTime", lookahead_days AS "lookaheadDays", prio, auto_close AS "autoClose",
          enabled, excluded_types AS "excludedTypes", last_sync_at AS "lastSyncAt", last_error AS "lastError"
     FROM calendar_sources`;
 
@@ -89,6 +91,7 @@ export async function syncSource(ctx: AppContext, source: CalendarSource): Promi
           areaId: source.areaId,
           prio: source.prio,
           due: due < t ? t : due,
+          dueTime: source.dueTime,
           source: 'ha',
         });
         await c.query('UPDATE calendar_imports SET ticket_id = $3 WHERE source_id = $1 AND event_key = $2', [source.id, `${e.date}|${e.summary}`, ticketId]);
@@ -141,8 +144,8 @@ export async function reapplySource(ctx: AppContext, source: CalendarSource): Pr
     }
     const due = addDays(r.eventDate, -source.leadDays);
     await ctx.db.query(
-      'UPDATE tickets SET title = $2, due_date = $3, area_id = $4, prio = $5, updated_at = now() WHERE id = $1',
-      [r.ticketId, ticketTitle(source.titleTemplate, summary, r.eventDate), due < t ? t : due, source.areaId, source.prio],
+      'UPDATE tickets SET title = $2, due_date = $3, area_id = $4, prio = $5, due_time = $6, due_notified_at = NULL, updated_at = now() WHERE id = $1',
+      [r.ticketId, ticketTitle(source.titleTemplate, summary, r.eventDate), due < t ? t : due, source.areaId, source.prio, source.dueTime],
     );
   }
   if (rows.length) ctx.publisher.schedule();
@@ -167,6 +170,7 @@ export async function previewSource(ctx: AppContext, source: CalendarSource, lim
       summary: e.summary,
       ticketTitle: ticketTitle(source.titleTemplate, e.summary, e.date),
       due: (d => (d < t ? t : d))(addDays(e.date, -source.leadDays)),
+      dueTime: source.dueTime,
       imported: Boolean(imp),
       ticketId: imp?.ticketId ?? null,
       ticketStatus: imp?.status ?? null,

@@ -275,3 +275,47 @@ describe('app endpoints', () => {
     expect((await call('GET', '/api/ha', member)).statusCode).toBe(403);
   });
 });
+
+describe('due time', () => {
+  let member: string;
+  let admin2: string;
+  beforeAll(async () => {
+    member = await t.login('member');
+    admin2 = await t.login('admin');
+  });
+
+  it('stores an optional time and validates it', async () => {
+    const res = await call('POST', '/api/tickets', member, { title: 'Mit Uhrzeit', areaId: 1, due: '2030-05-01', dueTime: '19:00' });
+    expect(res.json()).toMatchObject({ due: '2030-05-01', dueTime: '19:00' });
+    expect((await call('PATCH', `/api/tickets/${res.json().id}`, member, { dueTime: null })).json().dueTime).toBeNull();
+    expect((await call('POST', '/api/tickets', member, { title: 'Falsch', areaId: 1, dueTime: '25:00' })).statusCode).toBe(400);
+  });
+
+  it('counts a ticket as overdue once its time today has passed', async () => {
+    await t.db.query("UPDATE tickets SET status = 'done'");
+    const ticket = (await call('POST', '/api/tickets', member, { title: 'Heute früh', areaId: 1 })).json();
+    await t.db.query("UPDATE tickets SET due_date = current_date, due_time = '00:00' WHERE id = $1", [ticket.id]);
+    const preview = (await call('GET', '/api/entities/preview', admin2)).json();
+    expect(preview['binary_sensor.tasklog_overdue'].state).toBe('on');
+    await t.db.query("UPDATE tickets SET due_date = current_date + 1 WHERE id = $1", [ticket.id]);
+    expect((await call('GET', '/api/entities/preview', admin2)).json()['binary_sensor.tasklog_overdue'].state).toBe('off');
+  });
+
+  it('reminds once, an hour before the due time', async () => {
+    const { jobs } = await import('../src/services/jobs.js');
+    const { fakeHomeAssistant } = await import('./helpers.js');
+    const ha = await fakeHomeAssistant();
+    await call('PATCH', '/api/settings', admin2, { ha: { url: ha.url, token: 'ha-token' }, channel: 'haNotify', quietFrom: '00:00', quietTo: '00:00', notifications: { dueSoon: true } });
+    const ticket = (await call('POST', '/api/tickets', member, { title: 'Bald fällig', areaId: 1 })).json();
+    await t.db.query(
+      "UPDATE tickets SET due_date = (localtimestamp + interval '30 minutes')::date, due_time = (localtimestamp + interval '30 minutes')::time WHERE id = $1",
+      [ticket.id],
+    );
+    await jobs.dueSoon(t.ctx, new Date());
+    await jobs.dueSoon(t.ctx, new Date());
+    const notes = ha.calls.filter(c => c.path === '/api/services/notify/notify');
+    expect(notes).toHaveLength(1);
+    expect(notes[0].body).toMatchObject({ message: 'Bald fällig' });
+    await ha.close();
+  });
+});

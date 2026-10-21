@@ -127,6 +127,11 @@ export function Calendars() {
               value={selected.leadDays}
               onChange={leadDays => save({ leadDays })}
             />
+            <Field label={t('calendars.time')}>
+              <input className="input" type="time" style={{ maxWidth: 160 }} defaultValue={selected.dueTime ?? ''} key={`${selected.id}-${selected.dueTime}`}
+                onBlur={e => (e.target.value || null) !== selected.dueTime && save({ dueTime: e.target.value || null })} />
+            </Field>
+            <div className="field-hint" style={{ marginTop: -8 }}>{t('calendars.timeHint')}</div>
             <LabeledSeg
               title={t('calendars.lookahead')}
               options={[7, 14, 30].map(n => ({ value: n, label: t('calendars.days', { n }) }))}
@@ -170,7 +175,7 @@ export function Calendars() {
               {!events ? <div className="list-row"><Loading /></div> : events.map(e => (
                 <div key={`${e.date}|${e.summary}`} className="list-row">
                   <span className="accent" style={{ width: 90, flex: 'none' }}>{formatDay(e.date, i18n.language)}</span>
-                  <span className="grow">{e.summary}<div className="user-mail">{e.ticketTitle} · {t('calendars.dueOn', { date: formatDay(e.due, i18n.language) })}</div></span>
+                  <span className="grow">{e.summary}<div className="user-mail">{e.ticketTitle} · {t('calendars.dueOn', { date: formatDay(e.due, i18n.language) + (e.dueTime ? ` ${e.dueTime}` : '') })}</div></span>
                   {e.imported
                     ? <span className={`tag ${e.ticketStatus ? ticketTag[e.ticketStatus] : 'tag-neutral'}`}>{e.ticketStatus ? t(`status.${e.ticketStatus}`) : t('calendars.ticketDeleted')}</span>
                     : <span className="tag tag-neutral">{t('calendars.createdFrom', { date: formatDay(e.createFrom, i18n.language) })}</span>}

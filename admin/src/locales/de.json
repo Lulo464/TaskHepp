@@ -222,7 +222,7 @@
   "notify": {
     "dueSoon": {
       "title": "Push bei Fälligkeit",
-      "desc": "Eine Stunde vor dem Termin"
+      "desc": "Eine Stunde vor der Uhrzeit – ohne Uhrzeit morgens um 9:00"
     },
     "haCreated": {
       "title": "Von Home Assistant erstellte Tickets",
@@ -414,7 +414,9 @@
     "ticketDeleted": "Ticket gelöscht",
     "noEvents": "Keine Termine in den nächsten 60 Tagen.",
     "types": "Abfallarten",
-    "typesHint": "Ausgeschaltete Arten bekommen keine Tickets; offene Tickets dieser Art werden entfernt."
+    "typesHint": "Ausgeschaltete Arten bekommen keine Tickets; offene Tickets dieser Art werden entfernt.",
+    "time": "Uhrzeit (optional)",
+    "timeHint": "Leer = ganzer Tag. Mit Uhrzeit, z. B. 19:00, kommt die Erinnerung eine Stunde vorher."
   },
   "app": {
     "tagline": "Aufgaben und Zeit – bei der Arbeit und zuhause an einem Ort.",
@@ -469,7 +471,8 @@
       "description": "Beschreibung",
       "optional": "Optional",
       "create": "Ticket anlegen",
-      "createAndStart": "Anlegen und starten"
+      "createAndStart": "Anlegen und starten",
+      "time": "Uhrzeit (optional)"
     },
     "time": {
       "thisWeek": "Diese Woche · {{total}}",
