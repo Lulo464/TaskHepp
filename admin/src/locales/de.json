@@ -457,6 +457,13 @@
       "fromHa": "Automatisch von Home Assistant",
       "fromHaText": "{{title}} – Ticket erstellt {{time}}"
     },
+    "assignee": {
+      "label": "Zugewiesen an",
+      "nobody": "Niemand zugewiesen",
+      "me": "{{name}} (ich)",
+      "takeOver": "Übernehmen",
+      "mine": "Meine"
+    },
     "detail": {
       "noDescription": "Keine Beschreibung.",
       "due": "Fällig: {{when}}",
@@ -465,13 +472,6 @@
       "history": "Verlauf",
       "delete": "Ticket löschen",
       "deleteConfirm": "Ticket wirklich löschen?"
-    },
-    "assignee": {
-      "label": "Zugewiesen an",
-      "nobody": "Niemand zugewiesen",
-      "me": "{{name}} (ich)",
-      "takeOver": "Übernehmen",
-      "mine": "Meine"
     },
     "history": {
       "created": "Ticket erstellt",

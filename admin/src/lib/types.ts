@@ -213,12 +213,6 @@ export interface RunningTimer {
   startedAt: string;
 }
 
-/** Someone a ticket can be assigned to. */
-export interface Person {
-  id: number;
-  name: string;
-}
-
 export interface HistoryEvent {
   at: string;
   kind: 'created' | 'createdByHa' | 'createdByMail' | 'timerStarted' | 'timerStopped' | 'timeAdded' | 'done';
@@ -310,4 +304,10 @@ export interface MailImportEntry {
   result: 'created' | 'ignored' | 'nomatch' | 'error';
   rules: string[];
   ticketIds: number[];
+}
+
+/** Someone a ticket can be assigned to. */
+export interface Person {
+  id: number;
+  name: string;
 }
