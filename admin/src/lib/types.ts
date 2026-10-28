@@ -213,6 +213,14 @@ export interface RunningTimer {
   startedAt: string;
 }
 
+export interface TicketNote {
+  id: number;
+  body: string;
+  createdAt: string;
+  userId: number | null;
+  user: string | null;
+}
+
 export interface HistoryEvent {
   at: string;
   kind: 'created' | 'createdByHa' | 'createdByMail' | 'timerStarted' | 'timerStopped' | 'timeAdded' | 'done';

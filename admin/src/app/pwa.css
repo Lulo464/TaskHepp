@@ -91,6 +91,12 @@ body { background: var(--color-bg); overscroll-behavior: none; -webkit-tap-highl
 .pwa-add-time .btn { flex: 1; height: 40px; }
 .pwa-history { font-size: 13px; color: var(--color-neutral-300); line-height: 1.8; }
 .pwa-history .pwa-num { color: var(--color-neutral-400); margin-right: 6px; }
+.pwa-note { padding: 10px 0 12px; border-bottom: 1px solid var(--color-neutral-800); }
+.pwa-note-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; }
+.pwa-note-head .btn-icon { width: 36px; height: 36px; font-size: 16px; flex: none; }
+.pwa-note-body { font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pwa-note-form { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; margin: 12px 0 4px; }
+.pwa-note-form .input { width: 100%; min-height: 64px; }
 .pwa-delete { margin-top: 24px; margin-left: -6px; }
 
 /* — time — */

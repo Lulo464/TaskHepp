@@ -257,6 +257,29 @@ describe('app endpoints', () => {
   let member: string;
   beforeAll(async () => { member = await t.login('member'); });
 
+  it('lets members attach notes and delete their own', async () => {
+    const other = await t.login('member');
+    const boss = await t.login('admin');
+    const reader = await t.login('read');
+    const ticket = (await call('POST', '/api/tickets', member, { title: 'Mit Notizen', areaId: 1 })).json();
+    const url = `/api/tickets/${ticket.id}/notes`;
+
+    const note = await call('POST', url, member, { body: '  Ersatzteil bestellt, kommt Freitag.  ' });
+    expect(note.statusCode).toBe(201);
+    expect(note.json()).toMatchObject({ body: 'Ersatzteil bestellt, kommt Freitag.', user: expect.any(String) });
+    await call('POST', url, other, { body: 'Zweite Notiz' });
+    expect((await call('POST', url, member, { body: '   ' })).statusCode).toBe(400);
+    expect((await call('POST', url, reader, { body: 'x' })).statusCode).toBe(403);
+    expect((await call('POST', '/api/tickets/999999/notes', member, { body: 'x' })).statusCode).toBe(404);
+    expect((await call('GET', url, reader)).json().map((n: { body: string }) => n.body)).toEqual(['Ersatzteil bestellt, kommt Freitag.', 'Zweite Notiz']);
+
+    expect((await call('DELETE', `/api/notes/${note.json().id}`, other)).statusCode).toBe(403);
+    expect((await call('DELETE', `/api/notes/${note.json().id}`, member)).statusCode).toBe(204);
+    const second = (await call('GET', url, reader)).json()[0];
+    expect((await call('DELETE', `/api/notes/${second.id}`, boss)).statusCode).toBe(204);
+    expect((await call('GET', url, reader)).json()).toEqual([]);
+  });
+
   it('keeps each user\'s own area order and hidden areas', async () => {
     const reader = await t.login('read');
     expect((await call('GET', '/api/me/areas', reader)).json()).toEqual({ order: [], hidden: [] });

@@ -88,14 +88,14 @@ function Shell({ me }: { me: Me }) {
             <TicketList timers={timers} canEdit={canEdit} selectedId={route.name === 'ticket' ? route.id : undefined} />
             <div className="pwa-split-detail">
               {route.name === 'ticket'
-                ? <TicketDetail key={route.id} id={route.id} timers={timers} canEdit={canEdit} />
+                ? <TicketDetail key={route.id} id={route.id} me={me} timers={timers} canEdit={canEdit} />
                 : <div className="pwa-split-empty"><Icon name="cursor-click" /> {t('app.selectTicket')}</div>}
             </div>
           </div>
         ) : (
           <>
             {route.name === 'tickets' && <TicketList timers={timers} canEdit={canEdit} />}
-            {route.name === 'ticket' && <TicketDetail id={route.id} timers={timers} canEdit={canEdit} />}
+            {route.name === 'ticket' && <TicketDetail id={route.id} me={me} timers={timers} canEdit={canEdit} />}
           </>
         )}
         {route.name === 'new' && <NewTicket timers={timers} />}
