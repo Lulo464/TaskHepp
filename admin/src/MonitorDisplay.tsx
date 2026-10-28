@@ -4,10 +4,12 @@ import { Icon } from './components/ui';
 import { formatMinutes } from './lib/format';
 import type { MonitorData } from './lib/types';
 
-/** Full-screen day view for a wall display or browser tab: /monitor?t=<token>. No login needed. */
+/** Full-screen day view for a wall display or browser tab: /monitor?t=<token>[&area=<id>]. No login needed. */
 export function MonitorDisplay() {
   const { t, i18n } = useTranslation();
-  const token = new URLSearchParams(window.location.search).get('t') ?? '';
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('t') ?? '';
+  const area = params.get('area');
   const [data, setData] = useState<MonitorData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
@@ -16,7 +18,7 @@ export function MonitorDisplay() {
     let timer: number | undefined;
     const load = async () => {
       try {
-        const res = await fetch(`/api/monitor/public?t=${encodeURIComponent(token)}`);
+        const res = await fetch(`/api/monitor/public?t=${encodeURIComponent(token)}${area ? `&area=${encodeURIComponent(area)}` : ''}`);
         if (!res.ok) throw new Error((await res.json().catch(() => null))?.error ?? res.statusText);
         const d = (await res.json()) as MonitorData;
         setData(d);
@@ -29,7 +31,7 @@ export function MonitorDisplay() {
     };
     void load();
     return () => window.clearTimeout(timer);
-  }, [token]);
+  }, [token, area]);
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 1000);
@@ -44,10 +46,13 @@ export function MonitorDisplay() {
   return (
     <div className="monitor-screen">
       <div className="ms-head">
-        {data.widgets.clock && (
+        {(data.widgets.clock || data.area) && (
           <div>
+            {data.area && <div className="ms-area">{data.area}</div>}
+            {data.widgets.clock && <>
             <div className="ms-date">{now.toLocaleDateString(i18n.language, { weekday: 'long', day: 'numeric', month: 'long' })}</div>
             <div className="ms-clock">{now.toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })}</div>
+            </>}
           </div>
         )}
         <div className="ms-totals">

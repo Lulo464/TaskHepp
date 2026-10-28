@@ -224,6 +224,7 @@ button.tag:focus-visible { outline: 2px solid var(--color-accent); outline-offse
   background: radial-gradient(ellipse at 0% 0%, var(--color-accent-900), transparent 50%), var(--color-bg);
 }
 .ms-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+.ms-area { font-size: 13px; color: var(--color-accent); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
 .ms-date { font-size: 14px; color: var(--color-neutral-300); }
 .ms-clock { font-size: 72px; font-weight: 500; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
 .ms-totals { display: flex; gap: 40px; text-align: right; }

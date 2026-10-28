@@ -207,6 +207,25 @@ describe('Tasklog → Home Assistant', () => {
     const data = (await call('GET', `/api/monitor/public?t=${token}`)).json();
     expect(data).toHaveProperty('next');
     expect(data.interval).toBe(30);
+    expect(data.area).toBeNull();
+  });
+
+  it('filters the monitor by area', async () => {
+    const today = new Date().toLocaleDateString('sv-SE');
+    await call('POST', '/api/tickets', admin, { title: 'Monitor Arbeit', areaId: 1, due: today });
+    await call('POST', '/api/tickets', admin, { title: 'Monitor Zuhause', areaId: 2, due: today });
+    const token = new URL((await call('GET', '/api/system', admin)).json().monitorUrl).searchParams.get('t');
+    const titles = (d: { next: { title: string }[]; later: { title: string }[] }) => [...d.next, ...d.later].map(x => x.title);
+
+    const all = (await call('GET', `/api/monitor/public?t=${token}`)).json();
+    expect(titles(all)).toEqual(expect.arrayContaining(['Monitor Arbeit', 'Monitor Zuhause']));
+    const home = (await call('GET', `/api/monitor/public?t=${token}&area=2`)).json();
+    expect(home.area).toBeTruthy();
+    expect(titles(home)).toContain('Monitor Zuhause');
+    expect(titles(home)).not.toContain('Monitor Arbeit');
+    expect(home.openTickets).toBeLessThan(all.openTickets);
+    expect((await call('GET', `/api/monitor/public?t=${token}&area=999`)).statusCode).toBe(404);
+    expect((await call('GET', '/api/monitor?area=1', admin)).json().area).toBeTruthy();
   });
 });
 
