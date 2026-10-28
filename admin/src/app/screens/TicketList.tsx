@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon, Loading } from '../../components/ui';
 import { useApi } from '../../lib/api';
-import type { Area, Ticket } from '../../lib/types';
+import type { Ticket } from '../../lib/types';
+import { useMyAreas } from '../areas';
 import type { Timers } from '../timer';
 import { TicketRow } from './TicketRow';
 
@@ -11,18 +12,18 @@ type Filter = 'all' | 'ha' | 'mail' | 'done' | number;
 export function TicketList({ timers, canEdit }: { timers: Timers; canEdit: boolean }) {
   const { t } = useTranslation();
   const tickets = useApi<Ticket[]>('/api/tickets');
-  const areas = useApi<Area[]>('/api/areas');
+  const areas = useMyAreas();
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
 
   const chips: { value: Filter; label: React.ReactNode }[] = [
     { value: 'all', label: t('common.all') },
-    ...(areas ?? []).map(a => ({ value: a.id as Filter, label: a.name })),
+    ...(areas?.visible ?? []).map(a => ({ value: a.id as Filter, label: a.name })),
     { value: 'ha', label: <><Icon name="house-line" /> HA</> },
     { value: 'mail', label: <><Icon name="envelope-simple" /> Mail</> },
     { value: 'done', label: t('status.done') },
   ];
-  const rows = (tickets ?? []).filter(x =>
+  const rows = (tickets ?? []).filter(x => !areas?.isHidden(x.areaId) &&
     (filter === 'done' ? x.status === 'done' : x.status !== 'done') &&
     (filter === 'all' || filter === 'done' || (filter === 'ha' || filter === 'mail' ? x.source === filter : x.areaId === filter)) &&
     x.title.toLowerCase().includes(query.trim().toLowerCase()));

@@ -33,6 +33,8 @@ Danach startet Tasklog im Vollbild mit eigenem Icon, wie eine normale App.
 
 Admins kommen über **Mehr → Admin-Oberfläche** zur Verwaltung, alle anderen sehen nur die App.
 
+Unter **Mehr → Bereiche** sortiert jeder Benutzer die Bereiche für sich und blendet sie aus. Ausgeblendete Bereiche verschwinden aus Heute, Tickets und Neu. Die Einstellung gilt nur für diesen Benutzer, dafür aber auf allen seinen Geräten.
+
 ## Entwicklung
 
 Voraussetzung: Node.js 22 und eine PostgreSQL-Datenbank.

@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AppContext } from '../context.js';
+import { userId } from '../auth/plugin.js';
 import { HttpError, idParam, notFound, parse } from '../lib/http.js';
 
 const areaInput = z.object({
@@ -9,6 +10,8 @@ const areaInput = z.object({
   defaultPrio: z.enum(['normal', 'high']).optional(),
 });
 const projectInput = z.object({ name: z.string().trim().min(1).max(80) });
+const ids = z.array(z.number().int().positive()).max(200);
+const areaPrefsInput = z.object({ order: ids, hidden: ids });
 
 const isUniqueViolation = (err: unknown) => (err as { code?: string }).code === '23505';
 const isFkViolation = (err: unknown) => (err as { code?: string }).code === '23503';
@@ -99,5 +102,29 @@ export function areaRoutes(app: FastifyInstance, ctx: AppContext) {
     const { rowCount } = await db.query('DELETE FROM projects WHERE id = $1', [id]);
     if (!rowCount) throw notFound('Projekt nicht gefunden');
     return reply.code(204).send();
+  });
+
+  // — the signed-in user's own order and hidden areas in the app —
+  const ownUser = (req: Parameters<typeof userId>[0]) => {
+    const uid = userId(req);
+    if (uid === null) throw new HttpError(400, 'Nur für angemeldete Benutzer');
+    return uid;
+  };
+
+  app.get('/api/me/areas', async req => {
+    const { rows: [r] } = await db.query<{ order: number[]; hidden: number[] }>(
+      'SELECT area_order AS "order", hidden_areas AS hidden FROM users WHERE id = $1', [ownUser(req)],
+    );
+    return r ?? { order: [], hidden: [] };
+  });
+
+  app.put('/api/me/areas', { config: { access: 'read' } }, async req => {
+    const body = parse(areaPrefsInput, req.body);
+    const { rows: [r] } = await db.query<{ order: number[]; hidden: number[] }>(
+      `UPDATE users SET area_order = $2, hidden_areas = $3 WHERE id = $1
+       RETURNING area_order AS "order", hidden_areas AS hidden`,
+      [ownUser(req), [...new Set(body.order)], [...new Set(body.hidden)]],
+    );
+    return r;
   });
 }

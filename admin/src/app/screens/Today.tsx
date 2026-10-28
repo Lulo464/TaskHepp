@@ -5,6 +5,7 @@ import { firstName, formatMinutes, formatTime } from '../../lib/format';
 import type { Me, MyTime, Ticket } from '../../lib/types';
 import { href, navigate } from '../router';
 import type { Timers } from '../timer';
+import { useMyAreas } from '../areas';
 import { TicketRow } from './TicketRow';
 
 const isoToday = () => new Date().toLocaleDateString('sv-SE');
@@ -13,13 +14,14 @@ export function Today({ me, timers, canEdit }: { me: Me; timers: Timers; canEdit
   const { t, i18n } = useTranslation();
   const tickets = useApi<Ticket[]>('/api/tickets?open=true');
   const time = useApi<MyTime>('/api/me/time');
+  const areas = useMyAreas();
   const today = isoToday();
 
   // Overdue days first, then by time of day; tickets without a time after the timed ones.
-  const due = (tickets?.filter(x => x.due && x.due <= today) ?? [])
+  const due = (tickets?.filter(x => x.due && x.due <= today && !areas?.isHidden(x.areaId)) ?? [])
     .sort((a, b) => a.due!.localeCompare(b.due!) || (a.dueTime ?? '99').localeCompare(b.dueTime ?? '99'));
   // Newest ticket Home Assistant created today, as in the design's HA card.
-  const fromHa = tickets?.filter(x => x.source === 'ha' && new Date(x.createdAt).toLocaleDateString('sv-SE') >= today).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+  const fromHa = tickets?.filter(x => x.source === 'ha' && !areas?.isHidden(x.areaId) && new Date(x.createdAt).toLocaleDateString('sv-SE') >= today).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
 
   return (
     <div className="pwa-screen">

@@ -137,12 +137,17 @@ export function systemRoutes(app: FastifyInstance, ctx: AppContext) {
     await withTransaction(db, async c => {
       await c.query(`TRUNCATE ${[...BACKUP_TABLES, 'sessions'].join(', ')} RESTART IDENTITY CASCADE`);
       for (const table of BACKUP_TABLES) {
+        // json columns get their value as text; array columns (e.g. int[]) take the array as it is.
+        const { rows: jsonCols } = await c.query<{ name: string }>(
+          `SELECT column_name AS name FROM information_schema.columns WHERE table_name = $1 AND data_type IN ('json', 'jsonb')`, [table],
+        );
+        const isJson = new Set(jsonCols.map(r => r.name));
         for (const row of backup.data[table] ?? []) {
           const cols = Object.keys(row);
           if (!cols.every(col => /^[a-z_][a-z0-9_]*$/.test(col))) throw new HttpError(400, `Ungültige Spalte in ${table}`);
           await c.query(
             `INSERT INTO ${table} (${cols.join(', ')}) VALUES (${cols.map((_, i) => `$${i + 1}`).join(', ')})`,
-            cols.map(col => (row[col] !== null && typeof row[col] === 'object' ? JSON.stringify(row[col]) : row[col])),
+            cols.map(col => (row[col] !== null && typeof row[col] === 'object' && (isJson.has(col) || !Array.isArray(row[col])) ? JSON.stringify(row[col]) : row[col])),
           );
         }
         // Keep serial sequences ahead of the restored ids.
