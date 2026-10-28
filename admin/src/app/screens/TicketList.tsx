@@ -8,7 +8,7 @@ import { TicketRow } from './TicketRow';
 
 type Filter = 'all' | 'ha' | 'mail' | 'done' | number;
 
-export function TicketList({ timers, canEdit }: { timers: Timers; canEdit: boolean }) {
+export function TicketList({ timers, canEdit, selectedId }: { timers: Timers; canEdit: boolean; selectedId?: number }) {
   const { t } = useTranslation();
   const tickets = useApi<Ticket[]>('/api/tickets');
   const areas = useApi<Area[]>('/api/areas');
@@ -28,7 +28,7 @@ export function TicketList({ timers, canEdit }: { timers: Timers; canEdit: boole
     x.title.toLowerCase().includes(query.trim().toLowerCase()));
 
   return (
-    <div className="pwa-screen">
+    <div className="pwa-screen pwa-list">
       <h1 className="pwa-h1">{t('app.tab.tickets')}</h1>
       <input className="input pwa-search" type="search" placeholder={t('tickets.search')} value={query} onChange={e => setQuery(e.target.value)} aria-label={t('tickets.search')} />
       <div className="pwa-chips" role="tablist">
@@ -38,7 +38,7 @@ export function TicketList({ timers, canEdit }: { timers: Timers; canEdit: boole
           </button>
         ))}
       </div>
-      {!tickets ? <Loading /> : rows.map(x => <TicketRow key={x.id} ticket={x} timers={timers} canEdit={canEdit} showStatus showDue />)}
+      {!tickets ? <Loading /> : rows.map(x => <TicketRow key={x.id} ticket={x} timers={timers} canEdit={canEdit} showStatus showDue selected={x.id === selectedId} />)}
       {tickets && rows.length === 0 && <div className="pwa-empty">{t('tickets.empty')}</div>}
     </div>
   );

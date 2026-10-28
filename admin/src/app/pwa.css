@@ -8,7 +8,7 @@ body { background: var(--color-bg); overscroll-behavior: none; -webkit-tap-highl
   font-family: var(--font-body); color: var(--color-text); background: var(--color-bg);
   padding-top: env(safe-area-inset-top);
 }
-@media (min-width: 560px) {
+@media (min-width: 560px) and (max-width: 959px) {
   .pwa { border-left: 1px solid var(--color-neutral-800); border-right: 1px solid var(--color-neutral-800); }
 }
 .pwa-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -62,6 +62,7 @@ body { background: var(--color-bg); overscroll-behavior: none; -webkit-tap-highl
 .pwa-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; cursor: pointer; border-bottom: 1px solid var(--color-neutral-800); min-height: 52px; }
 .pwa-row:focus-visible, .pwa-ha-card:focus-visible, .pwa-top-row:focus-visible, .pwa-mini:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 .pwa-row .dot { width: 8px; height: 8px; }
+.pwa-row.is-selected { background: var(--color-accent-900); box-shadow: inset 2px 0 0 var(--color-accent); }
 .pwa-row-title { font-size: 14px; }
 .pwa-row-meta { font-size: 12px; color: var(--color-neutral-400); margin-top: 2px; }
 .pwa-row .btn-icon { width: 44px; height: 44px; font-size: 20px; flex: none; }
@@ -96,7 +97,7 @@ body { background: var(--color-bg); overscroll-behavior: none; -webkit-tap-highl
 .pwa-bars { display: flex; align-items: flex-end; gap: 10px; height: 150px; margin: 22px 0 8px; }
 .pwa-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 6px; font-size: 12px; color: var(--color-neutral-400); }
 .pwa-bar-col .is-today { color: var(--color-text); }
-.pwa-bar { width: 100%; min-height: 3px; border-radius: 6px; background: var(--color-neutral-700); transition: height .2s; }
+.pwa-bar { width: 100%; height: calc(var(--share, 0) * (100% - 40px)); min-height: 3px; border-radius: 6px; background: var(--color-neutral-700); transition: height .2s; }
 .pwa-bar.is-today { background: var(--color-accent); }
 .pwa-area-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 20px; }
 .pwa-area-card { padding: 14px; gap: 0; }
@@ -138,6 +139,7 @@ a.btn { text-decoration: none; }
 }
 .pwa-tab i { font-size: 24px; }
 .pwa-tab.is-active { color: var(--color-accent); }
+.pwa-brand { display: none; }
 .pwa-tab:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 
 .pwa-toast {
@@ -155,3 +157,61 @@ textarea.input { min-height: 80px; }
 .pwa-due-edit .input { min-height: 34px; padding: 4px 8px; font-size: 13px; width: auto; }
 .pwa-due-edit input[type='date'] { flex: 1.4; min-width: 0; }
 .pwa-due-edit input[type='time'] { flex: 1; min-width: 0; }
+
+/* — desktop: sidebar instead of tabs, wider pages, tickets as list + detail — */
+@media (min-width: 960px) {
+  .pwa {
+    max-width: none; display: grid; grid-template-columns: 232px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: 'nav content' 'nav mini';
+  }
+  .pwa-content { grid-area: content; }
+  .pwa-screen { max-width: 760px; margin: 0 auto; padding: 32px 40px 48px; }
+  .pwa-screen.pwa-wide { max-width: 1120px; }
+  .pwa-h1 { font-size: 30px; }
+
+  .pwa-tabs {
+    grid-area: nav; flex-direction: column; justify-content: flex-start; align-items: stretch; gap: 2px;
+    padding: 20px 12px; border-top: none; border-right: 1px solid var(--color-neutral-800);
+  }
+  .pwa-brand { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 500; padding: 0 10px 22px; }
+  .pwa-brand-logo {
+    width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--color-accent); color: var(--color-accent);
+    display: inline-flex; align-items: center; justify-content: center; font-size: 17px;
+  }
+  .pwa-tab { flex-direction: row; gap: 12px; width: auto; padding: 9px 12px; font-size: 14px; color: var(--color-neutral-300); }
+  .pwa-tab i { font-size: 20px; }
+  .pwa-tab:hover { background: var(--color-neutral-800); color: var(--color-text); }
+  .pwa-tab.is-active { background: var(--color-accent-900); color: var(--color-text); }
+  .pwa-tab.is-active i { color: var(--color-accent); }
+  .pwa-mini { grid-area: mini; width: min(720px, calc(100% - 80px)); margin: 0 auto 16px; }
+
+  .pwa-row:hover, .pwa-top-row:hover { background: var(--color-neutral-800); }
+  .pwa-row, .pwa-top-row { padding-left: 8px; padding-right: 4px; border-radius: 6px; }
+  .pwa-chips { flex-wrap: wrap; overflow: visible; }
+
+  /* Today: time and HA on the left, the due list on the right. */
+  .pwa-today { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(0, 1.6fr); grid-template-areas: 'hero due' 'ha due' 'rest due'; column-gap: 40px; align-items: start; }
+  .pwa-today .pwa-hero { grid-area: hero; }
+  .pwa-today .pwa-ha-card { grid-area: ha; }
+  .pwa-today-due { grid-area: due; grid-row: 1 / span 3; }
+  .pwa-today-due .pwa-section-head { margin-top: 0; }
+  .pwa-hero { padding: 22px; }
+  .pwa-hero-value { font-size: 48px; }
+
+  /* Tickets: list and detail side by side, each scrolls on its own. */
+  .pwa-split { display: grid; grid-template-columns: minmax(340px, 440px) minmax(0, 1fr); height: 100%; }
+  .pwa-split > .pwa-list { max-width: none; margin: 0; padding: 32px 24px; overflow-y: auto; border-right: 1px solid var(--color-neutral-800); }
+  .pwa-split-detail { overflow-y: auto; }
+  .pwa-split-detail .pwa-back { display: none; }
+  .pwa-split-detail .pwa-screen { padding-top: 40px; }
+  .pwa-split-empty { height: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--color-neutral-400); font-size: 14px; }
+
+  .pwa-bars { height: 220px; }
+
+  /* Login as a centred card. */
+  .pwa-login {
+    height: auto; max-width: 440px; margin: 12vh auto 0; border: 1px solid var(--color-neutral-700); border-radius: 16px;
+    padding: 40px 36px 32px; box-shadow: var(--shadow-md);
+  }
+  .pwa-login .grow { flex: none; height: 32px; }
+}

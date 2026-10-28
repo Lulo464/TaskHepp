@@ -15,8 +15,21 @@ import { Today } from './screens/Today';
 import { clock, useNow, useTimers } from './timer';
 
 const REFRESH_MS = 60_000;
+/** From this width the tabs become a sidebar and tickets show list and detail side by side (matches pwa.css). */
+const WIDE = '(min-width: 960px)';
 
-/** Mobile app after design/Ticket App.dc.html: tabs Heute · Tickets · Neu · Zeit · Mehr. */
+function useWide() {
+  const [wide, setWide] = useState(() => window.matchMedia(WIDE).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(WIDE);
+    const onChange = () => setWide(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  return wide;
+}
+
+/** App after design/Ticket App.dc.html: tabs Heute · Tickets · Neu · Zeit · Mehr; on wide screens a sidebar instead. */
 export function PwaApp() {
   const [me, setMe] = useState<Me | null | undefined>(undefined); // undefined = still checking
   useEffect(() => {
@@ -32,6 +45,7 @@ export function PwaApp() {
 function Shell({ me }: { me: Me }) {
   const { t } = useTranslation();
   const route = useRoute();
+  const wide = useWide();
   const timers = useTimers();
   const refresh = useRefresh();
   const { error, clear } = useApiError();
@@ -69,8 +83,21 @@ function Shell({ me }: { me: Me }) {
       )}
       <main className="pwa-content">
         {route.name === 'today' && <Today me={me} timers={timers} canEdit={canEdit} />}
-        {route.name === 'tickets' && <TicketList timers={timers} canEdit={canEdit} />}
-        {route.name === 'ticket' && <TicketDetail id={route.id} timers={timers} canEdit={canEdit} />}
+        {wide && (route.name === 'tickets' || route.name === 'ticket') ? (
+          <div className="pwa-split">
+            <TicketList timers={timers} canEdit={canEdit} selectedId={route.name === 'ticket' ? route.id : undefined} />
+            <div className="pwa-split-detail">
+              {route.name === 'ticket'
+                ? <TicketDetail key={route.id} id={route.id} timers={timers} canEdit={canEdit} />
+                : <div className="pwa-split-empty"><Icon name="cursor-click" /> {t('app.selectTicket')}</div>}
+            </div>
+          </div>
+        ) : (
+          <>
+            {route.name === 'tickets' && <TicketList timers={timers} canEdit={canEdit} />}
+            {route.name === 'ticket' && <TicketDetail id={route.id} timers={timers} canEdit={canEdit} />}
+          </>
+        )}
         {route.name === 'new' && <NewTicket timers={timers} />}
         {route.name === 'time' && <Time />}
         {route.name === 'more' && <More me={me} />}
@@ -89,6 +116,7 @@ function Shell({ me }: { me: Me }) {
       )}
 
       <nav className="pwa-tabs" aria-label={t('app.navigation')}>
+        <div className="pwa-brand"><span className="pwa-brand-logo"><Icon name="check-square-offset" /></span> {t('brand.name')}</div>
         {tabs.map(tab => (
           <a key={tab.label} href={href(tab.route)} className={`pwa-tab${tab.active ? ' is-active' : ''}`} aria-current={tab.active ? 'page' : undefined}>
             <Icon name={tab.icon} fill={tab.active} />

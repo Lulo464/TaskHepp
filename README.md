@@ -33,6 +33,8 @@ Danach startet Tasklog im Vollbild mit eigenem Icon, wie eine normale App.
 
 Admins kommen über **Mehr → Admin-Oberfläche** zur Verwaltung, alle anderen sehen nur die App.
 
+Auf dem Desktop (ab 960 px Breite) zeigt die App eine Seitenleiste statt der unteren Tabs. Tickets erscheinen dort als Liste mit dem gewählten Ticket daneben.
+
 ## Entwicklung
 
 Voraussetzung: Node.js 22 und eine PostgreSQL-Datenbank.

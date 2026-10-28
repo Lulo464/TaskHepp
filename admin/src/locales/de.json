@@ -430,6 +430,7 @@
   "app": {
     "tagline": "Aufgaben und Zeit – bei der Arbeit und zuhause an einem Ort.",
     "navigation": "Navigation",
+    "selectTicket": "Ticket links auswählen, um es hier zu sehen.",
     "tab": {
       "today": "Heute",
       "tickets": "Tickets",

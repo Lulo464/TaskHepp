@@ -5,8 +5,6 @@ import { formatMinutes } from '../../lib/format';
 import type { MyTime } from '../../lib/types';
 import { navigate } from '../router';
 
-const BAR_HEIGHT = 110;
-
 /** The own tracked time this week, after the design's "Zeit" tab. */
 export function Time() {
   const { t, i18n } = useTranslation();
@@ -27,7 +25,7 @@ export function Time() {
           const [y, m, day] = d.date.split('-').map(Number);
           return (
             <div key={d.date} className="pwa-bar-col" title={formatMinutes(d.minutes)}>
-              <div className={`pwa-bar${isToday ? ' is-today' : ''}`} style={{ height: Math.round((d.minutes / max) * BAR_HEIGHT) }} />
+              <div className={`pwa-bar${isToday ? ' is-today' : ''}`} style={{ '--share': d.minutes / max } as React.CSSProperties} />
               <span className={isToday ? 'is-today' : ''}>{new Date(y, m - 1, day).toLocaleDateString(i18n.language, { weekday: 'short' }).replace('.', '')}</span>
             </div>
           );
