@@ -257,3 +257,23 @@ button.tag:focus-visible { outline: 2px solid var(--color-accent); outline-offse
   .ms-grid { grid-template-columns: minmax(0, 1fr); }
   .ms-clock { font-size: 56px; }
 }
+
+/* — mail import — */
+.mail-layout { grid-template-columns: minmax(0, .7fr) minmax(0, 1.6fr); }
+.mail-rules { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.3fr); gap: 20px; align-items: start; }
+.mail-rule-item { cursor: default; gap: 8px; }
+.mail-rule-pick { all: unset; cursor: pointer; min-width: 0; }
+.mail-rule-pick:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.mail-order { display: flex; flex-direction: column; }
+.mail-order .icon-btn { font-size: 14px; color: var(--color-neutral-400); }
+.mail-order .icon-btn:disabled { opacity: .3; cursor: default; }
+.mail-plan-ticket { padding: 6px 0; border-top: 1px solid var(--color-neutral-800); }
+.mail-plan-ticket:first-of-type { border-top: 0; }
+.mail-preview-row { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid var(--color-neutral-800); }
+.mail-preview-head { display: flex; gap: 12px; align-items: flex-start; }
+.mail-preview-head .row-title { display: block; }
+@media (max-width: 1200px) { .mail-rules { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 900px) { .mail-layout { grid-template-columns: minmax(0, 1fr); } }
+/* Long segment controls wrap inside editors instead of overflowing. */
+.editor .seg { display: flex; flex-wrap: wrap; max-width: 100%; }
+.editor .seg-btn.seg-fill { flex: 1 1 auto; }

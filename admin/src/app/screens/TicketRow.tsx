@@ -25,7 +25,8 @@ export function TicketRow({ ticket, timers, canEdit, showStatus, showDue, showTi
       <span className="dot" style={{ background: dotColor(ticket) }} />
       <div className="grow">
         <div className="pwa-row-title pwa-ellipsis">
-          {ticket.source === 'ha' && <i className="ph ph-house-line accent" aria-label="Home Assistant" />} {ticket.title}
+          {ticket.source === 'ha' && <i className="ph ph-house-line accent" aria-label="Home Assistant" />}
+          {ticket.source === 'mail' && <i className="ph ph-envelope-simple accent" aria-label="E-Mail" />} {ticket.title}
         </div>
         <div className="pwa-row-meta">{meta}</div>
       </div>

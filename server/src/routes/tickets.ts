@@ -28,7 +28,7 @@ const ticketInput = z.object({
 const listQuery = z.object({
   q: z.string().optional(),
   areaId: z.coerce.number().int().optional(),
-  source: z.enum(['manual', 'app', 'ha']).optional(),
+  source: z.enum(['manual', 'app', 'ha', 'mail']).optional(),
   status: status.optional(),
   open: z.stringbool().optional(),
   limit: z.coerce.number().int().min(1).max(1000).default(500),
@@ -123,7 +123,7 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
       [id],
     );
     const events: { at: string; kind: string; user?: string | null; minutes?: number }[] = [
-      { at: ticket.createdAt, kind: ticket.source === 'ha' ? 'createdByHa' : 'created' },
+      { at: ticket.createdAt, kind: ticket.source === 'ha' ? 'createdByHa' : ticket.source === 'mail' ? 'createdByMail' : 'created' },
     ];
     const minutes = (e: { startedAt: string; endedAt: string | null }) => Math.round((Date.parse(e.endedAt!) - Date.parse(e.startedAt)) / 60000);
     for (const e of entries) {

@@ -35,6 +35,10 @@ export const jobs: Record<string, Job> = {
     await ctx.publisher.publishAll();
   },
 
+  pollMail: async ctx => {
+    await ctx.mail.pollDue();
+  },
+
   syncCalendars: async ctx => {
     await syncDueSources(ctx);
   },

@@ -76,6 +76,7 @@ export function Tickets() {
                   <td>
                     {x.title}{' '}
                     {x.source === 'ha' && <i className="ph ph-house-line accent" title={t('tickets.fromHa')} />}
+                    {x.source === 'mail' && <i className="ph ph-envelope-simple accent" title={t('tickets.fromMail')} />}
                     {x.running && <i className="ph-fill ph-timer accent" title={t('tickets.running')} />}
                   </td>
                   <td className="soft">{x.area}{x.project ? ` / ${x.project}` : ''}</td>

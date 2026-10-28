@@ -98,6 +98,20 @@ Benachrichtigungen gehen über `notify.notify`. Push und E-Mail sind noch nicht 
 - Tickets entstehen nur bis zu 14 Tage im Voraus. Ist der Abfuhrtag vorbei, wird das Ticket automatisch erledigt.
 - Ein gelöschtes Ticket wird nicht neu angelegt.
 
+## E-Mail-Import
+
+Unter **Admin → Import → E-Mail** bindest du Postfächer per IMAP ein (SSL/TLS, STARTTLS oder unverschlüsselt). Tasklog ruft sie im eingestellten Abstand ab, nur ungelesene oder alle neuen Mails. Danach markiert es die Mails als gelesen, verschiebt sie, löscht sie oder lässt sie unverändert. Das Passwort wird verschlüsselt gespeichert, der Schlüssel kommt aus `COOKIE_SECRET`.
+
+**Regeln** legen fest, was aus einer Mail wird. Sie werden von oben nach unten geprüft:
+
+- **Bedingungen:** Absender, Betreff oder Text enthält …, optional ein Betreff-Muster (Regex).
+- **Aktion:** Ticket anlegen oder ignorieren, z. B. für Newsletter.
+- **Mehrere Tickets aus einer Mail:** ein Ticket pro Zeile, pro Aufzählungspunkt oder pro Treffer eines Musters. Mit „Danach weitere Regeln prüfen“ dürfen auch mehrere Regeln dieselbe Mail auswerten.
+- **Vorlagen** für Titel und Beschreibung, mit den Platzhaltern `{subject}`, `{from}`, `{fromName}`, `{fromAddress}`, `{date}`, `{body}`, `{bodyFirstLine}`, `{item}` sowie `{1}`, `{2}` … aus den Mustern.
+- **Bereich, Priorität und Fälligkeit:** keine, in X Tagen oder ein Datum aus der Mail (z. B. „05.11.2026 um 14:30“), optional mit Uhrzeit.
+
+Jede Mail wird genau einmal verarbeitet. Die **Vorschau** zeigt für die neuesten Mails, welche Tickets entstehen würden, ohne etwas zu importieren. Unter **Ausprobieren** lassen sich die Regeln an einer eingetippten Beispielmail testen.
+
 ## Tagesmonitor
 
 `<PUBLIC_URL>/monitor?t=<token>` ist eine Vollbildansicht für ein Wanddisplay oder einen Browser-Tab, ohne Login. Den Link gibt es unter „Tagesmonitor“, dort lässt er sich auch erneuern.

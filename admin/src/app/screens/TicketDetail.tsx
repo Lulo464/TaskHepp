@@ -34,6 +34,7 @@ export function TicketDetail({ id, timers, canEdit }: { id: number; timers: Time
       <div className="row" style={{ margin: '10px 0' }}>
         <span className="tag tag-accent">{ticket.area}{ticket.project ? ` · ${ticket.project}` : ''}</span>
         {ticket.source === 'ha' && <span className="tag tag-outline"><Icon name="house-line" />&nbsp;Home Assistant</span>}
+        {ticket.source === 'mail' && <span className="tag tag-outline"><Icon name="envelope-simple" />&nbsp;E-Mail</span>}
         {ticket.prio === 'high' && <span className="tag tag-outline">{t('prio.high')}</span>}
       </div>
       <h1 className="pwa-h1 pwa-detail-title">{ticket.title}</h1>

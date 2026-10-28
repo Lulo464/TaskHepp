@@ -23,7 +23,7 @@ export interface Ticket {
   due: string | null;
   /** 'HH:MM', or null for the whole day. */
   dueTime: string | null;
-  source: 'manual' | 'app' | 'ha';
+  source: 'manual' | 'app' | 'ha' | 'mail';
   areaId: number;
   area: string;
   projectId: number | null;
@@ -213,7 +213,7 @@ export interface RunningTimer {
 
 export interface HistoryEvent {
   at: string;
-  kind: 'created' | 'createdByHa' | 'timerStarted' | 'timerStopped' | 'timeAdded' | 'done';
+  kind: 'created' | 'createdByHa' | 'createdByMail' | 'timerStarted' | 'timerStopped' | 'timeAdded' | 'done';
   user?: string | null;
   minutes?: number;
 }
@@ -236,4 +236,69 @@ export interface MonitorItem {
   prio: Prio;
   overdue: boolean;
   dueTime: string | null;
+}
+
+export interface MailAccount {
+  id: number;
+  name: string;
+  host: string;
+  port: number;
+  tls: 'tls' | 'starttls' | 'none';
+  username: string;
+  hasPassword: boolean;
+  mailbox: string;
+  pollMinutes: number;
+  onlyUnseen: boolean;
+  afterImport: 'seen' | 'move' | 'delete' | 'none';
+  moveTo: string;
+  enabled: boolean;
+  lastPollAt: string | null;
+  lastError: string | null;
+}
+
+export interface MailRule {
+  id: number;
+  name: string;
+  enabled: boolean;
+  fromContains: string;
+  subjectContains: string;
+  bodyContains: string;
+  subjectPattern: string;
+  action: 'ticket' | 'ignore';
+  split: 'none' | 'lines' | 'bullets' | 'pattern';
+  splitPattern: string;
+  titleTemplate: string;
+  descriptionTemplate: string;
+  areaId: number | null;
+  prio: Prio;
+  dueMode: 'none' | 'days' | 'detect';
+  dueDays: number;
+  dueTime: string | null;
+  continueAfter: boolean;
+}
+
+export interface MailPlan {
+  result: 'created' | 'ignored' | 'nomatch';
+  ruleIds: number[];
+  tickets: { ruleId: number; title: string; description: string; due: string | null; dueTime: string | null; prio: Prio }[];
+}
+
+export interface MailPreview {
+  fromAddress: string;
+  fromName: string;
+  subject: string;
+  date: string;
+  seen: boolean;
+  imported: boolean;
+  plan: MailPlan;
+}
+
+export interface MailImportEntry {
+  id: number;
+  createdAt: string;
+  from: string;
+  subject: string;
+  result: 'created' | 'ignored' | 'nomatch' | 'error';
+  rules: string[];
+  ticketIds: number[];
 }

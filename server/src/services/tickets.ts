@@ -12,7 +12,7 @@ export interface TicketRow {
   due: string | null;
   /** 'HH:MM' or null for the whole day. */
   dueTime: string | null;
-  source: 'manual' | 'app' | 'ha';
+  source: 'manual' | 'app' | 'ha' | 'mail';
   ruleId: number | null;
   areaId: number;
   area: string;
@@ -59,7 +59,7 @@ export interface NewTicket {
   assigneeId?: number | null;
   due?: string | null;
   dueTime?: string | null;
-  source?: 'manual' | 'app' | 'ha';
+  source?: 'manual' | 'app' | 'ha' | 'mail';
   ruleId?: number | null;
 }
 

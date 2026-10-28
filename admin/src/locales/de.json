@@ -8,7 +8,8 @@
       "ops": "Betrieb",
       "ha": "Home Assistant",
       "monitor": "Monitor",
-      "system": "System"
+      "system": "System",
+      "import": "Import"
     }
   },
   "sections": {
@@ -39,6 +40,10 @@
     "calendars": {
       "label": "Kalender",
       "sub": "Termine aus Home-Assistant-Kalendern – z. B. Abfuhrtermine – werden automatisch zu Tickets."
+    },
+    "mail": {
+      "label": "E-Mail",
+      "sub": "Postfächer per IMAP abrufen – Regeln legen fest, welche Mails zu welchen Tickets werden."
     },
     "notify": {
       "label": "Benachrichtigungen",
@@ -129,7 +134,8 @@
       "time": "Zeit"
     },
     "empty": "Keine Tickets gefunden.",
-    "running": "Timer läuft"
+    "running": "Timer läuft",
+    "fromMail": "Aus einer E-Mail erstellt"
   },
   "areas": {
     "defaultPrio": "Standard-Prio: {{prio}}",
@@ -462,7 +468,8 @@
       "timerStarted": "Timer gestartet {{user}}",
       "timerStopped": "Timer gestoppt ({{minutes}} min)",
       "timeAdded": "+{{minutes}} min nachgetragen {{user}}",
-      "done": "Erledigt"
+      "done": "Erledigt",
+      "createdByMail": "Ticket per E-Mail erstellt"
     },
     "new": {
       "title": "Neues Ticket",
@@ -495,6 +502,134 @@
     },
     "areas": {
       "week": "{{time}} diese Woche"
+    }
+  },
+  "mail": {
+    "addAccount": "Postfach hinzufügen",
+    "newAccount": "Neues Postfach",
+    "editAccount": "Postfach",
+    "namePlaceholder": "z. B. Familie oder Arbeit",
+    "tab": {
+      "account": "Postfach",
+      "rules": "Regeln",
+      "preview": "Vorschau & Protokoll"
+    },
+    "host": "IMAP-Server",
+    "port": "Port",
+    "security": "Verschlüsselung",
+    "noTls": "Keine",
+    "noTlsWarning": "Ohne Verschlüsselung gehen Passwort und Mails im Klartext übers Netz. Nur im eigenen Netz verwenden.",
+    "username": "Benutzer",
+    "password": "Passwort",
+    "folder": "Ordner",
+    "interval": "Abrufen alle",
+    "minutes": "{{n}} min",
+    "afterImport": "Nach dem Import",
+    "after": {
+      "seen": "Als gelesen markieren",
+      "move": "Verschieben",
+      "delete": "Löschen",
+      "none": "Nichts ändern"
+    },
+    "moveTo": "Zielordner",
+    "onlyUnseen": "Nur ungelesene Mails",
+    "onlyUnseenDesc": "Sonst alle neuen Mails ab jetzt, auch bereits gelesene.",
+    "enabled": "Abruf aktiv",
+    "enabledDesc": "Alle {{n}} Minuten nach neuen Mails schauen.",
+    "create": "Postfach anlegen",
+    "createHint": "Beim Anlegen entsteht eine Regel „Alle Mails“, die aus jeder Mail ein Ticket macht. Unter „Regeln“ passt du an, was aus welchen Mails wird – vor dem ersten Abruf lohnt ein Blick in die Vorschau.",
+    "saved": "Gespeichert.",
+    "test": "Verbindung testen",
+    "testing": "Verbinde …",
+    "testOk": "Verbindung OK · {{messages}} Mails, {{unseen}} ungelesen",
+    "testNoFolder": "Angemeldet, aber den Ordner „{{folder}}“ gibt es nicht. Die vorhandenen Ordner stehen jetzt in der Auswahl.",
+    "pollNow": "Jetzt abrufen",
+    "pollResult": "{{messages}} Mails verarbeitet, {{tickets}} Tickets erstellt.",
+    "lastPoll": "Zuletzt abgerufen {{when}}",
+    "neverPolled": "Noch nicht abgerufen.",
+    "deleteConfirm": "Postfach „{{name}}“ mit allen Regeln entfernen? Bereits erstellte Tickets bleiben.",
+    "newRule": "Neue Regel",
+    "noRules": "Keine Regeln – Mails werden nicht importiert.",
+    "orderHint": "Regeln werden von oben nach unten geprüft; die erste passende entscheidet, außer sie lässt weitere Regeln zu.",
+    "up": "Nach oben",
+    "down": "Nach unten",
+    "ignore": "Ignorieren",
+    "ticket": "Ticket",
+    "tickets": "Mehrere Tickets",
+    "sum": {
+      "from": "Von: {{v}}",
+      "subject": "Betreff: {{v}}",
+      "body": "Text: {{v}}",
+      "pattern": "Muster: {{v}}",
+      "all": "alle Mails"
+    },
+    "deleteRuleConfirm": "Regel „{{name}}“ löschen?",
+    "when": "Wenn die Mail …",
+    "fromContains": "Absender enthält",
+    "subjectContains": "Betreff enthält",
+    "bodyContains": "Text enthält",
+    "subjectPattern": "Betreff passt zum Muster (Regex, optional)",
+    "conditionsHint": "Leere Felder gelten immer. Groß-/Kleinschreibung egal. Klammern im Muster stehen als {1}, {2} … (oder benannt als {name}) in den Vorlagen bereit.",
+    "then": "Dann …",
+    "action": "Aktion",
+    "actionTicket": "Ticket anlegen",
+    "actionIgnore": "Ignorieren",
+    "split": "Tickets pro Mail",
+    "splitOpt": {
+      "none": "Ein Ticket",
+      "lines": "Pro Zeile",
+      "bullets": "Pro Aufzählungspunkt",
+      "pattern": "Pro Treffer"
+    },
+    "splitPattern": "Muster für einen Treffer (Regex)",
+    "splitHint": {
+      "lines": "Jede nicht leere Zeile wird ein Ticket ({item}). Zitate (>) und Signatur werden übersprungen.",
+      "bullets": "Jede Zeile mit -, *, •, 1. oder [ ] wird ein Ticket ({item}).",
+      "pattern": "Jeder Treffer wird ein Ticket; {item} ist der ganze Treffer, {1}, {2} … die Klammern."
+    },
+    "titleTemplate": "Ticket-Titel",
+    "descriptionTemplate": "Beschreibung",
+    "placeholders": "Platzhalter: {subject} {from} {fromName} {fromAddress} {date} {body} {bodyFirstLine} {item} {1} {2} …",
+    "due": {
+      "none": "Keine",
+      "days": "In X Tagen",
+      "detect": "Datum aus der Mail"
+    },
+    "dueDays": "Tage nach Eingang",
+    "detectHint": "Erstes Datum im Eintrag, Betreff oder Text, z. B. 05.11.2026 um 14:30 oder 03.11.",
+    "continueAfter": "Danach weitere Regeln prüfen",
+    "continueAfterDesc": "Auch die folgenden Regeln dürfen aus derselben Mail Tickets machen.",
+    "ruleEnabled": "Regel aktiv",
+    "try": "Ausprobieren",
+    "tryHint": "Eine Beispielmail gegen die gespeicherten Regeln laufen lassen – ohne Postfach und ohne etwas anzulegen.",
+    "from": "Von",
+    "subject": "Betreff",
+    "body": "Text",
+    "result": {
+      "created_one": "Wird 1 Ticket",
+      "created_other": "Wird {{count}} Tickets",
+      "ignored": "Wird ignoriert",
+      "nomatch": "Keine Regel passt – bleibt unberührt",
+      "error": "Fehler"
+    },
+    "dueOn": "fällig {{date}}",
+    "noDue": "ohne Fälligkeit",
+    "previewTitle": "Vorschau",
+    "previewHint": "Die 10 neuesten Mails im Ordner und was aus ihnen würde. Es wird nichts importiert und nichts als gelesen markiert.",
+    "loadPreview": "Neueste Mails laden",
+    "noSubject": "(ohne Betreff)",
+    "unread": "ungelesen",
+    "alreadyImported": "schon verarbeitet",
+    "empty": "Der Ordner ist leer.",
+    "log": "Import-Protokoll",
+    "ruleCol": "Regel",
+    "noImports": "Noch nichts importiert.",
+    "logResult": {
+      "created_one": "1 Ticket erstellt",
+      "created_other": "{{count}} Tickets erstellt",
+      "ignored": "Ignoriert",
+      "nomatch": "Keine Regel – unberührt",
+      "error": "Fehler"
     }
   }
 }
