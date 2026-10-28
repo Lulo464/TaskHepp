@@ -24,6 +24,8 @@ export interface MailRule {
   action: 'ticket' | 'ignore';
   split: 'none' | 'lines' | 'bullets' | 'pattern';
   splitPattern: string;
+  /** Comma-separated words; hits containing one of them are skipped. */
+  splitExclude: string;
   titleTemplate: string;
   descriptionTemplate: string;
   areaId: number | null;
@@ -92,9 +94,15 @@ function groupVars(m: RegExpMatchArray): Vars {
   return vars;
 }
 
-/** Replaces {name} placeholders; unknown ones become empty. */
+/**
+ * Replaces {name} placeholders; unknown ones become empty.
+ * {a|b|c} takes the first one that is not empty, e.g. {1|2}: the text before a link, else the link.
+ */
 export function render(template: string, vars: Vars): string {
-  return template.replace(/\{([\wäöüÄÖÜß]+)\}/g, (_, key: string) => vars[key] ?? '').replace(/[ \t]+\n/g, '\n').trim();
+  return template
+    .replace(/\{([\wäöüÄÖÜß]+(?:\|[\wäöüÄÖÜß]+)*)\}/g, (_, keys: string) => keys.split('|').map(k => vars[k]?.trim()).find(Boolean) ?? '')
+    .replace(/[ \t]+\n/g, '\n')
+    .trim();
 }
 
 /** The mail text without quoted replies and signature. */
@@ -123,6 +131,8 @@ export function splitItems(rule: MailRule, body: string): Vars[] {
       items = [];
     }
   }
+  const skip = rule.splitExclude.split(/[,\n]/).map(w => w.trim().toLowerCase()).filter(Boolean);
+  if (skip.length) items = items.filter(i => !skip.some(w => (i.item ?? '').toLowerCase().includes(w)));
   return items.slice(0, MAX_TICKETS_PER_MAIL);
 }
 

@@ -6,7 +6,7 @@ const today = new Date(2026, 9, 28); // 28.10.2026
 
 const rule = (over: Partial<MailRule> = {}): MailRule => ({
   id: 1, name: 'R', enabled: true, fromContains: '', subjectContains: '', bodyContains: '', subjectPattern: '',
-  action: 'ticket', split: 'none', splitPattern: '', titleTemplate: '{subject}', descriptionTemplate: '{body}',
+  action: 'ticket', split: 'none', splitPattern: '', splitExclude: '', titleTemplate: '{subject}', descriptionTemplate: '{body}',
   areaId: 1, prio: 'normal', dueMode: 'none', dueDays: 0, dueTime: null, continueAfter: false, ...over,
 });
 
@@ -72,6 +72,33 @@ describe('planMail', () => {
   });
 });
 
+describe('links as tickets', () => {
+  // The pattern from the docs: one ticket per line with a link, list markers in front are skipped.
+  const LINK = String.raw`^\s*(?:[-*•–·]|\d{1,3}[.)])?\s*(.*?)[\s\[(<:]*((?:https?://|www\.)[^\s\]>)"]+).*$`;
+  const body = [
+    '* https://youtube.com/watch?v=abc',
+    '- Neue Kaffeemaschine https://shop.de/kaffee?id=1',
+    '* Startseite https://www.herbrand.de/start',
+    '1. Rezept: www.chefkoch.de/rezept/123',
+    'Angebot: Hier klicken [https://shop.de/deal]',
+    'Ohne Link',
+  ].join('\n');
+
+  it('uses the text before the link, else the link, and skips excluded sites', () => {
+    const r = rule({ split: 'pattern', splitPattern: LINK, titleTemplate: '{1|2}', descriptionTemplate: '{2}', splitExclude: 'herbrand.de, abmelden' });
+    expect(planMail([r], mail({ body }), today).tickets.map(t => [t.title, t.description])).toEqual([
+      ['https://youtube.com/watch?v=abc', 'https://youtube.com/watch?v=abc'],
+      ['Neue Kaffeemaschine', 'https://shop.de/kaffee?id=1'],
+      ['Rezept', 'www.chefkoch.de/rezept/123'],
+      ['Angebot: Hier klicken', 'https://shop.de/deal'],
+    ]);
+  });
+
+  it('applies the exclusions to lines and bullets too', () => {
+    expect(planMail([rule({ split: 'bullets', titleTemplate: '{item}', splitExclude: 'HERBRAND' })], mail({ body }), today).tickets).toHaveLength(3);
+  });
+});
+
 describe('helpers', () => {
   it('detects dates', () => {
     expect(detectDue('bis 01.02.', today)).toEqual({ date: '2027-02-01', time: null }); // next occurrence
@@ -87,6 +114,8 @@ describe('helpers', () => {
 
   it('renders templates and validates patterns', () => {
     expect(render('{a} – {missing}!', { a: 'x' })).toBe('x – !');
+    expect(render('{1|2|subject}', { 1: ' ', 2: '', subject: 'Betreff' })).toBe('Betreff');
+    expect(render('{1|2}', { 1: 'Text', 2: 'https://x' })).toBe('Text');
     expect(checkPattern('(')).not.toBeNull();
     expect(checkPattern('Auftrag (\\d+)')).toBeNull();
   });

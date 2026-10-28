@@ -41,6 +41,7 @@ const ruleInput = z.object({
   action: z.enum(['ticket', 'ignore']),
   split: z.enum(['none', 'lines', 'bullets', 'pattern']),
   splitPattern: pattern,
+  splitExclude: z.string().max(1000),
   titleTemplate: z.string().trim().min(1).max(300),
   descriptionTemplate: z.string().max(2000),
   areaId: z.number().int().nullable(),
@@ -52,7 +53,7 @@ const ruleInput = z.object({
 });
 const RULE_COLUMNS: Record<keyof z.infer<typeof ruleInput>, string> = {
   name: 'name', enabled: 'enabled', fromContains: 'from_contains', subjectContains: 'subject_contains', bodyContains: 'body_contains',
-  subjectPattern: 'subject_pattern', action: 'action', split: 'split', splitPattern: 'split_pattern', titleTemplate: 'title_template',
+  subjectPattern: 'subject_pattern', action: 'action', split: 'split', splitPattern: 'split_pattern', splitExclude: 'split_exclude', titleTemplate: 'title_template',
   descriptionTemplate: 'description_template', areaId: 'area_id', prio: 'prio', dueMode: 'due_mode', dueDays: 'due_days',
   dueTime: 'due_time', continueAfter: 'continue_after',
 };

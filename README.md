@@ -107,7 +107,10 @@ Unter **Admin → Import → E-Mail** bindest du Postfächer per IMAP ein (SSL/T
 - **Bedingungen:** Absender, Betreff oder Text enthält …, optional ein Betreff-Muster (Regex).
 - **Aktion:** Ticket anlegen oder ignorieren, z. B. für Newsletter.
 - **Mehrere Tickets aus einer Mail:** ein Ticket pro Zeile, pro Aufzählungspunkt oder pro Treffer eines Musters. Mit „Danach weitere Regeln prüfen“ dürfen auch mehrere Regeln dieselbe Mail auswerten.
-- **Vorlagen** für Titel und Beschreibung, mit den Platzhaltern `{subject}`, `{from}`, `{fromName}`, `{fromAddress}`, `{date}`, `{body}`, `{bodyFirstLine}`, `{item}` sowie `{1}`, `{2}` … aus den Mustern.
+  Treffer, die eines der Wörter unter „Treffer überspringen“ enthalten (z. B. `herbrand.de, abmelden`), werden ausgelassen.
+- **Vorlagen** für Titel und Beschreibung, mit den Platzhaltern `{subject}`, `{from}`, `{fromName}`, `{fromAddress}`, `{date}`, `{body}`, `{bodyFirstLine}`, `{item}` sowie `{1}`, `{2}` … aus den Mustern. `{1|2}` nimmt den ersten Wert, der nicht leer ist.
+
+  Beispiel „ein Ticket pro Link“: Pro Treffer mit dem Muster `^\s*(?:[-*•–·]|\d{1,3}[.)])?\s*(.*?)[\s\[(<:]*((?:https?://|www\.)[^\s\]>)"]+).*$`, Titel `{1|2}` (Text vor dem Link, sonst der Link) und Beschreibung `{2}` (der Link).
 - **Bereich, Priorität und Fälligkeit:** keine, in X Tagen oder ein Datum aus der Mail (z. B. „05.11.2026 um 14:30“), optional mit Uhrzeit.
 
 Jede Mail wird genau einmal verarbeitet. Die **Vorschau** zeigt für die neuesten Mails, welche Tickets entstehen würden, ohne etwas zu importieren. Unter **Ausprobieren** lassen sich die Regeln an einer eingetippten Beispielmail testen.
