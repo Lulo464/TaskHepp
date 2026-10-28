@@ -257,6 +257,17 @@ describe('app endpoints', () => {
   let member: string;
   beforeAll(async () => { member = await t.login('member'); });
 
+  it('keeps each user\'s own area order and hidden areas', async () => {
+    const reader = await t.login('read');
+    expect((await call('GET', '/api/me/areas', reader)).json()).toEqual({ order: [], hidden: [] });
+    const saved = await call('PUT', '/api/me/areas', reader, { order: [2, 1, 2], hidden: [1] });
+    expect(saved.statusCode).toBe(200);
+    expect(saved.json()).toEqual({ order: [2, 1], hidden: [1] });
+    expect((await call('GET', '/api/me/areas', reader)).json()).toEqual({ order: [2, 1], hidden: [1] });
+    expect((await call('GET', '/api/me/areas', member)).json()).toEqual({ order: [], hidden: [] });
+    expect((await call('PUT', '/api/me/areas', reader, { order: ['x'], hidden: [] })).statusCode).toBe(400);
+  });
+
   it('stores a description and makes the creator the assignee', async () => {
     const me = (await call('GET', '/api/me', member)).json();
     const res = await call('POST', '/api/tickets', member, { title: 'Mit Beschreibung', description: 'Flur, Küche', areaId: 1 });

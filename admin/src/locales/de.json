@@ -505,7 +505,13 @@
       "monitor": "Tagesmonitor öffnen"
     },
     "areas": {
-      "week": "{{time}} diese Woche"
+      "week": "{{time}} diese Woche",
+      "prefsHint": "Reihenfolge und Sichtbarkeit gelten nur für dich. Ausgeblendete Bereiche verschwinden aus Heute, Tickets und Neu.",
+      "hidden": "Ausgeblendet",
+      "up": "{{name}} nach oben",
+      "down": "{{name}} nach unten",
+      "hide": "{{name}} ausblenden",
+      "show": "{{name}} einblenden"
     }
   },
   "mail": {

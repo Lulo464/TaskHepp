@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Field, Icon, Loading, Seg } from '../../components/ui';
-import { post, useAction, useApi } from '../../lib/api';
-import type { Area, Ticket } from '../../lib/types';
+import { post, useAction } from '../../lib/api';
+import type { Ticket } from '../../lib/types';
+import { useMyAreas } from '../areas';
 import { href, navigate } from '../router';
 import type { Timers } from '../timer';
 
 export function NewTicket({ timers }: { timers: Timers }) {
   const { t } = useTranslation();
-  const areas = useApi<Area[]>('/api/areas');
+  const myAreas = useMyAreas();
+  // Hidden areas are left out; if all are hidden, offer all of them rather than none.
+  const areas = myAreas && (myAreas.visible.length ? myAreas.visible : myAreas.all);
   const act = useAction();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');

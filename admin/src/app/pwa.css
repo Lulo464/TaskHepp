@@ -118,6 +118,10 @@ body { background: var(--color-bg); overscroll-behavior: none; -webkit-tap-highl
 .pwa-rule .pwa-row-meta { display: block; }
 .pwa-area-icon { font-size: 24px; }
 .pwa-area-name { font-size: 17px; }
+.pwa-area-tools { display: flex; gap: 2px; flex: none; }
+.pwa-area-tools .btn-icon { width: 40px; height: 40px; font-size: 18px; }
+.pwa-card.is-hidden { opacity: .55; }
+.pwa-card.is-hidden .pwa-area-tools { opacity: 1; }
 .pwa-project { display: flex; justify-content: space-between; padding: 10px 0 0; border-top: 1px solid var(--color-neutral-800); font-size: 14px; }
 a.btn { text-decoration: none; }
 
