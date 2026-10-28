@@ -9,7 +9,7 @@ const dotColor = (t: Ticket) =>
   t.status === 'done' ? 'var(--color-neutral-600)' : t.status === 'inProgress' ? 'var(--color-accent)' : 'var(--color-neutral-400)';
 
 /** One ticket with status dot, meta line and play/pause. */
-export function TicketRow({ ticket, timers, canEdit, showStatus, showDue, showTime }: { ticket: Ticket; timers: Timers; canEdit: boolean; showStatus?: boolean; showDue?: boolean; showTime?: boolean }) {
+export function TicketRow({ ticket, timers, canEdit, showStatus, showDue, showTime, selected }: { ticket: Ticket; timers: Timers; canEdit: boolean; showStatus?: boolean; showDue?: boolean; showTime?: boolean; selected?: boolean }) {
   const { t } = useTranslation();
   const running = Boolean(timers.runningFor(ticket.id));
   const meta = [
@@ -21,7 +21,7 @@ export function TicketRow({ ticket, timers, canEdit, showStatus, showDue, showTi
   ].filter(Boolean).join(' · ');
 
   return (
-    <div className="pwa-row" role="button" tabIndex={0} onClick={() => navigate({ name: 'ticket', id: ticket.id })} onKeyDown={e => e.key === 'Enter' && navigate({ name: 'ticket', id: ticket.id })}>
+    <div className={`pwa-row${selected ? ' is-selected' : ''}`} role="button" tabIndex={0} aria-current={selected || undefined} onClick={() => navigate({ name: 'ticket', id: ticket.id })} onKeyDown={e => e.key === 'Enter' && navigate({ name: 'ticket', id: ticket.id })}>
       <span className="dot" style={{ background: dotColor(ticket) }} />
       <div className="grow">
         <div className="pwa-row-title pwa-ellipsis">
