@@ -8,6 +8,7 @@ import { Calendars } from './sections/Calendars';
 import { Config } from './sections/Config';
 import { HomeAssistant } from './sections/HomeAssistant';
 import { Log } from './sections/Log';
+import { Mail } from './sections/Mail';
 import { Monitor } from './sections/Monitor';
 import { Notifications } from './sections/Notifications';
 import { Overview } from './sections/Overview';
@@ -33,8 +34,11 @@ const navGroups: { group: string; sections: Section[] }[] = [
   { group: 'ha', sections: [
     { id: 'ha', icon: 'house-line', view: HomeAssistant },
     { id: 'rules', icon: 'flow-arrow', view: Rules },
-    { id: 'calendars', icon: 'calendar-check', view: Calendars },
     { id: 'notify', icon: 'bell', view: Notifications },
+  ] },
+  { group: 'import', sections: [
+    { id: 'calendars', icon: 'calendar-check', view: Calendars },
+    { id: 'mail', icon: 'envelope-simple', view: Mail },
   ] },
   { group: 'monitor', sections: [
     { id: 'monitor', icon: 'monitor', view: Monitor },

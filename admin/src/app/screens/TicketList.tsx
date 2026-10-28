@@ -6,7 +6,7 @@ import type { Area, Ticket } from '../../lib/types';
 import type { Timers } from '../timer';
 import { TicketRow } from './TicketRow';
 
-type Filter = 'all' | 'ha' | 'done' | number;
+type Filter = 'all' | 'ha' | 'mail' | 'done' | number;
 
 export function TicketList({ timers, canEdit }: { timers: Timers; canEdit: boolean }) {
   const { t } = useTranslation();
@@ -19,11 +19,12 @@ export function TicketList({ timers, canEdit }: { timers: Timers; canEdit: boole
     { value: 'all', label: t('common.all') },
     ...(areas ?? []).map(a => ({ value: a.id as Filter, label: a.name })),
     { value: 'ha', label: <><Icon name="house-line" /> HA</> },
+    { value: 'mail', label: <><Icon name="envelope-simple" /> Mail</> },
     { value: 'done', label: t('status.done') },
   ];
   const rows = (tickets ?? []).filter(x =>
     (filter === 'done' ? x.status === 'done' : x.status !== 'done') &&
-    (filter === 'all' || filter === 'done' || (filter === 'ha' ? x.source === 'ha' : x.areaId === filter)) &&
+    (filter === 'all' || filter === 'done' || (filter === 'ha' || filter === 'mail' ? x.source === filter : x.areaId === filter)) &&
     x.title.toLowerCase().includes(query.trim().toLowerCase()));
 
   return (
