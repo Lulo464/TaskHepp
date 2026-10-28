@@ -157,6 +157,9 @@ textarea.input { min-height: 80px; }
 
 /* — due date + time — */
 .pwa-due-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; }
+.pwa-assignee { display: flex; align-items: center; gap: 8px; margin: -6px 0 18px; color: var(--color-neutral-400); }
+.pwa-assignee .input { flex: 1; min-width: 0; min-height: 34px; padding: 4px 8px; font-size: 13px; }
+.pwa-assignee .btn { flex: none; font-size: 13px; padding: 4px 10px; min-height: 34px; }
 .pwa-due-edit { display: flex; align-items: center; gap: 8px; margin: -6px 0 18px; color: var(--color-neutral-400); }
 .pwa-due-edit .input { min-height: 34px; padding: 4px 8px; font-size: 13px; width: auto; }
 .pwa-due-edit input[type='date'] { flex: 1.4; min-width: 0; }

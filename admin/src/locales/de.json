@@ -466,6 +466,13 @@
       "delete": "Ticket löschen",
       "deleteConfirm": "Ticket wirklich löschen?"
     },
+    "assignee": {
+      "label": "Zugewiesen an",
+      "nobody": "Niemand zugewiesen",
+      "me": "{{name}} (ich)",
+      "takeOver": "Übernehmen",
+      "mine": "Meine"
+    },
     "history": {
       "created": "Ticket erstellt",
       "createdByHa": "Ticket von Home Assistant erstellt",

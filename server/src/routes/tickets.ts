@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { userId } from '../auth/plugin.js';
 import type { AppContext } from '../context.js';
 import { withTransaction } from '../db.js';
-import { idParam, notFound, parse } from '../lib/http.js';
+import { HttpError, idParam, notFound, parse } from '../lib/http.js';
 import { createTicket, getTicket, setStatus, TICKET_ORDER, TICKET_SELECT, type TicketRow } from '../services/tickets.js';
 import { addManualTime, startTimer, stopEntries } from '../services/time.js';
 
@@ -37,6 +37,16 @@ const listQuery = z.object({
 export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
   const { db, publisher } = ctx;
 
+  /** Who tickets can be assigned to: everyone allowed to work on them. */
+  const PEOPLE_SQL = "SELECT id, name FROM users WHERE role IN ('member', 'admin')";
+  const checkAssignee = async (assigneeId: number | null | undefined) => {
+    if (assigneeId == null) return;
+    const { rowCount } = await db.query(`${PEOPLE_SQL} AND id = $1`, [assigneeId]);
+    if (!rowCount) throw new HttpError(400, 'Diese Person kann keine Tickets übernehmen');
+  };
+
+  app.get('/api/people', async () => (await db.query(`${PEOPLE_SQL} ORDER BY name, id`)).rows);
+
   app.get('/api/tickets', async req => {
     const q = parse(listQuery, req.query);
     const where: string[] = [];
@@ -63,6 +73,7 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
   app.post('/api/tickets', { config: { access: 'member' } }, async (req, reply) => {
     const body = parse(ticketInput, req.body);
     // Tickets created by a person are theirs unless assigned otherwise.
+    await checkAssignee(body.assigneeId);
     const id = await createTicket(db, { ...body, assigneeId: body.assigneeId === undefined ? userId(req) : body.assigneeId });
     publisher.schedule();
     reply.code(201);
@@ -72,6 +83,7 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
   app.patch('/api/tickets/:id', { config: { access: 'member' } }, async req => {
     const { id } = parse(idParam, req.params);
     const body = parse(ticketInput.partial(), req.body);
+    await checkAssignee(body.assigneeId);
     const cols: Record<string, string> = { title: 'title', description: 'description', areaId: 'area_id', projectId: 'project_id', prio: 'prio', assigneeId: 'assignee_id', due: 'due_date', dueTime: 'due_time', source: 'source' };
     await withTransaction(db, async c => {
       const sets: string[] = [];
