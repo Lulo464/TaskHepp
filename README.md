@@ -118,3 +118,5 @@ Jede Mail wird genau einmal verarbeitet. Die **Vorschau** zeigt für die neueste
 ## Tagesmonitor
 
 `<PUBLIC_URL>/monitor?t=<token>` ist eine Vollbildansicht für ein Wanddisplay oder einen Browser-Tab, ohne Login. Den Link gibt es unter „Tagesmonitor“, dort lässt er sich auch erneuern.
+
+Mit `&area=<id>` zeigt der Monitor nur einen Bereich: dessen Tickets, erfasste Zeit, laufenden Timer und Sensoren. Unter „Tagesmonitor“ steht ein fertiger Link für alle Bereiche und je einer pro Bereich.

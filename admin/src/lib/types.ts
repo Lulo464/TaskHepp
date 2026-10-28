@@ -159,6 +159,8 @@ export interface Overview {
 
 export interface MonitorData {
   now: string;
+  /** Name of the area the monitor is limited to, null for all areas. */
+  area: string | null;
   interval: number;
   widgets: Settings['widgets'];
   openTickets: number;

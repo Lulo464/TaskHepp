@@ -28,29 +28,42 @@ const backupSchema = z.object({
   data: z.record(z.enum(BACKUP_TABLES), z.array(z.record(z.string(), z.unknown()))),
 });
 
-async function monitorData(ctx: AppContext, s: Settings) {
+/** Day view for the monitor; with an area only that area's tickets, time, timer and sensors. */
+async function monitorData(ctx: AppContext, s: Settings, areaId?: number) {
   const { db } = ctx;
+  const area = areaId ?? null;
+  let areaName: string | null = null;
+  if (area !== null) {
+    const { rows: [a] } = await db.query<{ name: string }>('SELECT name FROM areas WHERE id = $1', [area]);
+    if (!a) throw new HttpError(404, 'Bereich nicht gefunden');
+    areaName = a.name;
+  }
   const { rows: timer } = await db.query(
     `SELECT t.title, a.name AS area, t.source, e.started_at AS "startedAt", u.name AS "user" FROM time_entries e
        JOIN tickets t ON t.id = e.ticket_id JOIN areas a ON a.id = t.area_id LEFT JOIN users u ON u.id = e.user_id
-      WHERE e.ended_at IS NULL ORDER BY e.started_at DESC LIMIT 1`,
+      WHERE e.ended_at IS NULL AND ($1::int IS NULL OR t.area_id = $1) ORDER BY e.started_at DESC LIMIT 1`,
+    [area],
   );
   const { rows: [totals] } = await db.query<{ openTickets: number; todayMinutes: number }>(
-    `SELECT (SELECT count(*)::int FROM tickets WHERE status <> 'done') AS "openTickets",
-            (SELECT COALESCE(round(sum(extract(epoch FROM (COALESCE(ended_at, now()) - GREATEST(started_at, date_trunc('day', now()))))) / 60), 0)::int
-               FROM time_entries WHERE COALESCE(ended_at, now()) > date_trunc('day', now())) AS "todayMinutes"`,
+    `SELECT (SELECT count(*)::int FROM tickets WHERE status <> 'done' AND ($1::int IS NULL OR area_id = $1)) AS "openTickets",
+            (SELECT COALESCE(round(sum(extract(epoch FROM (COALESCE(e.ended_at, now()) - GREATEST(e.started_at, date_trunc('day', now()))))) / 60), 0)::int
+               FROM time_entries e LEFT JOIN tickets t ON t.id = e.ticket_id
+              WHERE COALESCE(e.ended_at, now()) > date_trunc('day', now()) AND ($1::int IS NULL OR t.area_id = $1)) AS "todayMinutes"`,
+    [area],
   );
   const { rows: today } = await db.query<{ id: number; title: string; prio: string; area: string; overdue: boolean; dueTime: string | null }>(
     `SELECT t.id, t.title, t.prio, a.name AS area, ${OVERDUE_SQL} AS overdue, to_char(t.due_time, 'HH24:MI') AS "dueTime"
        FROM tickets t JOIN areas a ON a.id = t.area_id
-      WHERE t.status <> 'done' AND t.due_date <= current_date
+      WHERE t.status <> 'done' AND t.due_date <= current_date AND ($1::int IS NULL OR t.area_id = $1)
       ORDER BY t.due_date < current_date DESC, t.due_time NULLS LAST, t.prio = 'high' DESC, t.id`,
+    [area],
   );
 
-  // Sensor values for the entities the rules watch.
+  // Sensor values for the entities the rules (of the area) watch.
   let sensors: { entity: string; state: string; unit?: string; name?: unknown }[] = [];
   if (s.widgets.haSensors && (await ctx.ha.isConfigured())) {
-    const entities = [...new Set((await listRules(db)).filter(r => r.enabled).map(r => r.entity))].slice(0, 8);
+    const rules = (await listRules(db)).filter(r => r.enabled && (area === null || r.areaId === area));
+    const entities = [...new Set(rules.map(r => r.entity))].slice(0, 8);
     sensors = (await Promise.all(entities.map(async entity => {
       try {
         const st = await ctx.ha.getState(entity);
@@ -63,6 +76,7 @@ async function monitorData(ctx: AppContext, s: Settings) {
 
   return {
     now: new Date().toISOString(),
+    area: areaName,
     interval: s.monitorInterval,
     widgets: s.widgets,
     ...totals,
@@ -98,14 +112,15 @@ export function systemRoutes(app: FastifyInstance, ctx: AppContext) {
   });
 
   // — monitor —
-  app.get('/api/monitor', async () => monitorData(ctx, await settings.get()));
+  const monitorQuery = z.object({ area: z.coerce.number().int().positive().optional() });
+  app.get('/api/monitor', async req => monitorData(ctx, await settings.get(), parse(monitorQuery, req.query).area));
 
   /** Read-only link for the wall display; the token is part of the URL. */
   app.get('/api/monitor/public', { config: { access: 'public' } }, async req => {
-    const { t } = parse(z.object({ t: z.string().min(1) }), req.query);
+    const { t, area } = parse(monitorQuery.extend({ t: z.string().min(1) }), req.query);
     const s = await settings.get();
     if (!safeEqual(t, s.monitorToken)) throw new HttpError(403, 'Ungültiger Monitor-Link');
-    return monitorData(ctx, s);
+    return monitorData(ctx, s, area);
   });
 
   // — backup —
