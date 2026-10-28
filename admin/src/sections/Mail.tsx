@@ -153,7 +153,7 @@ function AccountForm({ account, onCreated, onDeleted }: { account?: MailAccount;
 
 const NEW_RULE: Omit<MailRule, 'id'> = {
   name: '', enabled: true, fromContains: '', subjectContains: '', bodyContains: '', subjectPattern: '', action: 'ticket',
-  split: 'none', splitPattern: '', titleTemplate: '{subject}', descriptionTemplate: 'Von {from} am {date}:\n\n{body}', areaId: null,
+  split: 'none', splitPattern: '', splitExclude: '', titleTemplate: '{subject}', descriptionTemplate: 'Von {from} am {date}:\n\n{body}', areaId: null,
   prio: 'normal', dueMode: 'none', dueDays: 1, dueTime: null, continueAfter: false,
 };
 
@@ -253,6 +253,9 @@ function Rules({ account }: { account: MailAccount }) {
                   <Field label={t('mail.splitPattern')}><input className="input mono" value={draft.splitPattern} placeholder="Termin: (\S+) (.+)" onChange={e => set({ splitPattern: e.target.value })} /></Field>
                 )}
                 {draft.split !== 'none' && <div className="field-hint" style={{ marginTop: -8 }}>{t(`mail.splitHint.${draft.split}`)}</div>}
+                {draft.split !== 'none' && (
+                  <Field label={t('mail.splitExclude')}><input className="input" value={draft.splitExclude} placeholder="herbrand.de, abmelden" onChange={e => set({ splitExclude: e.target.value })} /></Field>
+                )}
                 <Field label={t('mail.titleTemplate')}><input className="input" value={draft.titleTemplate} onChange={e => set({ titleTemplate: e.target.value })} /></Field>
                 <Field label={t('mail.descriptionTemplate')}><textarea className="input" rows={3} value={draft.descriptionTemplate} onChange={e => set({ descriptionTemplate: e.target.value })} /></Field>
                 <div className="field-hint" style={{ marginTop: -8 }}>{t('mail.placeholders')}</div>

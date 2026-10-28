@@ -587,9 +587,10 @@
       "bullets": "Jede Zeile mit -, *, •, 1. oder [ ] wird ein Ticket ({item}).",
       "pattern": "Jeder Treffer wird ein Ticket; {item} ist der ganze Treffer, {1}, {2} … die Klammern."
     },
+    "splitExclude": "Treffer überspringen, wenn sie eines davon enthalten (mit Komma getrennt)",
     "titleTemplate": "Ticket-Titel",
     "descriptionTemplate": "Beschreibung",
-    "placeholders": "Platzhalter: {subject} {from} {fromName} {fromAddress} {date} {body} {bodyFirstLine} {item} {1} {2} …",
+    "placeholders": "Platzhalter: {subject} {from} {fromName} {fromAddress} {date} {body} {bodyFirstLine} {item} {1} {2} … – {1|2} nimmt den ersten nicht leeren Wert.",
     "due": {
       "none": "Keine",
       "days": "In X Tagen",

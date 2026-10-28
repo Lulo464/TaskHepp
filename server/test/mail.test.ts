@@ -54,7 +54,7 @@ const account = () => ({
 
 const rule = (over: object) => ({
   name: 'R', enabled: true, fromContains: '', subjectContains: '', bodyContains: '', subjectPattern: '', action: 'ticket', split: 'none',
-  splitPattern: '', titleTemplate: '{subject}', descriptionTemplate: '{body}', areaId: 2, prio: 'normal', dueMode: 'none', dueDays: 0,
+  splitPattern: '', splitExclude: '', titleTemplate: '{subject}', descriptionTemplate: '{body}', areaId: 2, prio: 'normal', dueMode: 'none', dueDays: 0,
   dueTime: null, continueAfter: false, ...over,
 });
 

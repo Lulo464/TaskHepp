@@ -267,6 +267,7 @@ export interface MailRule {
   action: 'ticket' | 'ignore';
   split: 'none' | 'lines' | 'bullets' | 'pattern';
   splitPattern: string;
+  splitExclude: string;
   titleTemplate: string;
   descriptionTemplate: string;
   areaId: number | null;

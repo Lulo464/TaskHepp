@@ -37,7 +37,7 @@ export const ACCOUNT_SELECT = `
 export const RULE_SELECT = `
   SELECT id, account_id AS "accountId", position, name, enabled, from_contains AS "fromContains",
          subject_contains AS "subjectContains", body_contains AS "bodyContains", subject_pattern AS "subjectPattern",
-         action, split, split_pattern AS "splitPattern", title_template AS "titleTemplate",
+         action, split, split_pattern AS "splitPattern", split_exclude AS "splitExclude", title_template AS "titleTemplate",
          description_template AS "descriptionTemplate", area_id AS "areaId", prio, due_mode AS "dueMode",
          due_days AS "dueDays", to_char(due_time, 'HH24:MI') AS "dueTime", continue_after AS "continueAfter"
     FROM mail_rules`;
