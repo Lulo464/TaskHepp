@@ -17,7 +17,7 @@ export function adminRoutes(app: FastifyInstance, ctx: AppContext) {
   const { db, settings } = ctx;
 
   // — users & roles —
-  app.get('/api/users', async () => {
+  app.get('/api/users', { config: { access: 'admin' } }, async () => {
     const { rows } = await db.query(
       `SELECT id, name, email, oidc_group AS "group", role, role_override AS "roleOverride", last_seen_at AS "lastSeenAt"
          FROM users ORDER BY name`,

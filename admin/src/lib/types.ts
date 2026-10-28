@@ -313,3 +313,9 @@ export interface MailImportEntry {
   rules: string[];
   ticketIds: number[];
 }
+
+/** Someone a ticket can be assigned to. */
+export interface Person {
+  id: number;
+  name: string;
+}

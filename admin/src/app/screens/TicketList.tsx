@@ -2,22 +2,24 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon, Loading } from '../../components/ui';
 import { useApi } from '../../lib/api';
-import type { Ticket } from '../../lib/types';
+import type { Me, Ticket } from '../../lib/types';
 import { useMyAreas } from '../areas';
 import type { Timers } from '../timer';
 import { TicketRow } from './TicketRow';
 
-type Filter = 'all' | 'ha' | 'mail' | 'done' | number;
+type Filter = 'all' | 'mine' | 'ha' | 'mail' | 'done' | number;
 
 export function TicketList({ timers, canEdit, selectedId }: { timers: Timers; canEdit: boolean; selectedId?: number }) {
   const { t } = useTranslation();
   const tickets = useApi<Ticket[]>('/api/tickets');
+  const me = useApi<Me>('/api/me');
   const areas = useMyAreas();
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
 
   const chips: { value: Filter; label: React.ReactNode }[] = [
     { value: 'all', label: t('common.all') },
+    { value: 'mine', label: <><Icon name="user" /> {t('app.assignee.mine')}</> },
     ...(areas?.visible ?? []).map(a => ({ value: a.id as Filter, label: a.name })),
     { value: 'ha', label: <><Icon name="house-line" /> HA</> },
     { value: 'mail', label: <><Icon name="envelope-simple" /> Mail</> },
@@ -25,7 +27,7 @@ export function TicketList({ timers, canEdit, selectedId }: { timers: Timers; ca
   ];
   const rows = (tickets ?? []).filter(x => !areas?.isHidden(x.areaId) &&
     (filter === 'done' ? x.status === 'done' : x.status !== 'done') &&
-    (filter === 'all' || filter === 'done' || (filter === 'ha' || filter === 'mail' ? x.source === filter : x.areaId === filter)) &&
+    (filter === 'all' || filter === 'done' || (filter === 'mine' ? x.assigneeId === me?.id : filter === 'ha' || filter === 'mail' ? x.source === filter : x.areaId === filter)) &&
     x.title.toLowerCase().includes(query.trim().toLowerCase()));
 
   return (

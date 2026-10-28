@@ -96,6 +96,26 @@ describe('tickets and time', () => {
     expect(csv.headers['content-type']).toContain('text/csv');
     expect(csv.body).toContain('Projekt;Minuten;Stunden');
   });
+
+  it('assigns tickets to someone else', async () => {
+    const reader = await t.login('read');
+    const people = (await call('GET', '/api/people', member)).json() as { id: number; name: string }[];
+    const me = (await call('GET', '/api/me', member)).json();
+    const readerMe = (await call('GET', '/api/me', reader)).json();
+    expect(people.map(p => p.id)).toContain(me.id);
+    expect(people.map(p => p.id)).not.toContain(readerMe.id); // readers cannot work on tickets
+    expect(Object.keys(people[0]).sort()).toEqual(['id', 'name']);
+    expect((await call('GET', '/api/users', member)).statusCode).toBe(403);
+
+    const other = people.find(p => p.id !== me.id)!;
+    const ticket = (await call('POST', '/api/tickets', member, { title: 'Für jemand anderen', areaId: 1 })).json();
+    expect(ticket.assigneeId).toBe(me.id);
+    const moved = await call('PATCH', `/api/tickets/${ticket.id}`, member, { assigneeId: other.id });
+    expect(moved.json()).toMatchObject({ assigneeId: other.id, assignee: other.name });
+    expect((await call('PATCH', `/api/tickets/${ticket.id}`, member, { assigneeId: null })).json().assignee).toBeNull();
+    expect((await call('PATCH', `/api/tickets/${ticket.id}`, member, { assigneeId: readerMe.id })).statusCode).toBe(400);
+    expect((await call('PATCH', `/api/tickets/${ticket.id}`, member, { assigneeId: 999999 })).statusCode).toBe(400);
+  });
 });
 
 describe('Home Assistant webhook', () => {

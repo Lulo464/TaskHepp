@@ -39,6 +39,8 @@ Admins kommen über **Mehr → Admin-Oberfläche** zur Verwaltung, alle anderen 
 
 Auf dem Desktop (ab 960 px Breite) zeigt die App eine Seitenleiste statt der unteren Tabs. Tickets erscheinen dort als Liste mit dem gewählten Ticket daneben.
 
+Auf der Ticket-Seite wählst du aus, **wem ein Ticket zugewiesen** ist, oder übernimmst es mit einem Tipp selbst. Zur Auswahl stehen alle Mitglieder und Admins. Der Filter **„Meine“** in der Ticket-Liste zeigt die Tickets, die dir zugewiesen sind.
+
 ## Entwicklung
 
 Voraussetzung: Node.js 22 und eine PostgreSQL-Datenbank.

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Assignee } from './Assignee';
 import { Icon, Loading } from '../../components/ui';
 import { del, patch, post, useAction, useApi } from '../../lib/api';
 import { formatDue, formatMinutes, formatTime, isOverdue } from '../../lib/format';
@@ -51,7 +52,7 @@ export function TicketDetail({ id, me, timers, canEdit }: { id: number; me: Me; 
       ) : ticket.due && (
         <p className="pwa-row-meta" style={{ margin: '-10px 0 18px' }}><Icon name="calendar-blank" /> {t('app.detail.due', { when: formatDue(ticket.due, ticket.dueTime) })}</p>
       )}
-      {ticket.assignee && <p className="pwa-row-meta" style={{ margin: '-10px 0 18px' }}><Icon name="user" /> {ticket.assignee}</p>}
+      <Assignee ticket={ticket} canEdit={canEdit} />
 
       <div className="seg pwa-seg" role="radiogroup" aria-label={t('tickets.col.status')}>
         {STATUSES.map(s => (
