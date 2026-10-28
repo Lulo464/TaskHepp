@@ -2,13 +2,14 @@ import { useTranslation } from 'react-i18next';
 import { Icon, Loading } from '../../components/ui';
 import { del, patch, post, useAction, useApi } from '../../lib/api';
 import { formatDue, formatMinutes, formatTime, isOverdue } from '../../lib/format';
-import type { HistoryEvent, Ticket, TicketStatus } from '../../lib/types';
+import type { HistoryEvent, Me, Ticket, TicketStatus } from '../../lib/types';
 import { href, navigate } from '../router';
 import { clock, useNow, type Timers } from '../timer';
+import { TicketNotes } from './TicketNotes';
 
 const STATUSES: TicketStatus[] = ['open', 'inProgress', 'done'];
 
-export function TicketDetail({ id, timers, canEdit }: { id: number; timers: Timers; canEdit: boolean }) {
+export function TicketDetail({ id, me, timers, canEdit }: { id: number; me: Me; timers: Timers; canEdit: boolean }) {
   const { t } = useTranslation();
   const ticket = useApi<Ticket>(`/api/tickets/${id}`);
   const history = useApi<HistoryEvent[]>(`/api/tickets/${id}/history`);
@@ -86,6 +87,8 @@ export function TicketDetail({ id, timers, canEdit }: { id: number; timers: Time
           </>
         )}
       </div>
+
+      <TicketNotes ticketId={id} me={me} canEdit={canEdit} />
 
       {history && history.length > 0 && (
         <>

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { userId } from '../auth/plugin.js';
 import type { AppContext } from '../context.js';
 import { withTransaction } from '../db.js';
-import { idParam, notFound, parse } from '../lib/http.js';
+import { HttpError, idParam, notFound, parse } from '../lib/http.js';
 import { createTicket, getTicket, setStatus, TICKET_ORDER, TICKET_SELECT, type TicketRow } from '../services/tickets.js';
 import { addManualTime, startTimer, stopEntries } from '../services/time.js';
 
@@ -136,6 +136,39 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
     }
     if (ticket.doneAt) events.push({ at: ticket.doneAt, kind: 'done' });
     return events.sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
+  });
+
+  // — notes —
+  const NOTE_SELECT = `SELECT n.id, n.body, n.created_at AS "createdAt", n.user_id AS "userId", u.name AS "user"
+                         FROM ticket_notes n LEFT JOIN users u ON u.id = n.user_id`;
+
+  app.get('/api/tickets/:id/notes', async req => {
+    const { id } = parse(idParam, req.params);
+    if (!(await getTicket(db, id))) throw notFound('Ticket nicht gefunden');
+    return (await db.query(`${NOTE_SELECT} WHERE n.ticket_id = $1 ORDER BY n.created_at, n.id`, [id])).rows;
+  });
+
+  app.post('/api/tickets/:id/notes', { config: { access: 'member' } }, async (req, reply) => {
+    const { id } = parse(idParam, req.params);
+    const { body } = parse(z.object({ body: z.string().trim().min(1, 'Die Notiz ist leer').max(4000) }), req.body);
+    if (!(await getTicket(db, id))) throw notFound('Ticket nicht gefunden');
+    const { rows: [{ id: noteId }] } = await db.query<{ id: number }>(
+      'INSERT INTO ticket_notes (ticket_id, user_id, body) VALUES ($1, $2, $3) RETURNING id', [id, userId(req), body],
+    );
+    const { rows: [note] } = await db.query(`${NOTE_SELECT} WHERE n.id = $1`, [noteId]);
+    return reply.code(201).send(note);
+  });
+
+  /** Authors delete their own notes, admins any. */
+  app.delete('/api/notes/:id', { config: { access: 'member' } }, async (req, reply) => {
+    const { id } = parse(idParam, req.params);
+    const { rows: [note] } = await db.query<{ userId: number | null }>('SELECT user_id AS "userId" FROM ticket_notes WHERE id = $1', [id]);
+    if (!note) throw notFound('Notiz nicht gefunden');
+    const p = req.principal!;
+    const isAdmin = p.kind === 'user' ? p.user.role === 'admin' : p.scope === 'admin';
+    if (!isAdmin && note.userId !== userId(req)) throw new HttpError(403, 'Nur eigene Notizen lassen sich löschen');
+    await db.query('DELETE FROM ticket_notes WHERE id = $1', [id]);
+    return reply.code(204).send();
   });
 
   /** The signed-in user's own tracked time: today, this week per day, per area, and the top tickets. */

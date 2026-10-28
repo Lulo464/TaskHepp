@@ -466,6 +466,14 @@
       "delete": "Ticket löschen",
       "deleteConfirm": "Ticket wirklich löschen?"
     },
+    "notes": {
+      "title": "Notizen",
+      "placeholder": "Notiz hinzufügen …",
+      "add": "Notiz speichern",
+      "delete": "Notiz löschen",
+      "deleteConfirm": "Notiz wirklich löschen?",
+      "unknownUser": "Unbekannt"
+    },
     "history": {
       "created": "Ticket erstellt",
       "createdByHa": "Ticket von Home Assistant erstellt",
