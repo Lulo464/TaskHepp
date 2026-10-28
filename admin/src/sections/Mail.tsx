@@ -372,7 +372,7 @@ function Preview({ account }: { account: MailAccount }) {
                   <td className="soft">{e.from}</td>
                   <td>{e.subject}</td>
                   <td className="soft">{e.rules.join(', ') || '–'}</td>
-                  <td><span className={`tag ${e.result === 'created' ? 'tag-accent' : e.result === 'nomatch' ? 'tag-outline' : 'tag-neutral'}`}>{t(`mail.result.${e.result}`, { count: e.ticketIds.length })}</span></td>
+                  <td><span className={`tag ${e.result === 'created' ? 'tag-accent' : e.result === 'nomatch' ? 'tag-outline' : 'tag-neutral'}`}>{t(`mail.logResult.${e.result}`, { count: e.ticketIds.length })}</span></td>
                 </tr>
               ))}
               {imports?.length === 0 && <tr><td colSpan={5} className="empty">{t('mail.noImports')}</td></tr>}

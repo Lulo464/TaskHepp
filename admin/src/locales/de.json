@@ -623,6 +623,13 @@
     "empty": "Der Ordner ist leer.",
     "log": "Import-Protokoll",
     "ruleCol": "Regel",
-    "noImports": "Noch nichts importiert."
+    "noImports": "Noch nichts importiert.",
+    "logResult": {
+      "created_one": "1 Ticket erstellt",
+      "created_other": "{{count}} Tickets erstellt",
+      "ignored": "Ignoriert",
+      "nomatch": "Keine Regel – unberührt",
+      "error": "Fehler"
+    }
   }
 }

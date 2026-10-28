@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { fixLatin1Headers } from '../src/services/mailImport.js';
 import { checkPattern, detectDue, htmlToText, planMail, render, splitItems, type MailMessage, type MailRule } from '../src/services/mailRules.js';
 
 const today = new Date(2026, 9, 28); // 28.10.2026
@@ -92,5 +93,14 @@ describe('helpers', () => {
 
   it('converts HTML mails to text', () => {
     expect(htmlToText('<p>Hallo&nbsp;Welt</p><ul><li>Eins</li><li>Zwei</li></ul><style>x{}</style>')).toBe('Hallo Welt\n- Eins\n- Zwei');
+  });
+});
+
+describe('header charset', () => {
+  it('reads unencoded Latin-1 headers and leaves UTF-8 alone', () => {
+    const latin1 = Buffer.concat([Buffer.from('From: Werkstatt Müller <a@b.de>\r\n', 'latin1'), Buffer.from('\r\nKörper', 'utf8')]);
+    expect(fixLatin1Headers(latin1).toString('utf8')).toBe('From: Werkstatt Müller <a@b.de>\r\n\r\nKörper');
+    const utf8 = Buffer.from('From: Müller <a@b.de>\r\n\r\nText', 'utf8');
+    expect(fixLatin1Headers(utf8)).toBe(utf8);
   });
 });

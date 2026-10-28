@@ -42,6 +42,22 @@ export const RULE_SELECT = `
          due_days AS "dueDays", to_char(due_time, 'HH24:MI') AS "dueTime", continue_after AS "continueAfter"
     FROM mail_rules`;
 
+/**
+ * Old mail programs put unencoded Latin-1 (umlauts) into headers. mailparser reads 8-bit headers as
+ * UTF-8, so such a header block is converted first; the body keeps its declared charset.
+ */
+export function fixLatin1Headers(source: Buffer): Buffer {
+  let end = source.indexOf('\r\n\r\n');
+  if (end < 0) end = source.indexOf('\n\n');
+  const head = source.subarray(0, end < 0 ? source.length : end);
+  try {
+    new TextDecoder('utf-8', { fatal: true }).decode(head);
+    return source;
+  } catch {
+    return Buffer.concat([Buffer.from(head.toString('latin1'), 'utf8'), source.subarray(head.length)]);
+  }
+}
+
 /** Messages handled per poll; the rest follow on the next one. */
 const BATCH = 25;
 const MAX_SOURCE = 5 * 1024 * 1024;
@@ -112,7 +128,7 @@ export class MailImporter {
   }
 
   private async parse(uid: number, source: Buffer, uidValidity: string): Promise<MailMessage> {
-    const p = await simpleParser(source.subarray(0, MAX_SOURCE));
+    const p = await simpleParser(fixLatin1Headers(source.subarray(0, MAX_SOURCE)));
     const from = p.from?.value[0];
     return {
       messageKey: p.messageId || `${uidValidity}:${uid}`,
