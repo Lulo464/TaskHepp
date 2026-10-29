@@ -43,7 +43,7 @@ Auf der Ticket-Seite wählst du aus, **wem ein Ticket zugewiesen** ist, oder üb
 
 ## Entwicklung
 
-Voraussetzung: Node.js 22 und eine PostgreSQL-Datenbank.
+Voraussetzung: Node.js 24 und eine PostgreSQL-Datenbank.
 
 ```sh
 # API (Port 8080), ohne OIDC und mit Beispieldaten

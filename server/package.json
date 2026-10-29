@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@types/mailparser": "3.4.6",
-    "@types/node": "^22.10.0",
+    "@types/node": "^24.19.2",
     "@types/oidc-provider": "^9.12.1",
     "@types/pg": "^8.23.0",
     "hoodiecrow-imap": "3.3.1",
