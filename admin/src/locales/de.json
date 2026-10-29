@@ -434,6 +434,7 @@
     "tab": {
       "today": "Heute",
       "tickets": "Tickets",
+      "plan": "Planung",
       "new": "Neu",
       "time": "Zeit",
       "more": "Mehr"
@@ -456,6 +457,19 @@
       "nothingDue": "Für heute ist nichts fällig.",
       "fromHa": "Automatisch von Home Assistant",
       "fromHaText": "{{title}} – Ticket erstellt {{time}}"
+    },
+    "plan": {
+      "title": "Planung",
+      "nextDays": "Die nächsten {{n}} Tage",
+      "earlier": "Frühere Tage",
+      "later": "Spätere Tage",
+      "hint": "Tickets auf einen Tag ziehen oder über den Kalender verschieben.",
+      "free": "Nichts geplant",
+      "undated": "Ohne Datum",
+      "allPlanned": "Alles hat ein Datum.",
+      "laterCount_one": "Danach ist noch {{count}} Ticket geplant.",
+      "laterCount_other": "Danach sind noch {{count}} Tickets geplant.",
+      "move": "„{{title}}“ verschieben"
     },
     "assignee": {
       "label": "Zugewiesen an",

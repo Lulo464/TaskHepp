@@ -144,7 +144,7 @@ a.btn { text-decoration: none; }
   padding: 8px 0 calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--color-neutral-800); background: var(--color-bg);
 }
 .pwa-tab {
-  display: flex; flex-direction: column; align-items: center; gap: 3px; width: 64px; padding: 4px 0;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; min-width: 0; max-width: 72px; padding: 4px 0;
   font-size: 11px; color: var(--color-neutral-400); text-decoration: none; border-radius: var(--radius-md);
 }
 .pwa-tab i { font-size: 24px; }
@@ -171,6 +171,25 @@ textarea.input { min-height: 80px; }
 .pwa-due-edit input[type='date'] { flex: 1.4; min-width: 0; }
 .pwa-due-edit input[type='time'] { flex: 1; min-width: 0; }
 
+/* — planning — */
+.pwa-plan-nav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin: 6px 0 4px -8px; }
+.pwa-plan-hint { margin: 0 0 14px; }
+.pwa-plan-grid { display: grid; gap: 12px; }
+.pwa-plan-day { border: 1px solid var(--color-neutral-800); border-radius: 12px; padding: 10px 12px; background: var(--color-bg); transition: border-color .15s, background .15s; }
+.pwa-plan-day.is-today { border-color: var(--color-accent-800); }
+.pwa-plan-day.is-overdue { border-color: var(--color-accent); margin-bottom: 12px; }
+.pwa-plan-day.is-drop { border-color: var(--color-accent); background: var(--color-accent-900); }
+.pwa-plan-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; font-weight: 500; padding-bottom: 6px; }
+.pwa-plan-free { font-size: 13px; color: var(--color-neutral-500); padding: 6px 0 2px; }
+.pwa-plan-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--color-neutral-800); min-height: 48px; }
+.pwa-plan-item > .grow { min-width: 0; cursor: pointer; }
+.pwa-plan-item > .grow:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.pwa-plan-item.is-dragging { opacity: .4; }
+.pwa-plan-item[draggable='true'] { cursor: grab; }
+.pwa-plan-move { position: relative; flex: none; }
+.pwa-plan-move .btn-icon { width: 40px; height: 40px; font-size: 18px; }
+.pwa-plan-move input { position: absolute; inset: 0; opacity: 0; pointer-events: none; width: 100%; }
+
 /* — desktop: sidebar instead of tabs, wider pages, tickets as list + detail — */
 @media (min-width: 960px) {
   .pwa {
@@ -191,7 +210,7 @@ textarea.input { min-height: 80px; }
     width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--color-accent); color: var(--color-accent);
     display: inline-flex; align-items: center; justify-content: center; font-size: 17px;
   }
-  .pwa-tab { flex-direction: row; gap: 12px; width: auto; padding: 9px 12px; font-size: 14px; color: var(--color-neutral-300); }
+  .pwa-tab { flex-direction: row; gap: 12px; flex: none; max-width: none; padding: 9px 12px; font-size: 14px; color: var(--color-neutral-300); }
   .pwa-tab i { font-size: 20px; }
   .pwa-tab:hover { background: var(--color-neutral-800); color: var(--color-text); }
   .pwa-tab.is-active { background: var(--color-accent-900); color: var(--color-text); }
@@ -220,6 +239,8 @@ textarea.input { min-height: 80px; }
   .pwa-split-empty { height: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--color-neutral-400); font-size: 14px; }
 
   .pwa-bars { height: 220px; }
+  .pwa-plan-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+  .pwa-plan-item:hover { background: var(--color-neutral-800); }
 
   /* Login as a centred card. */
   .pwa-login {

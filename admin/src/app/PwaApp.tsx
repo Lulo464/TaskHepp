@@ -8,6 +8,7 @@ import { Areas } from './screens/Areas';
 import { Login } from './screens/Login';
 import { More } from './screens/More';
 import { NewTicket } from './screens/NewTicket';
+import { Plan } from './screens/Plan';
 import { TicketDetail } from './screens/TicketDetail';
 import { TicketList } from './screens/TicketList';
 import { Time } from './screens/Time';
@@ -69,6 +70,7 @@ function Shell({ me }: { me: Me }) {
   const tabs: { route: Route; icon: string; label: string; active: boolean }[] = [
     { route: { name: 'today' }, icon: 'house', label: t('app.tab.today'), active: route.name === 'today' },
     { route: { name: 'tickets' }, icon: 'list-checks', label: t('app.tab.tickets'), active: route.name === 'tickets' || route.name === 'ticket' },
+    { route: { name: 'plan' }, icon: 'calendar-dots', label: t('app.tab.plan'), active: route.name === 'plan' },
     ...(canEdit ? [{ route: { name: 'new' } as Route, icon: 'plus-circle', label: t('app.tab.new'), active: route.name === 'new' }] : []),
     { route: { name: 'time' }, icon: 'chart-bar', label: t('app.tab.time'), active: route.name === 'time' },
     { route: { name: 'more' }, icon: 'gear', label: t('app.tab.more'), active: route.name === 'more' || route.name === 'areas' },
@@ -98,6 +100,7 @@ function Shell({ me }: { me: Me }) {
             {route.name === 'ticket' && <TicketDetail id={route.id} me={me} timers={timers} canEdit={canEdit} />}
           </>
         )}
+        {route.name === 'plan' && <Plan me={me} />}
         {route.name === 'new' && <NewTicket timers={timers} />}
         {route.name === 'time' && <Time />}
         {route.name === 'more' && <More me={me} />}
