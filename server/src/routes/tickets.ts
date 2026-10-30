@@ -47,6 +47,15 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
     if (!rowCount) throw new HttpError(400, 'Diese Person kann keine Tickets übernehmen');
   };
 
+  /** The area must exist and the project, if any, belong to it. */
+  const checkPlace = async (areaId: number, projectId: number | null | undefined) => {
+    if (!(await db.query('SELECT 1 FROM areas WHERE id = $1', [areaId])).rowCount) throw new HttpError(400, 'Unbekannter Bereich');
+    if (projectId == null) return;
+    if (!(await db.query('SELECT 1 FROM projects WHERE id = $1 AND area_id = $2', [projectId, areaId])).rowCount) {
+      throw new HttpError(400, 'Das Projekt gehört nicht zu diesem Bereich');
+    }
+  };
+
   app.get('/api/people', async () => (await db.query(`${PEOPLE_SQL} ORDER BY name, id`)).rows);
 
   app.get('/api/tickets', async req => {
@@ -76,6 +85,7 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
     const body = parse(ticketInput, req.body);
     // Tickets created by a person are theirs unless assigned otherwise.
     await checkAssignee(body.assigneeId);
+    await checkPlace(body.areaId, body.projectId);
     const id = await createTicket(db, { ...body, assigneeId: body.assigneeId === undefined ? userId(req) : body.assigneeId });
     publisher.schedule();
     reply.code(201);
@@ -86,6 +96,14 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
     const { id } = parse(idParam, req.params);
     const body = parse(ticketInput.partial(), req.body);
     await checkAssignee(body.assigneeId);
+    if ('areaId' in body || 'projectId' in body) {
+      const current = await getTicket(db, id);
+      if (!current) throw notFound('Ticket nicht gefunden');
+      const areaId = body.areaId ?? current.areaId;
+      // Moved to another area: a project of the old area no longer fits and is dropped.
+      if (!('projectId' in body) && areaId !== current.areaId) body.projectId = null;
+      await checkPlace(areaId, 'projectId' in body ? body.projectId : current.projectId);
+    }
     const cols: Record<string, string> = { title: 'title', description: 'description', areaId: 'area_id', projectId: 'project_id', prio: 'prio', assigneeId: 'assignee_id', due: 'due_date', dueTime: 'due_time', source: 'source', recurrence: 'recurrence' };
     await withTransaction(db, async c => {
       const sets: string[] = [];

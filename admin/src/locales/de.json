@@ -481,7 +481,9 @@
     },
     "detail": {
       "noDescription": "Keine Beschreibung.",
-      "edit": "Titel und Beschreibung bearbeiten",
+      "edit": "Ticket bearbeiten (Titel, Beschreibung, Bereich)",
+      "project": "Projekt",
+      "noProject": "Kein Projekt",
       "due": "Fällig: {{when}}",
       "tracked": "Erfasste Zeit",
       "trackedRunning": "Läuft · gesamt {{total}}",
