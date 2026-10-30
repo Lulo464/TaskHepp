@@ -149,6 +149,22 @@ describe('tickets and time', () => {
     expect((await call('PATCH', `/api/tickets/${next.id}`, member, { recurrence: null })).json().recurrence).toBeNull();
   });
 
+  it('moves a ticket to another area and project', async () => {
+    const areas = (await call('GET', '/api/areas', member)).json() as { id: number; projects: { id: number }[] }[];
+    const [a, b] = areas;
+    const ticket = (await call('POST', '/api/tickets', member, { title: 'Umziehen', areaId: a.id, projectId: a.projects[0].id })).json();
+    expect(ticket.projectId).toBe(a.projects[0].id);
+
+    const moved = (await call('PATCH', `/api/tickets/${ticket.id}`, member, { areaId: b.id })).json();
+    expect(moved).toMatchObject({ areaId: b.id, projectId: null }); // the old project does not fit
+    expect((await call('PATCH', `/api/tickets/${ticket.id}`, member, { projectId: b.projects[0].id })).json().projectId).toBe(b.projects[0].id);
+    expect((await call('PATCH', `/api/tickets/${ticket.id}`, member, { areaId: a.id, projectId: a.projects[0].id })).json()).toMatchObject({ areaId: a.id, projectId: a.projects[0].id });
+
+    expect((await call('PATCH', `/api/tickets/${ticket.id}`, member, { projectId: b.projects[0].id })).statusCode).toBe(400);
+    expect((await call('PATCH', `/api/tickets/${ticket.id}`, member, { areaId: 999999 })).statusCode).toBe(400);
+    expect((await call('POST', '/api/tickets', member, { title: 'x', areaId: a.id, projectId: b.projects[0].id })).statusCode).toBe(400);
+  });
+
   it('assigns tickets to someone else', async () => {
     const reader = await t.login('read');
     const people = (await call('GET', '/api/people', member)).json() as { id: number; name: string }[];
