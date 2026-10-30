@@ -5,6 +5,28 @@ import type { AppContext } from '../context.js';
 import { randomToken } from '../lib/crypto.js';
 import { HttpError, notFound, parse } from '../lib/http.js';
 import { icalCalendar } from '../lib/ical.js';
+import type { Recurrence } from '../services/recurrence.js';
+
+const BYDAY = ['', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
+
+/**
+ * The series as an RRULE so calendars show the dates to come. Counted from when it is done, the dates are not known
+ * in advance: those show only the current ticket.
+ */
+export function rruleOf(r: Recurrence | null, due: string): string | null {
+  if (!r || r.fromDone) return null;
+  const every = r.every > 1 ? `;INTERVAL=${r.every}` : '';
+  switch (r.unit) {
+    case 'day': return `FREQ=DAILY${every}`;
+    case 'week': return `FREQ=WEEKLY${every}${r.weekdays?.length ? `;BYDAY=${[...r.weekdays].sort((a, b) => a - b).map(d => BYDAY[d]).join(',')}` : ''}`;
+    case 'month': {
+      // A day past the 28th falls back to the month's last day, as the series itself does.
+      const day = r.monthDay ?? Number(due.slice(8));
+      return `FREQ=MONTHLY${every};` + (day <= 28 ? `BYMONTHDAY=${day}` : `BYMONTHDAY=${Array.from({ length: day - 27 }, (_, i) => 28 + i).join(',')};BYSETPOS=-1`);
+    }
+    case 'year': return `FREQ=YEARLY${every}`;
+  }
+}
 
 const feedQuery = z.object({
   mine: z.stringbool().optional(),
@@ -48,10 +70,10 @@ export function feedRoutes(app: FastifyInstance, ctx: AppContext) {
 
     const { rows } = await db.query<{
       id: number; title: string; description: string; due: string; dueTime: string | null; area: string; project: string | null;
-      assignee: string | null; updatedAt: Date;
+      assignee: string | null; updatedAt: Date; recurrence: Recurrence | null;
     }>(
       `SELECT t.id, t.title, t.description, t.due_date AS due, to_char(t.due_time, 'HH24:MI') AS "dueTime", a.name AS area,
-              p.name AS project, u.name AS assignee, t.updated_at AS "updatedAt"
+              p.name AS project, u.name AS assignee, t.updated_at AS "updatedAt", t.recurrence
          FROM tickets t JOIN areas a ON a.id = t.area_id LEFT JOIN projects p ON p.id = t.project_id LEFT JOIN users u ON u.id = t.assignee_id
         WHERE t.status <> 'done' AND t.due_date IS NOT NULL
           AND NOT (t.area_id = ANY($1::int[]))
@@ -74,6 +96,7 @@ export function feedRoutes(app: FastifyInstance, ctx: AppContext) {
       date: t.due,
       time: t.dueTime,
       tz: config.TZ,
+      rrule: rruleOf(t.recurrence, t.due),
     })));
     reply.header('Content-Type', 'text/calendar; charset=utf-8');
     reply.header('Content-Disposition', 'inline; filename="tasklog.ics"');

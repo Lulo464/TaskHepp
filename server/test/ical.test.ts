@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { foldLine, icalCalendar, icalText } from '../src/lib/ical.js';
+import { rruleOf } from '../src/routes/feed.js';
 
 describe('ical', () => {
   it('escapes text and folds long lines at 75 octets without splitting characters', () => {
@@ -20,5 +21,15 @@ describe('ical', () => {
     expect(cal).toContain('DTSTAMP:20261030T080000Z');
     expect(cal.startsWith('BEGIN:VCALENDAR\r\n')).toBe(true);
     expect(cal.endsWith('END:VCALENDAR\r\n')).toBe(true);
+  });
+
+  it('turns a series into an RRULE', () => {
+    expect(rruleOf({ every: 1, unit: 'week', weekdays: [4, 1] }, '2026-11-02')).toBe('FREQ=WEEKLY;BYDAY=MO,TH');
+    expect(rruleOf({ every: 2, unit: 'day' }, '2026-11-02')).toBe('FREQ=DAILY;INTERVAL=2');
+    expect(rruleOf({ every: 1, unit: 'month' }, '2026-11-15')).toBe('FREQ=MONTHLY;BYMONTHDAY=15');
+    expect(rruleOf({ every: 1, unit: 'month', monthDay: 31 }, '2026-10-31')).toBe('FREQ=MONTHLY;BYMONTHDAY=28,29,30,31;BYSETPOS=-1');
+    expect(rruleOf({ every: 1, unit: 'year' }, '2026-11-15')).toBe('FREQ=YEARLY');
+    expect(rruleOf({ every: 3, unit: 'month', fromDone: true }, '2026-11-15')).toBeNull();
+    expect(rruleOf(null, '2026-11-15')).toBeNull();
   });
 });

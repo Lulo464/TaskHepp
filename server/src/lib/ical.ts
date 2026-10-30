@@ -39,6 +39,8 @@ export interface IcalEvent {
   time: string | null;
   tz: string;
   minutes?: number;
+  /** RRULE value, e.g. FREQ=WEEKLY;BYDAY=MO */
+  rrule?: string | null;
 }
 
 const nextDay = (iso: string) => {
@@ -64,6 +66,7 @@ export function icalCalendar(name: string, events: IcalEvent[]): string {
     } else {
       lines.push(`DTSTART;VALUE=DATE:${icalDate(e.date)}`, `DTEND;VALUE=DATE:${icalDate(nextDay(e.date))}`, 'TRANSP:TRANSPARENT');
     }
+    if (e.rrule) lines.push(`RRULE:${e.rrule}`);
     lines.push(`SUMMARY:${icalText(e.summary)}`);
     if (e.description) lines.push(`DESCRIPTION:${icalText(e.description)}`);
     if (e.url) lines.push(`URL:${e.url}`);
