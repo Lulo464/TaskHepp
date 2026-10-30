@@ -357,6 +357,14 @@
   "config": {
     "ha": "Home Assistant (YAML)",
     "tasklog": "Tasklog (YAML)",
+    "dashboard": "Dashboard-Karte",
+    "dashboardHint": "Mit der Tasklog-Integration wird jeder Bereich in Home Assistant eine To-do-Liste (todo.tasklog_…). Abhaken, Anlegen, Umbenennen und Löschen dort landet direkt in Tasklog – auch per Sprachassistent („Füge Milch zu Tasklog Zuhause hinzu“). Die Karte oben zeigt alle Listen im Dashboard. So richtest du die Integration ein:",
+    "dashboardSteps": [
+      "In Tasklog unter Einstellungen → API-Tokens ein Token mit dem Recht tickets:write anlegen.",
+      "In HACS → Integrationen → ⋮ → Benutzerdefinierte Repositories die Adresse dieses Git-Repositorys als „Integration“ hinzufügen und „Tasklog“ installieren (oder den Ordner custom_components/tasklog in das config-Verzeichnis von Home Assistant kopieren).",
+      "Home Assistant neu starten, dann Einstellungen → Geräte & Dienste → Integration hinzufügen → „Tasklog“: Adresse von Tasklog und das Token eintragen.",
+      "Dashboard bearbeiten → Karte hinzufügen → Manuell → das YAML von oben einfügen."
+    ],
     "copy": "Kopieren",
     "copied": "Kopiert",
     "download": "Herunterladen",
@@ -572,6 +580,17 @@
       "deleteConfirm": "Dieses Foto löschen?",
       "failed": "„{{name}}“ ließ sich nicht hochladen: {{reason}}",
       "unsupported": "Dieses Format kann der Browser nicht umwandeln – bitte als JPEG oder PNG"
+    },
+    "autoClose": {
+      "add": "Automatisch erledigen, wenn …",
+      "rule": "Erledigt sich, wenn {{name}} zu „{{state}}“ wechselt",
+      "entity": "Entität aus Home Assistant",
+      "state": "wechselt zu",
+      "now": "{{name}} ist gerade: {{state}}",
+      "noHa": "Home Assistant ist nicht verbunden – die Entität lässt sich trotzdem eintippen.",
+      "how": "Es zählt der Wechsel: Ist die Waschmaschine schon „idle“, erledigt sich „Wäsche aufhängen“ nach ihrem nächsten Lauf. Wiederkehrende Tickets nehmen die Bedingung mit.",
+      "change": "Bedingung ändern",
+      "remove": "Bedingung entfernen"
     },
     "checklist": {
       "title": "Checkliste",

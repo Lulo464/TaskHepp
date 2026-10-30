@@ -25,6 +25,10 @@ const ticketInput = z.object({
   dueTime: hhmm.nullable().optional(),
   source: z.enum(['manual', 'app']).optional(),
   recurrence: recurrenceSchema.nullable().optional(),
+  autoClose: z.object({
+    entity: z.string().regex(/^[a-z_]+\.[a-z0-9_]+$/, 'Entität aus Home Assistant, z. B. sensor.waschmaschine'),
+    state: z.string().trim().min(1).max(100),
+  }).nullable().optional(),
 });
 
 const listQuery = z.object({
@@ -115,7 +119,7 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
       if (!('projectId' in body) && areaId !== current.areaId) body.projectId = null;
       await checkPlace(areaId, 'projectId' in body ? body.projectId : current.projectId);
     }
-    const cols: Record<string, string> = { title: 'title', description: 'description', areaId: 'area_id', projectId: 'project_id', prio: 'prio', assigneeId: 'assignee_id', due: 'due_date', dueTime: 'due_time', source: 'source', recurrence: 'recurrence' };
+    const cols: Record<string, string> = { title: 'title', description: 'description', areaId: 'area_id', projectId: 'project_id', prio: 'prio', assigneeId: 'assignee_id', due: 'due_date', dueTime: 'due_time', source: 'source', recurrence: 'recurrence', autoClose: 'auto_close' };
     await withTransaction(db, async c => {
       const sets: string[] = [];
       const params: unknown[] = [id];
@@ -127,6 +131,8 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
       }
       // A new due date/time gets its own "due soon" reminder.
       if ('due' in body || 'dueTime' in body) sets.push('due_notified_at = NULL');
+      // A new condition starts from what Home Assistant says next.
+      if ('autoClose' in body) sets.push('auto_close_seen = NULL');
       if (sets.length) {
         const { rowCount } = await c.query(`UPDATE tickets SET ${sets.join(', ')}, updated_at = now() WHERE id = $1`, params);
         if (!rowCount) throw notFound('Ticket nicht gefunden');

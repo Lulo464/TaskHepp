@@ -6,6 +6,7 @@ import { formatDue, formatMinutes, formatTime, isOverdue } from '../../lib/forma
 import type { HistoryEvent, Me, Ticket, TicketStatus } from '../../lib/types';
 import { href, navigate } from '../router';
 import { clock, useNow, type Timers } from '../timer';
+import { AutoClose } from './AutoClose';
 import { Checklist } from './Checklist';
 import { Photos } from './Photos';
 import { RepeatPicker } from './Repeat';
@@ -63,6 +64,7 @@ export function TicketDetail({ id, me, timers, canEdit }: { id: number; me: Me; 
       {(canEdit || ticket.recurrence) && (
         <RepeatPicker value={ticket.recurrence} due={ticket.due} disabled={!canEdit} onChange={recurrence => act(() => patch(`/api/tickets/${id}`, { recurrence }))} />
       )}
+      <AutoClose ticket={ticket} canEdit={canEdit} />
       {ticket.followupId && (
         <a className="btn btn-ghost pwa-followup" href={href({ name: 'ticket', id: ticket.followupId })}><Icon name="arrow-right" /> {t('repeat.next')}</a>
       )}

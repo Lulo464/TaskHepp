@@ -2,6 +2,7 @@ import { mkdir, readdir, utimes, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { hmacSha256 } from '../src/lib/crypto.js';
+import { checkAutoClose } from '../src/services/autoClose.js';
 import { jobs, sendPersonalLists } from '../src/services/jobs.js';
 import { checkPresence } from '../src/services/presence.js';
 import { sweepUploads } from '../src/routes/attachments.js';
@@ -375,6 +376,34 @@ describe('Tasklog → Home Assistant', () => {
     await t.db.query('DELETE FROM tickets WHERE id = $1', [ticket.id]);
   });
 
+  it('closes a ticket when a Home Assistant entity changes to a state', async () => {
+    ha.states.set('sensor.waschmaschine', { state: 'idle', attributes: { friendly_name: 'Waschmaschine' } });
+    const entities = (await call('GET', '/api/ha/entities', member)).json();
+    expect(entities).toContainEqual({ id: 'sensor.waschmaschine', name: 'Waschmaschine', state: 'idle' });
+    expect((await call('GET', '/api/ha/entities', reader)).statusCode).toBe(403);
+
+    const autoClose = { entity: 'sensor.waschmaschine', state: 'Idle' };
+    const ticket = (await call('POST', '/api/tickets', member, { title: 'Wäsche aufhängen', areaId: 2, due: '2030-05-06', recurrence: { every: 1, unit: 'week' }, autoClose })).json();
+    expect(ticket.autoClose).toEqual(autoClose);
+    const status = async () => (await call('GET', `/api/tickets/${ticket.id}`, member)).json().status;
+
+    await checkAutoClose(t.ctx); // already idle when created: only remembered
+    expect(await status()).toBe('open');
+    ha.states.set('sensor.waschmaschine', { state: 'running', attributes: {} });
+    await checkAutoClose(t.ctx);
+    expect(await status()).toBe('open');
+    ha.states.set('sensor.waschmaschine', { state: 'idle', attributes: {} });
+    expect(await checkAutoClose(t.ctx)).toBe(1); // finished: closed, the comparison ignores case
+    const done = (await call('GET', `/api/tickets/${ticket.id}`, member)).json();
+    expect(done.status).toBe('done');
+    expect((await call('GET', `/api/tickets/${done.followupId}`, member)).json().autoClose).toEqual(autoClose); // the series keeps it
+
+    expect((await call('PATCH', `/api/tickets/${done.followupId}`, member, { autoClose: { entity: 'Waschmaschine', state: 'idle' } })).statusCode).toBe(400);
+    expect((await call('PATCH', `/api/tickets/${done.followupId}`, member, { autoClose: null })).json().autoClose).toBeNull();
+    ha.states.delete('sensor.waschmaschine');
+    await t.db.query("DELETE FROM tickets WHERE title = 'Wäsche aufhängen'");
+  });
+
   it('tells a user what is due when they arrive home', async () => {
     const noon = new Date();
     noon.setHours(12, 0, 0, 0); // outside the default quiet hours
@@ -481,6 +510,13 @@ describe('Tasklog → Home Assistant', () => {
 });
 
 describe('configuration and backup', () => {
+  it('generates the dashboard card for the Tasklog integration', async () => {
+    const yaml = (await call('GET', '/api/config/dashboard.yaml', admin)).body;
+    expect(yaml).toContain('type: vertical-stack');
+    expect(yaml).toContain('entity: todo.tasklog_zuhause');
+    expect(yaml).toContain('entity: todo.tasklog_arbeit');
+  });
+
   it('generates both YAML files', async () => {
     const ha = await call('GET', '/api/config/homeassistant.yaml', admin);
     expect(ha.body).toContain('rest_command:');

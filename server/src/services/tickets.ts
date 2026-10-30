@@ -33,6 +33,13 @@ export interface TicketRow {
   checkDone: number;
   /** How many photos are attached. */
   photos: number;
+  /** Closes itself when this Home Assistant entity changes to this state. */
+  autoClose: AutoClose | null;
+}
+
+export interface AutoClose {
+  entity: string;
+  state: string;
 }
 
 export const TICKET_SELECT = `
@@ -40,7 +47,7 @@ export const TICKET_SELECT = `
          t.area_id AS "areaId", a.name AS area, t.project_id AS "projectId", p.name AS project,
          t.assignee_id AS "assigneeId", u.name AS assignee,
          COALESCE(tm.minutes, 0)::int AS minutes, COALESCE(tm.running, false) AS running,
-         t.created_at AS "createdAt", t.done_at AS "doneAt", t.recurrence, t.followup_id AS "followupId",
+         t.created_at AS "createdAt", t.done_at AS "doneAt", t.recurrence, t.followup_id AS "followupId", t.auto_close AS "autoClose",
          COALESCE(cl.total, 0)::int AS "checkTotal", COALESCE(cl.done, 0)::int AS "checkDone",
          (SELECT count(*) FROM ticket_attachments ta WHERE ta.ticket_id = t.id)::int AS photos
     FROM tickets t
@@ -76,13 +83,14 @@ export interface NewTicket {
   source?: 'manual' | 'app' | 'ha' | 'mail';
   ruleId?: number | null;
   recurrence?: Recurrence | null;
+  autoClose?: AutoClose | null;
 }
 
 export async function createTicket(db: Queryable, t: NewTicket): Promise<number> {
   const { rows } = await db.query<{ id: number }>(
-    `INSERT INTO tickets (title, area_id, project_id, status, prio, assignee_id, due_date, source, rule_id, description, due_time, recurrence, done_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CASE WHEN $4 = 'done' THEN now() END) RETURNING id`,
-    [t.title, t.areaId, t.projectId ?? null, t.status ?? 'open', t.prio ?? 'normal', t.assigneeId ?? null, t.due ?? null, t.source ?? 'manual', t.ruleId ?? null, t.description ?? '', t.dueTime ?? null, t.recurrence ?? null],
+    `INSERT INTO tickets (title, area_id, project_id, status, prio, assignee_id, due_date, source, rule_id, description, due_time, recurrence, auto_close, done_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CASE WHEN $4 = 'done' THEN now() END) RETURNING id`,
+    [t.title, t.areaId, t.projectId ?? null, t.status ?? 'open', t.prio ?? 'normal', t.assigneeId ?? null, t.due ?? null, t.source ?? 'manual', t.ruleId ?? null, t.description ?? '', t.dueTime ?? null, t.recurrence ?? null, t.autoClose ?? null],
   );
   return rows[0].id;
 }
@@ -106,7 +114,7 @@ export async function setStatus(db: Queryable, ids: number[], status: TicketStat
 async function createFollowups(db: Queryable, ids: number[]) {
   const { rows } = await db.query<{ id: number; recurrence: Recurrence; due: string | null; today: string } & Omit<NewTicket, 'recurrence' | 'due'>>(
     `SELECT id, recurrence, due_date::text AS due, current_date::text AS today, title, description, area_id AS "areaId", project_id AS "projectId",
-            prio, assignee_id AS "assigneeId", to_char(due_time, 'HH24:MI') AS "dueTime", source
+            prio, assignee_id AS "assigneeId", to_char(due_time, 'HH24:MI') AS "dueTime", source, auto_close AS "autoClose"
        FROM tickets WHERE id = ANY($1::int[]) AND status = 'done' AND recurrence IS NOT NULL AND followup_id IS NULL
        FOR UPDATE`,
     [ids],

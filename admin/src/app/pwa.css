@@ -214,6 +214,13 @@ textarea.input { min-height: 80px; }
 .pwa-title-row .btn-icon { flex: none; width: 40px; height: 40px; font-size: 19px; margin: -4px -8px 0 0; }
 .pwa-text-edit { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 18px; }
 
+/* — auto close — */
+.pwa-auto { display: flex; align-items: center; gap: 8px; margin: -10px 0 14px; font-size: 13px; color: var(--color-neutral-300); min-height: 34px; }
+.pwa-auto > i { color: var(--color-accent); flex: none; }
+.pwa-auto .btn-icon { width: 34px; height: 34px; flex: none; }
+.pwa-auto-add { margin-left: -12px; font-size: 13px; }
+.pwa-auto-edit { display: flex; flex-direction: column; gap: 12px; margin: -6px 0 18px; padding: 12px; border: 1px solid var(--color-neutral-700); border-radius: 12px; }
+
 /* — checklist — */
 .pwa-checklist { margin: -4px 0 18px; }
 .pwa-checklist-head { display: flex; justify-content: space-between; margin-top: 0; }

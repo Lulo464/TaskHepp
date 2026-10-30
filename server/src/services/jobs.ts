@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { AppContext } from '../context.js';
 import { sweepUploads } from '../routes/attachments.js';
 import { exportAll } from '../routes/system.js';
+import { checkAutoClose } from './autoClose.js';
 import { syncDueSources } from './calendars.js';
 import { checkPresence } from './presence.js';
 
@@ -101,6 +102,11 @@ export const jobs: Record<string, Job> = {
     );
     if (rows.length) await ctx.notifier.notify('dailyDigest', `Heute: ${rows.length} Ticket${rows.length === 1 ? '' : 's'}`, rows.map(r => `• ${r.title}`).join('\n'));
   }),
+
+  /** Tickets that close themselves when a Home Assistant entity changes to a state. */
+  autoClose: async ctx => {
+    await checkAutoClose(ctx);
+  },
 
   /** "Wenn ich nach Hause komme": arrivals in a zone bring what is due there. */
   presence: async (ctx, now) => {

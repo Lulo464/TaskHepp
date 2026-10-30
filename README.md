@@ -136,6 +136,16 @@ Erinnerungen gehen an die zugewiesene Person, sonst an alle, die den Bereich seh
 - Tickets entstehen nur bis zu 14 Tage im Voraus. Ist der Abfuhrtag vorbei, wird das Ticket automatisch erledigt.
 - Ein gelöschtes Ticket wird nicht neu angelegt.
 
+**Tasklog als To-do-Liste in Home Assistant:** Die Integration in `custom_components/tasklog` macht aus jedem Bereich eine HA-To-do-Liste (`todo.tasklog_zuhause` …). Abhaken, Anlegen (mit Datum, Uhrzeit, Beschreibung), Umbenennen und Löschen in Home Assistant landet sofort in Tasklog, auch per Sprachassistent. Erledigte Tickets bleiben zwei Tage abgehakt sichtbar.
+1. In Tasklog ein API-Token mit dem Recht `tickets:write` anlegen.
+2. In HACS → Integrationen → ⋮ → *Benutzerdefinierte Repositories* dieses Repository als *Integration* hinzufügen und „Tasklog“ installieren. Alternativ den Ordner `custom_components/tasklog` ins config-Verzeichnis von Home Assistant kopieren.
+3. Home Assistant neu starten, dann *Einstellungen → Geräte & Dienste → Integration hinzufügen → Tasklog*: Adresse und Token eintragen.
+4. **Dashboard-Karte:** Admin → Konfiguration → *Dashboard-Karte* liefert das YAML mit HAs eingebauter To-do-Karte für jeden Bereich.
+
+**Automatisch erledigen:** Auf der Ticket-Seite unter *Automatisch erledigen, wenn …* eine Entität und einen Zustand wählen, z. B. `sensor.waschmaschine` wechselt zu `idle`. Tasklog prüft jede Minute. Es zählt der Wechsel: Ist die Maschine schon „idle“, erledigt sich das Ticket nach ihrem nächsten Lauf. Wiederkehrende Tickets nehmen die Bedingung mit.
+
+Die Tests der Integration laufen gegen ein echtes Tasklog: `TASKLOG_URL=… TASKLOG_TOKEN=… pytest -c ha-tests/pytest.ini ha-tests` (mit `pytest-homeassistant-custom-component`).
+
 ## E-Mail-Import
 
 Unter **Admin → Import → E-Mail** bindest du Postfächer per IMAP ein (SSL/TLS, STARTTLS oder unverschlüsselt). Tasklog ruft sie im eingestellten Abstand ab, nur ungelesene oder alle neuen Mails. Danach markiert es die Mails als gelesen, verschiebt sie, löscht sie oder lässt sie unverändert. Das Passwort wird verschlüsselt gespeichert, der Schlüssel kommt aus `COOKIE_SECRET`.

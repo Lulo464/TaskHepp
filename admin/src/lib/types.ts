@@ -40,6 +40,8 @@ export interface Ticket {
   checkTotal: number;
   checkDone: number;
   photos: number;
+  /** Closes itself when this Home Assistant entity changes to this state. */
+  autoClose: { entity: string; state: string } | null;
 }
 
 export interface Attachment {
