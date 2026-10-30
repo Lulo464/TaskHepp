@@ -3,6 +3,7 @@ import { Icon, Switch } from '../../components/ui';
 import { patch, post, useAction, useApi } from '../../lib/api';
 import type { AuthInfo, Me, Rule, SystemInfo } from '../../lib/types';
 import { href } from '../router';
+import { CalendarFeed } from './CalendarFeed';
 
 /** "Mehr": account, Home Assistant, areas, admin link, sign-out — after design screen 7. */
 export function More({ me }: { me: Me }) {
@@ -63,6 +64,8 @@ export function More({ me }: { me: Me }) {
         ))}
         {rules?.length === 0 && <div className="pwa-row-meta">{t('app.more.noRules')}</div>}
       </div>
+
+      <CalendarFeed />
 
       <div className="stack" style={{ gap: 10, marginTop: 22 }}>
         <a className="btn btn-secondary btn-block" href={href({ name: 'areas' })}><Icon name="folders" /> {t('app.more.areas')}</a>

@@ -5,6 +5,7 @@ import type { AppContext } from '../context.js';
 import { withTransaction } from '../db.js';
 import { HttpError, idParam, notFound, parse } from '../lib/http.js';
 import { createTicket, getTicket, setStatus, TICKET_ORDER, TICKET_SELECT, type TicketRow } from '../services/tickets.js';
+import { recurrenceSchema } from '../services/recurrence.js';
 import { addManualTime, startTimer, stopEntries } from '../services/time.js';
 
 const status = z.enum(['open', 'inProgress', 'done']);
@@ -23,6 +24,7 @@ const ticketInput = z.object({
   due: date.nullable().optional(),
   dueTime: hhmm.nullable().optional(),
   source: z.enum(['manual', 'app']).optional(),
+  recurrence: recurrenceSchema.nullable().optional(),
 });
 
 const listQuery = z.object({
@@ -84,7 +86,7 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
     const { id } = parse(idParam, req.params);
     const body = parse(ticketInput.partial(), req.body);
     await checkAssignee(body.assigneeId);
-    const cols: Record<string, string> = { title: 'title', description: 'description', areaId: 'area_id', projectId: 'project_id', prio: 'prio', assigneeId: 'assignee_id', due: 'due_date', dueTime: 'due_time', source: 'source' };
+    const cols: Record<string, string> = { title: 'title', description: 'description', areaId: 'area_id', projectId: 'project_id', prio: 'prio', assigneeId: 'assignee_id', due: 'due_date', dueTime: 'due_time', source: 'source', recurrence: 'recurrence' };
     await withTransaction(db, async c => {
       const sets: string[] = [];
       const params: unknown[] = [id];

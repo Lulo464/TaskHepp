@@ -1,10 +1,14 @@
 // Quick add: turns free text — typed, pasted or shared from WhatsApp — into tickets with a due date and time.
 
+import type { Recurrence } from '../lib/types';
+
 export interface Quick {
   /** The text without the date and time words. */
   title: string;
   due: string | null;
   dueTime: string | null;
+  /** "jeden Montag", "alle 3 Monate" … */
+  repeat: Recurrence | null;
 }
 
 export interface Message {
@@ -102,11 +106,86 @@ function apply<T>(text: string, rules: Rule[], pick: (r: Rule, m: RegExpExecArra
   return { value: null, text };
 }
 
-/** Finds a due date and time in German free text, e.g. "Oma Arzt Donnerstag 10 Uhr" → Thursday 10:00, "Oma Arzt". */
+// — repeating: each rule adds to the recurrence, the matched words leave the title —
+
+type RepeatPart = Partial<Recurrence>;
+const ORDINAL: Record<string, number> = { zweite: 2, dritte: 3, vierte: 4, fünfte: 5, sechste: 6 };
+const DAY_LIST = `(?:${WEEKDAY})s?(?:(?:\\s*,\\s*|\\s+und\\s+|\\s*&\\s*)(?:${WEEKDAY})s?)*`;
+const REPEAT_RULES: { re: RegExp; part: (m: RegExpExecArray) => RepeatPart | null }[] = [
+  { re: new RegExp(`(?<![${L}])(?:werktags|jeden\\s+werktag|an\\s+werktagen|montags?\\s+bis\\s+freitags?)(?![${L}])`, 'giu'), part: () => ({ unit: 'week', weekdays: [1, 2, 3, 4, 5] }) },
+  // "jeden Montag und Donnerstag", "montags" — a plain "Montag" is a date, not a repeat
+  {
+    re: new RegExp(`(?<![${L}])(?:(jeden|immer)\\s+)?(${DAY_LIST})(?![${L}])`, 'giu'),
+    part: m => {
+      const names = m[2].toLowerCase().match(new RegExp(`(${WEEKDAY})s?`, 'gu')) ?? [];
+      if (!m[1] && !names.every(n => n.endsWith('s') && !n.endsWith('ss'))) return null;
+      return { unit: 'week', weekdays: [...new Set(names.map(n => DAY_INDEX[n.replace(/s$/, '')] || 7))].sort((a, b) => a - b) };
+    },
+  },
+  {
+    re: new RegExp(`(?<![${L}])alle\\s+(\\d{1,3}|zwei|drei|vier|fünf|sechs|sieben|acht|neun|zehn|zwölf)\\s+(tage|wochen|monate|jahre)(?![${L}])`, 'giu'),
+    part: m => {
+      const words: Record<string, number> = { ...NUMBERS, sechs: 6, sieben: 7, acht: 8, neun: 9, zehn: 10, zwölf: 12 };
+      const every = /^\d+$/.test(m[1]) ? +m[1] : words[m[1].toLowerCase()];
+      return every >= 1 ? { every, unit: ({ tage: 'day', wochen: 'week', monate: 'month', jahre: 'year' } as const)[m[2].toLowerCase() as 'tage'] } : null;
+    },
+  },
+  {
+    re: new RegExp(`(?<![${L}])jede[nrs]?\\s+(zweite|dritte|vierte|fünfte|sechste)[nrs]?\\s+(tag|woche|monat|jahr)(?![${L}])`, 'giu'),
+    part: m => ({ every: ORDINAL[m[1].toLowerCase()], unit: ({ tag: 'day', woche: 'week', monat: 'month', jahr: 'year' } as const)[m[2].toLowerCase() as 'tag'] }),
+  },
+  // "jeden 15." / "am 1. jedes Monats"
+  {
+    re: new RegExp(`(?<![${L}])(?:(jeden)\\s+(\\d{1,2})\\.(?:\\s+(?:jedes|des)\\s+monats)?|am\\s+(\\d{1,2})\\.\\s+(?:jedes|des)\\s+monats)(?![\\d.${L}])`, 'giu'),
+    part: m => {
+      const day = +(m[2] ?? m[3]);
+      return day >= 1 && day <= 31 ? { unit: 'month', monthDay: day } : null;
+    },
+  },
+  { re: new RegExp(`(?<![${L}])(?:täglich|jeden\\s+tag)(?![${L}])`, 'giu'), part: () => ({ unit: 'day' }) },
+  { re: new RegExp(`(?<![${L}])(?:wöchentlich|jede\\s+woche)(?![${L}])`, 'giu'), part: () => ({ unit: 'week' }) },
+  { re: new RegExp(`(?<![${L}])(?:monatlich|jeden\\s+monat)(?![${L}])`, 'giu'), part: () => ({ unit: 'month' }) },
+  { re: new RegExp(`(?<![${L}])(?:jährlich|jedes\\s+jahr)(?![${L}])`, 'giu'), part: () => ({ unit: 'year' }) },
+  { re: new RegExp(`(?<![${L}])(?:nach|ab)\\s+(?:der\\s+)?erledigung(?![${L}])`, 'giu'), part: () => ({ fromDone: true }) },
+];
+
+function findRepeat(input: string): { repeat: Recurrence | null; text: string } {
+  let text = input;
+  const r: RepeatPart = {};
+  for (const rule of REPEAT_RULES) {
+    const found = apply(text, [{ re: rule.re }], (_r, m) => rule.part(m));
+    if (!found.value) continue;
+    text = found.text;
+    // "alle 2 Wochen montags": the unit agrees, so the parts add up; otherwise the first one wins.
+    if (r.unit && found.value.unit && r.unit !== found.value.unit) continue;
+    Object.assign(r, Object.fromEntries(Object.entries(found.value).filter(([k]) => !(k in r) || k === 'every')));
+  }
+  if (!r.unit) return { repeat: null, text: input };
+  const repeat: Recurrence = { every: r.every ?? 1, unit: r.unit };
+  if (r.weekdays?.length) repeat.weekdays = r.weekdays;
+  if (r.monthDay) repeat.monthDay = r.monthDay;
+  if (r.fromDone) repeat.fromDone = true;
+  return { repeat, text };
+}
+
+/** First date of a new series: the next chosen weekday or day of the month, today included; otherwise today. */
+function firstOf(r: Recurrence, now: Date): Date {
+  for (let i = 0; i < 62; i++) {
+    const d = addDays(now, i);
+    if (r.weekdays?.length ? r.weekdays.includes(d.getDay() || 7) : r.monthDay ? d.getDate() === r.monthDay : true) return d;
+  }
+  return addDays(now, 0);
+}
+
+/**
+ * Finds a due date, time and repeat in German free text, e.g. "Oma Arzt Donnerstag 10 Uhr" → Thursday 10:00,
+ * "Oma Arzt"; "jeden Montag Müll raus" → every Monday, starting with the next one.
+ */
 export function parseQuick(input: string, now = new Date()): Quick {
-  const date = apply(input, DATE_RULES, (r, m) => r.date!(m, now));
+  const { repeat, text } = findRepeat(input);
+  const date = apply(text, DATE_RULES, (r, m) => r.date!(m, now));
   const time = apply(date.text, TIME_RULES, (r, m) => r.time!(m));
-  let due = date.value ? iso(date.value) : null;
+  let due = date.value ? iso(date.value) : repeat ? iso(firstOf(repeat, now)) : null;
   // Only a time: today, or tomorrow when that time has passed already.
   if (!due && time.value) {
     const passed = time.value <= `${pad(now.getHours())}:${pad(now.getMinutes())}`;
@@ -119,7 +198,7 @@ export function parseQuick(input: string, now = new Date()): Quick {
     .replace(/^[\s,;:–-]+|[\s,;:–-]+$/g, '')
     .replace(/\(\s*\)/g, '')
     .trim();
-  return { title: title || input.trim(), due, dueTime: time.value };
+  return { title: title || input.trim(), due, dueTime: time.value, repeat };
 }
 
 // WhatsApp puts "[30.10.26, 10:15:03] Oma: …" (iPhone) or "30.10.26, 10:15 - Oma: …" (Android) in front of each

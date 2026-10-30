@@ -97,6 +97,57 @@ describe('tickets and time', () => {
     expect(csv.body).toContain('Projekt;Minuten;Stunden');
   });
 
+  it('serves each user a calendar feed behind a secret link', async () => {
+    const { url } = (await call('GET', '/api/me/calendar-feed', member)).json();
+    expect((await call('GET', '/api/me/calendar-feed', member)).json().url).toBe(url); // stable until renewed
+    const path = new URL(url).pathname;
+    const me = (await call('GET', '/api/me', member)).json();
+    const mine = (await call('POST', '/api/tickets', member, { title: 'Feed: meins', areaId: 1, due: '2030-03-04', dueTime: '09:15' })).json();
+    await call('POST', '/api/tickets', member, { title: 'Feed: andere', areaId: 2, due: '2030-03-05', assigneeId: null });
+    await call('POST', '/api/tickets', member, { title: 'Feed: ohne Datum', areaId: 1 });
+
+    const feed = await call('GET', path); // no login needed
+    expect(feed.statusCode).toBe(200);
+    expect(feed.headers['content-type']).toContain('text/calendar');
+    expect(feed.body).toContain(`UID:ticket-${mine.id}@`);
+    expect(feed.body).toContain('SUMMARY:Feed: meins');
+    expect(feed.body).toContain('DTSTART;TZID=Europe/Berlin:20300304T091500');
+    expect(feed.body).toContain('DTSTART;VALUE=DATE:20300305');
+    expect(feed.body).not.toContain('Feed: ohne Datum');
+
+    expect((await call('GET', `${path}?mine=true`)).body).not.toContain('Feed: andere');
+    expect((await call('GET', `${path}?area=2`)).body).not.toContain('Feed: meins');
+    expect(me.id).toEqual(mine.assigneeId);
+
+    const renewed = (await call('POST', '/api/me/calendar-feed/rotate', member)).json().url;
+    expect(renewed).not.toBe(url);
+    expect((await call('GET', path)).statusCode).toBe(404);
+    expect((await call('GET', '/api/calendar/kurz.ics')).statusCode).toBe(400);
+  });
+
+  it('creates the next ticket of a series when one is done', async () => {
+    const recurrence = { every: 1, unit: 'week', weekdays: [1] };
+    const first = (await call('POST', '/api/tickets', member, { title: 'Müll rausstellen', areaId: 2, due: '2030-01-07', dueTime: '07:00', recurrence })).json();
+    expect(first.recurrence).toEqual(recurrence);
+
+    const done = (await call('PATCH', `/api/tickets/${first.id}`, member, { status: 'done' })).json();
+    expect(done.followupId).toEqual(expect.any(Number));
+    const next = (await call('GET', `/api/tickets/${done.followupId}`, member)).json();
+    expect(next).toMatchObject({ title: 'Müll rausstellen', status: 'open', due: '2030-01-14', dueTime: '07:00', areaId: 2, recurrence });
+
+    // Reopening and finishing again must not start a second series.
+    await call('PATCH', `/api/tickets/${first.id}`, member, { status: 'open' });
+    await call('PATCH', `/api/tickets/${first.id}`, member, { status: 'done' });
+    const series = (await call('GET', '/api/tickets', member)).json().filter((x: { title: string }) => x.title === 'Müll rausstellen');
+    expect(series).toHaveLength(2);
+
+    // Without recurrence nothing follows; a bad recurrence is rejected.
+    const once = (await call('POST', '/api/tickets', member, { title: 'Einmalig', areaId: 1 })).json();
+    expect((await call('PATCH', `/api/tickets/${once.id}`, member, { status: 'done' })).json().followupId).toBeNull();
+    expect((await call('PATCH', `/api/tickets/${next.id}`, member, { recurrence: { every: 0, unit: 'week' } })).statusCode).toBe(400);
+    expect((await call('PATCH', `/api/tickets/${next.id}`, member, { recurrence: null })).json().recurrence).toBeNull();
+  });
+
   it('assigns tickets to someone else', async () => {
     const reader = await t.login('read');
     const people = (await call('GET', '/api/people', member)).json() as { id: number; name: string }[];

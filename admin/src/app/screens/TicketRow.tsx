@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../components/ui';
 import { formatDue, formatMinutes, isOverdue } from '../../lib/format';
+import { describeRecurrence } from '../../lib/recurrence';
 import type { Ticket } from '../../lib/types';
 import { navigate } from '../router';
 import { Snooze } from './Snooze';
@@ -27,7 +28,8 @@ export function TicketRow({ ticket, timers, canEdit, showStatus, showDue, showTi
       <div className="grow">
         <div className="pwa-row-title pwa-ellipsis">
           {ticket.source === 'ha' && <i className="ph ph-house-line accent" aria-label="Home Assistant" />}
-          {ticket.source === 'mail' && <i className="ph ph-envelope-simple accent" aria-label="E-Mail" />} {ticket.title}
+          {ticket.source === 'mail' && <i className="ph ph-envelope-simple accent" aria-label="E-Mail" />}
+          {ticket.recurrence && <i className="ph ph-arrows-clockwise accent" aria-label={describeRecurrence(ticket.recurrence)} title={describeRecurrence(ticket.recurrence)} />} {ticket.title}
         </div>
         <div className="pwa-row-meta">{meta}</div>
       </div>
