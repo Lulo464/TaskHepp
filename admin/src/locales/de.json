@@ -691,5 +691,51 @@
       "nomatch": "Keine Regel – unberührt",
       "error": "Fehler"
     }
+  },
+  "repeat": {
+    "label": "Wiederholen",
+    "labelOthers": "Wiederholen (für Zeilen ohne eigene Angabe)",
+    "preset": {
+      "none": "Nicht wiederholen",
+      "daily": "Täglich",
+      "workdays": "Werktags (Mo–Fr)",
+      "weekly": "Wöchentlich",
+      "biweekly": "Alle 2 Wochen",
+      "monthly": "Monatlich",
+      "yearly": "Jährlich",
+      "custom": "Benutzerdefiniert …"
+    },
+    "every": "Alle",
+    "count": "Anzahl",
+    "unit": "Einheit",
+    "unitName": {
+      "day_one": "Tag",
+      "day_other": "Tage",
+      "week_one": "Woche",
+      "week_other": "Wochen",
+      "month_one": "Monat",
+      "month_other": "Monate",
+      "year_one": "Jahr",
+      "year_other": "Jahre"
+    },
+    "weekdays": "Wochentage",
+    "fromDone": "Ab Erledigung neu zählen (statt vom Fälligkeitsdatum)",
+    "next": "Nächstes Ticket dieser Serie",
+    "text": {
+      "day_one": "Täglich",
+      "day_other": "Alle {{count}} Tage",
+      "week_one": "Wöchentlich",
+      "week_other": "Alle {{count}} Wochen",
+      "month_one": "Monatlich",
+      "month_other": "Alle {{count}} Monate",
+      "year_one": "Jährlich",
+      "year_other": "Alle {{count}} Jahre",
+      "workdays": "Werktags",
+      "onDays": "Jeden {{days}}",
+      "everyWeeksOn_one": "Jede Woche {{days}}",
+      "everyWeeksOn_other": "Alle {{count}} Wochen: {{days}}",
+      "onMonthDay": "am {{day}}.",
+      "fromDone": "nach Erledigung"
+    }
   }
 }

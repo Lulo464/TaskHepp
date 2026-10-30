@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { linesOf, looksLikeList, parseQuick, shortTitle, splitMessages } from './quickAdd';
 
 const now = new Date(2026, 9, 30, 9, 0); // Friday, 30.10.2026, 09:00
-const q = (text: string) => parseQuick(text, now);
+const q = (text: string) => {
+  const { repeat, ...rest } = parseQuick(text, now);
+  return repeat ? { ...rest, repeat } : rest;
+};
+const rep = (text: string) => parseQuick(text, now);
 
 describe('parseQuick', () => {
   it('finds weekday and time and removes them from the title', () => {
@@ -40,6 +44,31 @@ describe('parseQuick', () => {
     for (const text of ['Guten Morgen, kannst du Milch mitbringen', 'Ist das so.', 'Version 1.2.3 updaten', 'Zahlung 31.02.2026 prüfen', 'Mach das so wie immer']) {
       expect(q(text)).toEqual({ title: text, due: null, dueTime: null });
     }
+  });
+});
+
+describe('repeats', () => {
+  it('reads weekdays and starts with the next one', () => {
+    expect(rep('jeden Montag Müll raus')).toEqual({ title: 'Müll raus', due: '2026-11-02', dueTime: null, repeat: { every: 1, unit: 'week', weekdays: [1] } });
+    expect(rep('Blumen gießen montags und donnerstags 18 Uhr')).toEqual({ title: 'Blumen gießen', due: '2026-11-02', dueTime: '18:00', repeat: { every: 1, unit: 'week', weekdays: [1, 4] } });
+    expect(rep('jeden Freitag Kuchen').due).toBe('2026-10-30'); // today counts for a new series
+    expect(rep('werktags 7 Uhr Kinder wecken')).toMatchObject({ title: 'Kinder wecken', due: '2026-10-30', dueTime: '07:00', repeat: { every: 1, unit: 'week', weekdays: [1, 2, 3, 4, 5] } });
+    expect(rep('alle 2 Wochen montags Fenster')).toMatchObject({ title: 'Fenster', repeat: { every: 2, unit: 'week', weekdays: [1] } });
+  });
+
+  it('reads intervals, days of the month and "after done"', () => {
+    expect(rep('täglich Tabletten')).toEqual({ title: 'Tabletten', due: '2026-10-30', dueTime: null, repeat: { every: 1, unit: 'day' } });
+    expect(rep('Filter wechseln alle 3 Monate nach Erledigung')).toEqual({ title: 'Filter wechseln', due: '2026-10-30', dueTime: null, repeat: { every: 3, unit: 'month', fromDone: true } });
+    expect(rep('jeden 1. Miete prüfen')).toEqual({ title: 'Miete prüfen', due: '2026-11-01', dueTime: null, repeat: { every: 1, unit: 'month', monthDay: 1 } });
+    expect(rep('Rauchmelder testen jährlich ab 5.11.')).toMatchObject({ title: 'Rauchmelder testen', due: '2026-11-05', repeat: { every: 1, unit: 'year' } });
+    expect(rep('jeden zweiten Tag Pflanzen').repeat).toEqual({ every: 2, unit: 'day' });
+  });
+
+  it('does not take a single day or date for a repeat', () => {
+    expect(rep('Montag Arzt').repeat).toBeNull();
+    expect(rep('am 5. Arzt').repeat).toBeNull();
+    expect(rep('jeden 15.11. etwas').repeat).toBeNull();
+    expect(rep('Der Klassiker bleibt').repeat).toBeNull();
   });
 });
 

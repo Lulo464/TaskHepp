@@ -47,6 +47,8 @@ Auf der Ticket-Seite wählst du aus, **wem ein Ticket zugewiesen** ist, oder üb
 
 **Teilen aus WhatsApp & Co. (Android):** Ist die App installiert (HTTPS nötig), steht Tasklog im **Teilen**-Menü. Eine Nachricht lange drücken → Teilen → Tasklog öffnet „Neu“ mit dem Text, erkanntem Termin und „Von Oma per WhatsApp“ in der Beschreibung. Mehrere geteilte Nachrichten werden mehrere Tickets. Das iPhone erlaubt Web-Apps nicht im Teilen-Menü; dort Text kopieren und in „Neu“ einfügen.
 
+**Wiederkehrende Tickets:** Auf der Ticket-Seite und bei „Neu“ unter **Wiederholen** wählen: täglich, werktags, wöchentlich, alle 2 Wochen, monatlich, jährlich oder benutzerdefiniert (alle n Tage/Wochen/Monate/Jahre, an bestimmten Wochentagen, wahlweise ab Erledigung gezählt). Ist ein Ticket erledigt, legt Tasklog das nächste der Serie an. Die Schnelleingabe versteht das auch: „jeden Montag 7 Uhr Müll raus“, „montags und donnerstags Blumen gießen“, „alle 3 Monate nach Erledigung Filter wechseln“, „jeden 1. Miete prüfen“.
+
 ## Entwicklung
 
 Voraussetzung: Node.js 24 und eine PostgreSQL-Datenbank.

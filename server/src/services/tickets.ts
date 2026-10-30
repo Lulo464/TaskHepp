@@ -1,4 +1,5 @@
 import type { Queryable } from '../db.js';
+import { nextDue, type Recurrence } from './recurrence.js';
 
 export type TicketStatus = 'open' | 'inProgress' | 'done';
 export type Prio = 'normal' | 'high';
@@ -24,6 +25,9 @@ export interface TicketRow {
   running: boolean;
   createdAt: string;
   doneAt: string | null;
+  recurrence: Recurrence | null;
+  /** The next ticket of the series, once this one is done. */
+  followupId: number | null;
 }
 
 export const TICKET_SELECT = `
@@ -31,7 +35,7 @@ export const TICKET_SELECT = `
          t.area_id AS "areaId", a.name AS area, t.project_id AS "projectId", p.name AS project,
          t.assignee_id AS "assigneeId", u.name AS assignee,
          COALESCE(tm.minutes, 0)::int AS minutes, COALESCE(tm.running, false) AS running,
-         t.created_at AS "createdAt", t.done_at AS "doneAt"
+         t.created_at AS "createdAt", t.done_at AS "doneAt", t.recurrence, t.followup_id AS "followupId"
     FROM tickets t
     JOIN areas a ON a.id = t.area_id
     LEFT JOIN projects p ON p.id = t.project_id
@@ -61,13 +65,14 @@ export interface NewTicket {
   dueTime?: string | null;
   source?: 'manual' | 'app' | 'ha' | 'mail';
   ruleId?: number | null;
+  recurrence?: Recurrence | null;
 }
 
 export async function createTicket(db: Queryable, t: NewTicket): Promise<number> {
   const { rows } = await db.query<{ id: number }>(
-    `INSERT INTO tickets (title, area_id, project_id, status, prio, assignee_id, due_date, source, rule_id, description, due_time, done_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CASE WHEN $4 = 'done' THEN now() END) RETURNING id`,
-    [t.title, t.areaId, t.projectId ?? null, t.status ?? 'open', t.prio ?? 'normal', t.assigneeId ?? null, t.due ?? null, t.source ?? 'manual', t.ruleId ?? null, t.description ?? '', t.dueTime ?? null],
+    `INSERT INTO tickets (title, area_id, project_id, status, prio, assignee_id, due_date, source, rule_id, description, due_time, recurrence, done_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CASE WHEN $4 = 'done' THEN now() END) RETURNING id`,
+    [t.title, t.areaId, t.projectId ?? null, t.status ?? 'open', t.prio ?? 'normal', t.assigneeId ?? null, t.due ?? null, t.source ?? 'manual', t.ruleId ?? null, t.description ?? '', t.dueTime ?? null, t.recurrence ?? null],
   );
   return rows[0].id;
 }
@@ -80,8 +85,28 @@ export async function setStatus(db: Queryable, ids: number[], status: TicketStat
       WHERE id = ANY($1::int[])`,
     [ids, status],
   );
-  if (status === 'done') await db.query('UPDATE time_entries SET ended_at = now() WHERE ended_at IS NULL AND ticket_id = ANY($1::int[])', [ids]);
+  if (status === 'done') {
+    await db.query('UPDATE time_entries SET ended_at = now() WHERE ended_at IS NULL AND ticket_id = ANY($1::int[])', [ids]);
+    await createFollowups(db, ids);
+  }
   return rowCount ?? 0;
+}
+
+/** For each repeating ticket among `ids` that is done and has no follow-up yet: the next one of the series. */
+async function createFollowups(db: Queryable, ids: number[]) {
+  const { rows } = await db.query<{ id: number; recurrence: Recurrence; due: string | null; today: string } & Omit<NewTicket, 'recurrence' | 'due'>>(
+    `SELECT id, recurrence, due_date::text AS due, current_date::text AS today, title, description, area_id AS "areaId", project_id AS "projectId",
+            prio, assignee_id AS "assigneeId", to_char(due_time, 'HH24:MI') AS "dueTime", source
+       FROM tickets WHERE id = ANY($1::int[]) AND status = 'done' AND recurrence IS NOT NULL AND followup_id IS NULL
+       FOR UPDATE`,
+    [ids],
+  );
+  for (const { id, recurrence, due, today, ...ticket } of rows) {
+    // A monthly series keeps its day of the month even after a short month (31 → 30 → 31).
+    const r: Recurrence = recurrence.unit === 'month' && !recurrence.monthDay && due ? { ...recurrence, monthDay: Number(due.slice(8)) } : recurrence;
+    const next = await createTicket(db, { ...ticket, due: nextDue(r, due, today), recurrence: r, source: ticket.source === 'ha' || ticket.source === 'mail' ? 'manual' : ticket.source });
+    await db.query('UPDATE tickets SET followup_id = $2 WHERE id = $1', [id, next]);
+  }
 }
 
 /** SQL condition: ticket `t` is past its due date, or due today and past its time. */

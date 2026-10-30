@@ -34,6 +34,18 @@ export interface Ticket {
   running: boolean;
   createdAt: string;
   doneAt: string | null;
+  recurrence: Recurrence | null;
+  /** The next ticket of the series, once this one is done. */
+  followupId: number | null;
+}
+
+/** How a ticket repeats; weekdays 1 = Monday … 7 = Sunday. */
+export interface Recurrence {
+  every: number;
+  unit: 'day' | 'week' | 'month' | 'year';
+  weekdays?: number[];
+  monthDay?: number;
+  fromDone?: boolean;
 }
 
 export interface Area {
