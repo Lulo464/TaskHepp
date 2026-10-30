@@ -29,6 +29,8 @@ Die App unter `<PUBLIC_URL>/` ist eine PWA:
 
 Danach startet Tasklog im Vollbild mit eigenem Icon, wie eine normale App.
 
+Der Tab **Planung** zeigt die offenen Tickets der nächsten 7 Tage nach Tag, darüber die überfälligen. Tickets ohne Datum stehen unter **Ungeplant**, am Desktop als Spalte daneben. Zum Einplanen ziehst du ein Ticket auf einen Tag (am Handy kurz gedrückt halten) oder nimmst das Kalender-Symbol. Zurück auf „Ungeplant“ gezogen verliert es sein Datum. „Meine“ zeigt nur die eigenen Tickets.
+
 Auf der Ticket-Seite lassen sich **Notizen** anhängen, z. B. „Ersatzteil bestellt, kommt Freitag“. Jede Notiz zeigt, wer sie wann geschrieben hat. Alle sehen die Notizen, Mitglieder und Admins schreiben sie, und löschen darf jeder seine eigenen (Admins alle).
 
 Unter **Mehr → Bereiche** sortiert jeder Benutzer die Bereiche für sich und blendet sie aus. Ausgeblendete Bereiche verschwinden aus Heute, Tickets und Neu. Die Einstellung gilt nur für diesen Benutzer, dafür aber auf allen seinen Geräten.

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 export type Route =
   | { name: 'today' }
   | { name: 'tickets' }
+  | { name: 'plan' }
   | { name: 'ticket'; id: number }
   | { name: 'new' }
   | { name: 'time' }
@@ -14,6 +15,7 @@ export function parseRoute(hash: string): Route {
   const [, name, arg] = hash.replace(/^#/, '').split('/');
   switch (name) {
     case 'tickets': return { name: 'tickets' };
+    case 'plan': return { name: 'plan' };
     case 'ticket': return Number(arg) > 0 ? { name: 'ticket', id: Number(arg) } : { name: 'tickets' };
     case 'new': return { name: 'new' };
     case 'time': return { name: 'time' };
