@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { hmacSha256 } from '../src/lib/crypto.js';
+import { checkPresence } from '../src/services/presence.js';
 import { fakeHomeAssistant, setup, type FakeHa, type TestApp } from './helpers.js';
 
 let t: TestApp;
@@ -244,6 +245,57 @@ describe('Tasklog → Home Assistant', () => {
   it('tests the connection without exposing the token', async () => {
     expect((await call('POST', '/api/ha/test', admin, {})).json()).toMatchObject({ ok: true, version: '2026.10.1' });
     expect(JSON.stringify((await call('GET', '/api/settings', admin)).json())).not.toContain('ha-token');
+  });
+
+  it('tells a user what is due when they arrive home', async () => {
+    const noon = new Date();
+    noon.setHours(12, 0, 0, 0); // outside the default quiet hours
+    const today = noon.toLocaleDateString('sv-SE');
+    ha.states.set('person.lukas', { state: 'not_home', attributes: { friendly_name: 'Lukas' } });
+    ha.states.set('zone.home', { state: '1', attributes: { friendly_name: 'Zuhause' } });
+    ha.states.set('zone.arbeit', { state: '0', attributes: { friendly_name: 'Arbeit' } });
+
+    const options = (await call('GET', '/api/me/presence/options', member)).json();
+    expect(options.persons).toEqual([{ id: 'person.lukas', name: 'Lukas', state: 'not_home' }]);
+    expect(options.zones).toEqual(expect.arrayContaining([{ value: 'home', name: 'Zuhause' }, { value: 'Arbeit', name: 'Arbeit' }]));
+    expect(options.notify).toEqual(['mobile_app_pixel', 'notify']);
+
+    const me = (await call('GET', '/api/me', member)).json();
+    const other = (await call('GET', '/api/people', member)).json().find((p: { id: number }) => p.id !== me.id);
+    await call('POST', '/api/tickets', member, { title: 'Daheim: Pflanzen gießen', areaId: 2, due: today, assigneeId: null });
+    await call('POST', '/api/tickets', member, { title: 'Daheim: für jemand anderen', areaId: 2, due: today, assigneeId: other.id });
+    await call('POST', '/api/tickets', member, { title: 'Daheim: Arbeit', areaId: 1, due: today });
+    const rule = await call('POST', '/api/me/presence', member, { personEntity: 'person.lukas', zone: 'home', areaId: 2, notifyService: 'mobile_app_pixel', includeUndated: false, enabled: true });
+    expect(rule.statusCode).toBe(201);
+    const sent = () => ha.calls.filter(c => c.path === '/api/services/notify/mobile_app_pixel');
+
+    await checkPresence(t.ctx, noon); // first look: only remembers "not_home"
+    ha.states.set('person.lukas', { state: 'home', attributes: {} });
+    await checkPresence(t.ctx, noon);
+    expect(sent()).toHaveLength(1);
+    const msg = sent()[0].body as { title: string; message: string; data: { url: string } };
+    expect(msg.title).toMatch(/^Willkommen zuhause – \d+ Sache/);
+    expect(msg.message).toContain('Pflanzen gießen');
+    expect(msg.message).not.toContain('für jemand anderen');
+    expect(msg.message).not.toContain('Daheim: Arbeit');
+    expect(msg.data.url).toMatch(/^http/);
+
+    await checkPresence(t.ctx, noon); // still home: nothing new
+    ha.states.set('person.lukas', { state: 'not_home', attributes: {} });
+    await checkPresence(t.ctx, noon);
+    ha.states.set('person.lukas', { state: 'home', attributes: {} });
+    await checkPresence(t.ctx, noon); // back within 30 minutes: GPS jitter, no second message
+    expect(sent()).toHaveLength(1);
+
+    const id = rule.json().id;
+    expect((await call('POST', `/api/me/presence/${id}/test`, member)).json().tickets).toBeGreaterThan(0);
+    expect(sent()).toHaveLength(2);
+    expect((await call('PATCH', `/api/me/presence/${id}`, admin, { enabled: false })).statusCode).toBe(404); // someone else's rule
+    expect((await call('POST', '/api/me/presence', member, { personEntity: 'licht.flur', zone: 'home', areaId: null, notifyService: 'x', includeUndated: false, enabled: true })).statusCode).toBe(400);
+    expect((await call('DELETE', `/api/me/presence/${id}`, member)).statusCode).toBe(204);
+    expect((await call('GET', '/api/me/presence', member)).json()).toEqual([]);
+    for (const e of ['person.lukas', 'zone.home', 'zone.arbeit']) ha.states.delete(e);
+    for (const x of (await call('GET', '/api/tickets', member)).json()) if (x.title.startsWith('Daheim:')) await call('DELETE', `/api/tickets/${x.id}`, member);
   });
 
   it('publishes enabled entities and logs only changes', async () => {

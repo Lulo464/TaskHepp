@@ -71,9 +71,11 @@ export async function fakeHomeAssistant(token = 'ha-token'): Promise<FakeHa> {
     if (fake.fail) return send(500, { message: 'boom' });
     if (path === '/api/config') return send(200, { version: '2026.10.1' });
     const m = path.match(/^\/api\/states\/(.+)$/);
+    if (path === '/api/states') return send(200, [...fake.states].map(([entity_id, st]) => ({ entity_id, ...st })));
+    if (path === '/api/services') return send(200, [{ domain: 'notify', services: { notify: {}, mobile_app_pixel: {} } }, { domain: 'light', services: { turn_on: {} } }]);
+    if (path.startsWith('/api/services/notify/')) return send(200, []);
     if (m && req.method === 'POST') { fake.states.set(decodeURIComponent(m[1]), JSON.parse(body)); return send(200, {}); }
     if (m) return fake.states.has(decodeURIComponent(m[1])) ? send(200, fake.states.get(decodeURIComponent(m[1]))) : send(404, {});
-    if (path === '/api/services/notify/notify') return send(200, []);
     if (path === '/api/calendars') return send(200, [...fake.calendars.keys()].map(id => ({ entity_id: id, name: id.split('.')[1] })));
     // Returns every event, ignoring ?start/&end, so Tasklog's own range filter is exercised.
     const cal = path.match(/^\/api\/calendars\/([^?]+)\?/);

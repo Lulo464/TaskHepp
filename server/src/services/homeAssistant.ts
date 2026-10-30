@@ -67,6 +67,16 @@ export class HomeAssistant {
     return this.request<HaCalendarEvent[]>(`api/calendars/${encodeURIComponent(entityId)}?${q}`);
   }
 
+  /** All entity states, e.g. to list persons and zones. */
+  listStates() {
+    return this.request<{ entity_id: string; state: string; attributes: Record<string, unknown> }[]>('api/states');
+  }
+
+  /** Services per domain, e.g. the notify targets of the companion apps. */
+  listServices() {
+    return this.request<{ domain: string; services: Record<string, unknown> }[]>('api/services');
+  }
+
   callService(domain: string, service: string, data: Record<string, unknown>) {
     return this.request(`api/services/${encodeURIComponent(domain)}/${encodeURIComponent(service)}`, { method: 'POST', body: data });
   }

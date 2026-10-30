@@ -53,6 +53,8 @@ Auf der Ticket-Seite wählst du aus, **wem ein Ticket zugewiesen** ist, oder üb
 
 **Wiederkehrende Tickets:** Auf der Ticket-Seite und bei „Neu“ unter **Wiederholen** wählen: täglich, werktags, wöchentlich, alle 2 Wochen, monatlich, jährlich oder benutzerdefiniert (alle n Tage/Wochen/Monate/Jahre, an bestimmten Wochentagen, wahlweise ab Erledigung gezählt). Ist ein Ticket erledigt, legt Tasklog das nächste der Serie an. Die Schnelleingabe versteht das auch: „jeden Montag 7 Uhr Müll raus“, „montags und donnerstags Blumen gießen“, „alle 3 Monate nach Erledigung Filter wechseln“, „jeden 1. Miete prüfen“.
 
+**Bei Ankunft erinnern:** Unter **Mehr → Bei Ankunft erinnern** legt jeder Benutzer fest: Wenn *Person* (aus Home Assistant) in *Zone* ankommt, schicke an *notify.mobile_app_…*, was im *Bereich* heute ansteht. Überfälliges ist dabei, Tickets anderer Personen nicht, Tickets ohne Datum auf Wunsch. Tasklog prüft jede Minute, schickt pro Ankunft eine Nachricht (höchstens alle 30 Minuten, nicht in den Ruhezeiten) und öffnet beim Antippen die App. Mit „Jetzt testen“ lässt sich das sofort ausprobieren.
+
 ## Entwicklung
 
 Voraussetzung: Node.js 24 und eine PostgreSQL-Datenbank.
@@ -110,7 +112,7 @@ Die passende HA-Konfiguration (rest_command und Automationen) erzeugt Tasklog un
 - `binary_sensor.tasklog_overdue`
 - `sensor.tasklog_next_due`
 
-Benachrichtigungen gehen über `notify.notify`. Push und E-Mail sind noch nicht angebunden.
+Benachrichtigungen gehen über `notify.notify`, die Ankunfts-Erinnerungen an den Dienst, den jeder Benutzer dafür wählt. Push und E-Mail sind noch nicht angebunden.
 
 **Kalender (z. B. Abfuhrtermine):** Unter „Kalender“ bindest du einen Kalender aus Home Assistant ein, etwa den von *Waste Collection Schedule*. Tasklog liest die Termine alle 15 Minuten über die HA-API.
 

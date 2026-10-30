@@ -553,6 +553,28 @@
       "admin": "Admin-Oberfläche",
       "monitor": "Tagesmonitor öffnen"
     },
+    "presence": {
+      "title": "Bei Ankunft erinnern",
+      "intro": "Kommst du nach Hause (oder in eine andere Zone aus Home Assistant), schickt dir Tasklog aufs Handy, was dort heute ansteht – Überfälliges inklusive, Tickets anderer Personen nicht.",
+      "noHa": "Home Assistant ist noch nicht verbunden. Ein Admin richtet das unter Admin → Verbindung ein.",
+      "noPersons": "In Home Assistant gibt es noch keine Personen. Lege dort unter Einstellungen → Personen eine an und verknüpfe dein Handy (Companion-App).",
+      "summary": "Wenn {{person}} in „{{zone}}“ ankommt",
+      "now": "Gerade: {{state}}",
+      "atHome": "zuhause",
+      "away": "unterwegs",
+      "person": "Person",
+      "zone": "Zone",
+      "area": "Tickets aus",
+      "notify": "Senden an",
+      "undated": "Auch Tickets ohne Datum mitschicken",
+      "test": "Jetzt testen",
+      "tested_one": "Gesendet an notify.{{service}} – {{count}} Ticket",
+      "tested_other": "Gesendet an notify.{{service}} – {{count}} Tickets",
+      "delete": "Löschen",
+      "deleteConfirm": "Diese Erinnerung löschen?",
+      "add": "Erinnerung hinzufügen",
+      "how": "Tasklog schaut jede Minute nach, wo die Person ist. Pro Ankunft kommt eine Nachricht (höchstens alle 30 Minuten), in den Ruhezeiten keine. Für dein Handy wähle notify.mobile_app_… – das ist die Home-Assistant-App auf deinem Telefon."
+    },
     "calendar": {
       "title": "Kalender-Abo",
       "intro": "Deine Tickets mit Datum als Kalender – für Google, Apple, Outlook oder Home Assistant. Ausgeblendete Bereiche bleiben draußen, erledigte Tickets verschwinden.",

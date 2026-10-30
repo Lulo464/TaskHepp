@@ -9,7 +9,8 @@ export type Route =
   | { name: 'new' }
   | { name: 'time' }
   | { name: 'more' }
-  | { name: 'areas' };
+  | { name: 'areas' }
+  | { name: 'presence' };
 
 export function parseRoute(hash: string): Route {
   const [, name, arg] = hash.replace(/^#/, '').split('/');
@@ -21,6 +22,7 @@ export function parseRoute(hash: string): Route {
     case 'time': return { name: 'time' };
     case 'more': return { name: 'more' };
     case 'areas': return { name: 'areas' };
+    case 'presence': return { name: 'presence' };
     default: return { name: 'today' };
   }
 }

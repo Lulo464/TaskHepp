@@ -207,6 +207,13 @@ textarea.input { min-height: 80px; }
 .pwa-repeat-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-neutral-300); }
 .pwa-followup { margin: -10px 0 14px -12px; font-size: 13px; }
 
+/* — presence — */
+.pwa-presence.is-off > :not(.pwa-presence-head) { opacity: .5; }
+.pwa-presence-head { padding-top: 0; border-top: none; }
+.pwa-presence-field { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--color-neutral-300); }
+.pwa-presence-field > span { flex: none; width: 84px; }
+.pwa-presence-field .input { flex: 1; min-width: 0; min-height: 34px; padding: 4px 8px; font-size: 13px; }
+
 /* — quick add — */
 .pwa-quick { field-sizing: content; min-height: 44px; max-height: 40vh; resize: none; line-height: 1.4; }
 .pwa-shared { display: flex; align-items: center; gap: 8px; margin: -6px 0 14px; font-size: 13px; color: var(--color-neutral-300); }
