@@ -97,6 +97,34 @@ describe('tickets and time', () => {
     expect(csv.body).toContain('Projekt;Minuten;Stunden');
   });
 
+  it('serves each user a calendar feed behind a secret link', async () => {
+    const { url } = (await call('GET', '/api/me/calendar-feed', member)).json();
+    expect((await call('GET', '/api/me/calendar-feed', member)).json().url).toBe(url); // stable until renewed
+    const path = new URL(url).pathname;
+    const me = (await call('GET', '/api/me', member)).json();
+    const mine = (await call('POST', '/api/tickets', member, { title: 'Feed: meins', areaId: 1, due: '2030-03-04', dueTime: '09:15' })).json();
+    await call('POST', '/api/tickets', member, { title: 'Feed: andere', areaId: 2, due: '2030-03-05', assigneeId: null });
+    await call('POST', '/api/tickets', member, { title: 'Feed: ohne Datum', areaId: 1 });
+
+    const feed = await call('GET', path); // no login needed
+    expect(feed.statusCode).toBe(200);
+    expect(feed.headers['content-type']).toContain('text/calendar');
+    expect(feed.body).toContain(`UID:ticket-${mine.id}@`);
+    expect(feed.body).toContain('SUMMARY:Feed: meins');
+    expect(feed.body).toContain('DTSTART;TZID=Europe/Berlin:20300304T091500');
+    expect(feed.body).toContain('DTSTART;VALUE=DATE:20300305');
+    expect(feed.body).not.toContain('Feed: ohne Datum');
+
+    expect((await call('GET', `${path}?mine=true`)).body).not.toContain('Feed: andere');
+    expect((await call('GET', `${path}?area=2`)).body).not.toContain('Feed: meins');
+    expect(me.id).toEqual(mine.assigneeId);
+
+    const renewed = (await call('POST', '/api/me/calendar-feed/rotate', member)).json().url;
+    expect(renewed).not.toBe(url);
+    expect((await call('GET', path)).statusCode).toBe(404);
+    expect((await call('GET', '/api/calendar/kurz.ics')).statusCode).toBe(400);
+  });
+
   it('assigns tickets to someone else', async () => {
     const reader = await t.login('read');
     const people = (await call('GET', '/api/people', member)).json() as { id: number; name: string }[];

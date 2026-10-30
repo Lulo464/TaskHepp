@@ -553,6 +553,26 @@
       "admin": "Admin-Oberfläche",
       "monitor": "Tagesmonitor öffnen"
     },
+    "calendar": {
+      "title": "Kalender-Abo",
+      "intro": "Deine Tickets mit Datum als Kalender – für Google, Apple, Outlook oder Home Assistant. Ausgeblendete Bereiche bleiben draußen, erledigte Tickets verschwinden.",
+      "mine": "Nur mir zugewiesene Tickets",
+      "area": "Bereich",
+      "allAreas": "Alle Bereiche",
+      "link": "Abo-Link",
+      "copy": "Link kopieren",
+      "copied": "Kopiert",
+      "copyManually": "Link kopieren:",
+      "subscribe": "Abonnieren",
+      "how": "So richtest du es ein",
+      "helpGoogle": "Google Kalender (am Computer): links bei „Weitere Kalender“ auf + → „Per URL“ → Link einfügen. Er erscheint danach auch am Handy.",
+      "helpApple": "iPhone/Mac: „Abonnieren“ tippen, oder Einstellungen → Kalender → Accounts → Account hinzufügen → Andere → Kalenderabo hinzufügen.",
+      "helpOutlook": "Outlook: Kalender hinzufügen → Aus dem Internet abonnieren → Link einfügen.",
+      "helpHa": "Home Assistant: Einstellungen → Geräte & Dienste → Integration hinzufügen → „Remote Calendar“ → Link einfügen.",
+      "helpDelay": "Google und Outlook holen den Kalender von ihren eigenen Servern – Tasklog muss dafür aus dem Internet erreichbar sein (HTTPS), und Änderungen kommen nur alle paar Stunden an. iPhone und Home Assistant holen direkt und deutlich öfter, auch im Heimnetz.",
+      "renew": "Neuen Link erzeugen",
+      "renewConfirm": "Neuen Link erzeugen? Kalender mit dem alten Link bekommen danach keine Änderungen mehr."
+    },
     "areas": {
       "week": "{{time}} diese Woche",
       "prefsHint": "Reihenfolge und Sichtbarkeit gelten nur für dich. Ausgeblendete Bereiche verschwinden aus Heute, Tickets und Neu.",

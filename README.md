@@ -47,6 +47,8 @@ Auf der Ticket-Seite wählst du aus, **wem ein Ticket zugewiesen** ist, oder üb
 
 **Teilen aus WhatsApp & Co. (Android):** Ist die App installiert (HTTPS nötig), steht Tasklog im **Teilen**-Menü. Eine Nachricht lange drücken → Teilen → Tasklog öffnet „Neu“ mit dem Text, erkanntem Termin und „Von Oma per WhatsApp“ in der Beschreibung. Mehrere geteilte Nachrichten werden mehrere Tickets. Das iPhone erlaubt Web-Apps nicht im Teilen-Menü; dort Text kopieren und in „Neu“ einfügen.
 
+**Kalender-Abo:** Unter **Mehr → Kalender-Abo** gibt es einen geheimen Link (iCal), mit dem du deine Tickets mit Datum in Google, Apple oder Outlook Kalender oder in Home Assistant („Remote Calendar“) abonnierst, wahlweise nur die dir zugewiesenen oder nur einen Bereich. Erledigte Tickets verschwinden, ausgeblendete Bereiche bleiben draußen. Google und Outlook brauchen eine aus dem Internet erreichbare Adresse und aktualisieren nur alle paar Stunden. Der Link lässt sich jederzeit erneuern.
+
 ## Entwicklung
 
 Voraussetzung: Node.js 24 und eine PostgreSQL-Datenbank.

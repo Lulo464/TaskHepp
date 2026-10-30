@@ -161,6 +161,13 @@ a.btn { text-decoration: none; }
 
 textarea.input { min-height: 80px; }
 
+/* — calendar feed — */
+.pwa-feed-row { display: flex; align-items: center; gap: 12px; padding-top: 12px; border-top: 1px solid var(--color-neutral-800); }
+.pwa-feed-row .input { width: auto; max-width: 55%; min-height: 34px; padding: 4px 8px; font-size: 13px; }
+.pwa-feed-url { font-size: 12px; min-height: 36px; }
+.pwa-feed-help-toggle, .pwa-feed-renew { align-self: flex-start; margin-left: -10px; font-size: 13px; }
+.pwa-feed-help { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.5; color: var(--color-neutral-300); display: flex; flex-direction: column; gap: 6px; }
+
 /* — quick add — */
 .pwa-quick { field-sizing: content; min-height: 44px; max-height: 40vh; resize: none; line-height: 1.4; }
 .pwa-shared { display: flex; align-items: center; gap: 8px; margin: -6px 0 14px; font-size: 13px; color: var(--color-neutral-300); }
