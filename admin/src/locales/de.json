@@ -691,5 +691,15 @@
       "nomatch": "Keine Regel – unberührt",
       "error": "Fehler"
     }
+  },
+  "snooze": {
+    "title": "Später",
+    "label": "„{{title}}“ verschieben",
+    "tomorrow": "Morgen",
+    "weekend": "Am Wochenende",
+    "nextWeek": "Nächste Woche",
+    "pick": "Datum wählen …",
+    "moved": "„{{title}}“ auf {{when}} verschoben",
+    "undo": "Rückgängig"
   }
 }

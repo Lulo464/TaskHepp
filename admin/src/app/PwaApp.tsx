@@ -14,6 +14,7 @@ import { TicketList } from './screens/TicketList';
 import { Time } from './screens/Time';
 import { Today } from './screens/Today';
 import { clock, useNow, useTimers } from './timer';
+import { dismissToast, useToast } from './toast';
 
 const REFRESH_MS = 60_000;
 /** From this width the tabs become a sidebar and tickets show list and detail side by side (matches pwa.css). */
@@ -50,6 +51,7 @@ function Shell({ me }: { me: Me }) {
   const timers = useTimers();
   const refresh = useRefresh();
   const { error, clear } = useApiError();
+  const toast = useToast();
 
   // Fresh data when the app comes back to the foreground, and once a minute while open.
   useEffect(() => {
@@ -115,6 +117,14 @@ function Shell({ me }: { me: Me }) {
           <button type="button" className="btn btn-icon btn-ghost" aria-label={t('app.stopTimer')} onClick={e => { e.stopPropagation(); void timers.stop(running.ticketId); }}>
             <Icon name="stop" fill />
           </button>
+        </div>
+      )}
+
+      {toast && (
+        <div key={toast.id} className="pwa-snackbar" role="status">
+          <span className="grow">{toast.text}</span>
+          {toast.action && <button type="button" className="btn btn-ghost" onClick={() => { toast.action!.run(); dismissToast(); }}>{toast.action.label}</button>}
+          <button type="button" className="btn btn-icon btn-ghost" aria-label={t('common.close')} onClick={dismissToast}><Icon name="x" /></button>
         </div>
       )}
 

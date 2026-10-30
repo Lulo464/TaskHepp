@@ -5,6 +5,7 @@ import { patch, useAction, useApi } from '../../lib/api';
 import type { Me, Ticket } from '../../lib/types';
 import { useMyAreas } from '../areas';
 import { usePointerDrag } from '../drag';
+import { Snooze } from './Snooze';
 import { navigate } from '../router';
 
 const DAYS = 7;
@@ -152,6 +153,7 @@ function PlanItem({ ticket, showDate, canEdit, onMove, onPointerDown, dragging, 
         </div>
         <div className="pwa-row-meta pwa-ellipsis">{ticket.area}{ticket.assignee ? ` · ${ticket.assignee}` : ''}</div>
       </div>
+      {canEdit && <Snooze ticket={ticket} />}
       {canEdit && (
         <span className="pwa-plan-move">
           <button type="button" className="btn btn-icon btn-ghost" aria-label={t('app.plan.move', { title: ticket.title })} title={t('app.plan.move', { title: ticket.title })}

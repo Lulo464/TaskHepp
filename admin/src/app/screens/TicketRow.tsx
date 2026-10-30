@@ -3,6 +3,7 @@ import { Icon } from '../../components/ui';
 import { formatDue, formatMinutes, isOverdue } from '../../lib/format';
 import type { Ticket } from '../../lib/types';
 import { navigate } from '../router';
+import { Snooze } from './Snooze';
 import type { Timers } from '../timer';
 
 const dotColor = (t: Ticket) =>
@@ -30,6 +31,7 @@ export function TicketRow({ ticket, timers, canEdit, showStatus, showDue, showTi
         </div>
         <div className="pwa-row-meta">{meta}</div>
       </div>
+      {canEdit && ticket.status !== 'done' && <Snooze ticket={ticket} />}
       {canEdit && ticket.status !== 'done' && (
         <button
           type="button"
