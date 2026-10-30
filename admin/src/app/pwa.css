@@ -14,6 +14,8 @@ body { background: var(--color-bg); overscroll-behavior: none; -webkit-tap-highl
 .pwa-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .pwa-screen { padding: 12px 20px 24px; }
 .pwa-ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+/* Long titles wrap instead of being cut off; long words break with hyphens where the browser knows how. */
+.pwa-wrap { overflow-wrap: anywhere; hyphens: auto; min-width: 0; }
 .pwa-num { font-variant-numeric: tabular-nums; }
 
 .pwa-splash { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--color-accent); background: var(--color-bg); }
@@ -347,6 +349,9 @@ textarea.input { min-height: 80px; }
   .pwa-plan-pool-body.is-closed { display: block; }
   .pwa-plan-pool-list { max-height: calc(100vh - 220px); }
   .pwa-plan-item:hover { background: var(--color-neutral-800); }
+  /* Narrow day cards: smaller buttons leave the title more room. */
+  .pwa-plan-grid .pwa-plan-item { gap: 2px; }
+  .pwa-plan-grid .pwa-plan-item .btn-icon { width: 32px; height: 32px; font-size: 16px; }
 
   /* Login as a centred card. */
   .pwa-login {

@@ -150,11 +150,11 @@ function PlanItem({ ticket, showDate, canEdit, onMove, onPointerDown, dragging, 
     <div className={`pwa-plan-item${dragging ? ' is-dragging' : ''}${canEdit ? ' can-drag' : ''}`}>
       <div className="grow" role="button" tabIndex={0} onClick={open} onKeyDown={e => e.key === 'Enter' && open()}
         onPointerDown={onPointerDown} onContextMenu={canEdit ? e => e.preventDefault() : undefined}>
-        <div className="pwa-row-title pwa-ellipsis">
+        <div className="pwa-row-title pwa-wrap">
           {when && <span className="accent pwa-num">{when} </span>}
           {ticket.prio === 'high' && <Icon name="arrow-up" className="accent" />} {ticket.recurrence && <i className="ph ph-arrows-clockwise accent" aria-label={describeRecurrence(ticket.recurrence)} title={describeRecurrence(ticket.recurrence)} />} {ticket.title}
         </div>
-        <div className="pwa-row-meta pwa-ellipsis">{ticket.area}{ticket.assignee ? ` · ${ticket.assignee}` : ''}</div>
+        <div className="pwa-row-meta pwa-wrap">{ticket.area}{ticket.assignee ? ` · ${ticket.assignee}` : ''}</div>
       </div>
       {canEdit && <Snooze ticket={ticket} />}
       {canEdit && (
