@@ -57,6 +57,8 @@ Auf der Ticket-Seite wählst du aus, **wem ein Ticket zugewiesen** ist, oder üb
 
 **Welche Bereiche du siehst:** Oben in Heute, Tickets, Planung und Zeit steht eine Leiste mit den Bereichen. Tippst du bei „Alle“ auf einen Bereich, siehst du nur noch diesen. Weitere Bereiche tippst du dazu oder wieder weg, und „Alle“ zeigt wieder alles. Die Auswahl gilt sofort überall: in allen Ansichten, bei „Neu“, im Kalender-Abo und bei den Ankunfts-Erinnerungen. Es ist dieselbe Einstellung wie Mehr → Bereiche.
 
+**Ticket bearbeiten:** Auf der Ticket-Seite macht der Stift neben dem Titel Titel und Beschreibung bearbeitbar. Speichern geht per Knopf oder Strg+Enter, Escape bricht ab.
+
 ## Entwicklung
 
 Voraussetzung: Node.js 24 und eine PostgreSQL-Datenbank.

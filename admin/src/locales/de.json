@@ -481,6 +481,7 @@
     },
     "detail": {
       "noDescription": "Keine Beschreibung.",
+      "edit": "Titel und Beschreibung bearbeiten",
       "due": "Fällig: {{when}}",
       "tracked": "Erfasste Zeit",
       "trackedRunning": "Läuft · gesamt {{total}}",
