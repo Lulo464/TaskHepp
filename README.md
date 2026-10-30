@@ -43,6 +43,10 @@ Auf dem Desktop (ab 960 px Breite) zeigt die App eine Seitenleiste statt der unt
 
 Auf der Ticket-Seite wählst du aus, **wem ein Ticket zugewiesen** ist, oder übernimmst es mit einem Tipp selbst. Zur Auswahl stehen alle Mitglieder und Admins. Der Filter **„Meine“** in der Ticket-Liste zeigt die Tickets, die dir zugewiesen sind.
 
+**Schnell erfassen:** Im Feld „Neu“ darf der Termin einfach mit im Text stehen: „Oma Arzt Donnerstag 10 Uhr“ wird zum Ticket „Oma Arzt“, fällig Donnerstag um 10:00. Tasklog versteht unter anderem heute, morgen, übermorgen, Wochentage („am Do“, „nächsten Montag“), „in 3 Tagen“, „nächste Woche“, Daten wie 5.11. oder 5. November und Uhrzeiten wie 10 Uhr, 14:30 oder „um 8“. Was erkannt wurde, steht unter dem Feld und lässt sich mit ✕ verwerfen. Eingefügte Listen oder mehrere Zeilen werden auf Wunsch zu einem Ticket pro Zeile, jedes mit eigenem Datum.
+
+**Teilen aus WhatsApp & Co. (Android):** Ist die App installiert (HTTPS nötig), steht Tasklog im **Teilen**-Menü. Eine Nachricht lange drücken → Teilen → Tasklog öffnet „Neu“ mit dem Text, erkanntem Termin und „Von Oma per WhatsApp“ in der Beschreibung. Mehrere geteilte Nachrichten werden mehrere Tickets. Das iPhone erlaubt Web-Apps nicht im Teilen-Menü; dort Text kopieren und in „Neu“ einfügen.
+
 ## Entwicklung
 
 Voraussetzung: Node.js 24 und eine PostgreSQL-Datenbank.

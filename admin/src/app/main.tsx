@@ -8,6 +8,10 @@ import './pwa.css';
 import '../i18n';
 import { ApiProvider } from '../lib/api';
 import { PwaApp } from './PwaApp';
+import { captureShare } from './quickAdd';
+
+// "Teilen → Tasklog" on Android arrives as /share?text=…; keep it and continue on the new-ticket screen.
+captureShare();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
