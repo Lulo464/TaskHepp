@@ -37,6 +37,28 @@ export interface Ticket {
   recurrence: Recurrence | null;
   /** The next ticket of the series, once this one is done. */
   followupId: number | null;
+  checkTotal: number;
+  checkDone: number;
+  photos: number;
+  /** Closes itself when this Home Assistant entity changes to this state. */
+  autoClose: { entity: string; state: string } | null;
+}
+
+export interface Attachment {
+  id: number;
+  fileName: string;
+  mime: string;
+  size: number;
+  createdAt: string;
+  userId: number | null;
+  user: string | null;
+}
+
+export interface ChecklistItem {
+  id: number;
+  text: string;
+  done: boolean;
+  position: number;
 }
 
 /** How a ticket repeats; weekdays 1 = Monday … 7 = Sunday. */

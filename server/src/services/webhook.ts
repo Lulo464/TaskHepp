@@ -54,7 +54,7 @@ export class WebhookProcessor {
     const title = body.title!;
     const ticketId = await createTicket(this.db, { title, areaId: rows[0].id, prio: body.prio, due: body.due ?? null, dueTime: body.dueTime ?? null, source: 'ha' });
     if (!replay) await this.log.add('in', `Ticket „${title}“ erstellt`, 'done', { kind: 'webhook', body });
-    await this.notifier.notify('haCreated', 'Neues Ticket von Home Assistant', title);
+    await this.notifier.deliver('haCreated', 'haCreated', { areaId: rows[0].id }, 'Neues Ticket von Home Assistant', title, { path: `/#/ticket/${ticketId}` });
     return { result: 'created', ticketId };
   }
 
@@ -106,7 +106,7 @@ export class WebhookProcessor {
       return { result: 'duplicate' };
     }
     await logged(`Ticket „${rule.title}“ erstellt`, 'done');
-    await this.notifier.notify('haCreated', 'Neues Ticket von Home Assistant', rule.title);
+    await this.notifier.deliver('haCreated', 'haCreated', { areaId: rule.areaId }, 'Neues Ticket von Home Assistant', rule.title, { path: `/#/ticket/${created}` });
     return { result: 'created', ticketId: created };
   }
 }

@@ -113,3 +113,32 @@ export function tasklogYaml(rules: RuleForYaml[], entities: string[], opts: { ha
   out.push('publish:', ...(entities.length ? entities.map(e => `  - ${e}`) : ['  []']));
   return out.join('\n') + '\n';
 }
+
+/** Home Assistant's entity id for a name: lower case, umlauts to plain letters, everything else to "_". */
+export function haSlug(name: string): string {
+  return name
+    .replace(/ß/g, 'ss')
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+/**
+ * Dashboard card for the Tasklog integration: one to-do list card per area (HA's own "todo-list" card, which
+ * ticks off, adds and edits items).
+ */
+export function dashboardYaml(areas: { name: string }[]): string {
+  const lines = [
+    '# Dashboard-Karte für die Tasklog-Integration (custom_components/tasklog).',
+    '# In Home Assistant: Dashboard bearbeiten → Karte hinzufügen → Manuell → diesen Text einfügen.',
+    '# Die Entitäten heißen todo.tasklog_<bereich>; stimmt ein Name nicht, unter Einstellungen → Entitäten nachsehen.',
+    'type: vertical-stack',
+    'cards:',
+  ];
+  for (const a of areas) {
+    lines.push('  - type: todo-list', `    entity: todo.tasklog_${haSlug(a.name)}`, `    title: ${s(a.name)}`);
+  }
+  return lines.join('\n') + '\n';
+}

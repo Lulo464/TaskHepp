@@ -38,3 +38,12 @@ describe('nextDue', () => {
     expect(nextDue({ every: 2, unit: 'day' }, null, '2026-10-30')).toBe('2026-11-01');
   });
 });
+
+describe('haSlug', () => {
+  it('builds entity ids like Home Assistant', async () => {
+    const { haSlug } = await import('../src/services/yaml.js');
+    expect(haSlug('Zuhause')).toBe('zuhause');
+    expect(haSlug('Büro & Garten')).toBe('buro_garten');
+    expect(haSlug('Straße 2')).toBe('strasse_2');
+  });
+});

@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { userId } from '../auth/plugin.js';
 import type { AppContext } from '../context.js';
@@ -25,6 +25,10 @@ const ticketInput = z.object({
   dueTime: hhmm.nullable().optional(),
   source: z.enum(['manual', 'app']).optional(),
   recurrence: recurrenceSchema.nullable().optional(),
+  autoClose: z.object({
+    entity: z.string().regex(/^[a-z_]+\.[a-z0-9_]+$/, 'Entität aus Home Assistant, z. B. sensor.waschmaschine'),
+    state: z.string().trim().min(1).max(100),
+  }).nullable().optional(),
 });
 
 const listQuery = z.object({
@@ -54,6 +58,15 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
     if (!(await db.query('SELECT 1 FROM projects WHERE id = $1 AND area_id = $2', [projectId, areaId])).rowCount) {
       throw new HttpError(400, 'Das Projekt gehört nicht zu diesem Bereich');
     }
+  };
+
+  /** "Neu für dich": the new assignee hears about it, unless they assigned it to themselves. */
+  const tellAssignee = async (req: FastifyRequest, ticketId: number, assigneeId: number) => {
+    if (assigneeId === userId(req)) return;
+    const ticket = await getTicket(db, ticketId);
+    const by = req.principal?.kind === 'user' ? req.principal.user.name : 'Home Assistant';
+    if (!ticket) return;
+    await ctx.notifier.sendTo(await ctx.notifier.recipients('assigned', { userIds: [assigneeId] }), 'Neu für dich', `${ticket.title} – von ${by}`, { path: `/#/ticket/${ticketId}` });
   };
 
   app.get('/api/people', async () => (await db.query(`${PEOPLE_SQL} ORDER BY name, id`)).rows);
@@ -88,6 +101,7 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
     await checkPlace(body.areaId, body.projectId);
     const id = await createTicket(db, { ...body, assigneeId: body.assigneeId === undefined ? userId(req) : body.assigneeId });
     publisher.schedule();
+    if (body.assigneeId) await tellAssignee(req, id, body.assigneeId);
     reply.code(201);
     return getTicket(db, id);
   });
@@ -96,6 +110,7 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
     const { id } = parse(idParam, req.params);
     const body = parse(ticketInput.partial(), req.body);
     await checkAssignee(body.assigneeId);
+    const assignedBefore = body.assigneeId ? (await db.query<{ a: number | null }>('SELECT assignee_id AS a FROM tickets WHERE id = $1', [id])).rows[0]?.a : undefined;
     if ('areaId' in body || 'projectId' in body) {
       const current = await getTicket(db, id);
       if (!current) throw notFound('Ticket nicht gefunden');
@@ -104,7 +119,7 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
       if (!('projectId' in body) && areaId !== current.areaId) body.projectId = null;
       await checkPlace(areaId, 'projectId' in body ? body.projectId : current.projectId);
     }
-    const cols: Record<string, string> = { title: 'title', description: 'description', areaId: 'area_id', projectId: 'project_id', prio: 'prio', assigneeId: 'assignee_id', due: 'due_date', dueTime: 'due_time', source: 'source', recurrence: 'recurrence' };
+    const cols: Record<string, string> = { title: 'title', description: 'description', areaId: 'area_id', projectId: 'project_id', prio: 'prio', assigneeId: 'assignee_id', due: 'due_date', dueTime: 'due_time', source: 'source', recurrence: 'recurrence', autoClose: 'auto_close' };
     await withTransaction(db, async c => {
       const sets: string[] = [];
       const params: unknown[] = [id];
@@ -116,6 +131,8 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
       }
       // A new due date/time gets its own "due soon" reminder.
       if ('due' in body || 'dueTime' in body) sets.push('due_notified_at = NULL');
+      // A new condition starts from what Home Assistant says next.
+      if ('autoClose' in body) sets.push('auto_close_seen = NULL');
       if (sets.length) {
         const { rowCount } = await c.query(`UPDATE tickets SET ${sets.join(', ')}, updated_at = now() WHERE id = $1`, params);
         if (!rowCount) throw notFound('Ticket nicht gefunden');
@@ -123,6 +140,7 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
       if (body.status) await setStatus(c, [id], body.status);
     });
     publisher.schedule();
+    if (body.assigneeId && body.assigneeId !== assignedBefore) await tellAssignee(req, id, body.assigneeId);
     return (await getTicket(db, id)) ?? Promise.reject(notFound('Ticket nicht gefunden'));
   });
 
@@ -201,6 +219,62 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
     if (!isAdmin && note.userId !== userId(req)) throw new HttpError(403, 'Nur eigene Notizen lassen sich löschen');
     await db.query('DELETE FROM ticket_notes WHERE id = $1', [id]);
     return reply.code(204).send();
+  });
+
+  // — checklist —
+  const CHECK_SELECT = 'SELECT id, text, done, position FROM ticket_checklist';
+  const checkText = z.string().trim().min(1, 'Der Punkt ist leer').max(500);
+
+  app.get('/api/tickets/:id/checklist', async req => {
+    const { id } = parse(idParam, req.params);
+    if (!(await getTicket(db, id))) throw notFound('Ticket nicht gefunden');
+    return (await db.query(`${CHECK_SELECT} WHERE ticket_id = $1 ORDER BY position, id`, [id])).rows;
+  });
+
+  /** One item, or several at once (one per line of `text`), appended at the end. */
+  app.post('/api/tickets/:id/checklist', { config: { access: 'member' } }, async (req, reply) => {
+    const { id } = parse(idParam, req.params);
+    const { text } = parse(z.object({ text: z.string().max(10_000) }), req.body);
+    const lines = text.split(/\r?\n/).map(l => l.replace(/^\s*(?:[-*•–·]|\d{1,3}[.)]|\[\s?[xX ]?\s?\])\s+/, '').trim()).filter(Boolean);
+    if (!lines.length) throw new HttpError(400, 'Der Punkt ist leer');
+    for (const l of lines) parse(checkText, l);
+    if (!(await getTicket(db, id))) throw notFound('Ticket nicht gefunden');
+    const { rows } = await db.query(
+      `INSERT INTO ticket_checklist (ticket_id, text, position)
+       SELECT $1, line, (SELECT COALESCE(max(position), 0) FROM ticket_checklist WHERE ticket_id = $1) + n
+         FROM unnest($2::text[]) WITH ORDINALITY AS l(line, n)
+       RETURNING id, text, done, position`,
+      [id, lines.slice(0, 100)],
+    );
+    return reply.code(201).send(rows);
+  });
+
+  app.patch('/api/checklist/:id', { config: { access: 'member' } }, async req => {
+    const { id } = parse(idParam, req.params);
+    const body = parse(z.object({ text: checkText.optional(), done: z.boolean().optional() }), req.body);
+    const { rows: [item] } = await db.query(
+      `UPDATE ticket_checklist SET text = COALESCE($2, text), done = COALESCE($3, done) WHERE id = $1 RETURNING id, text, done, position`,
+      [id, body.text ?? null, body.done ?? null],
+    );
+    if (!item) throw notFound('Punkt nicht gefunden');
+    return item;
+  });
+
+  app.delete('/api/checklist/:id', { config: { access: 'member' } }, async (req, reply) => {
+    const { id } = parse(idParam, req.params);
+    if (!(await db.query('DELETE FROM ticket_checklist WHERE id = $1', [id])).rowCount) throw notFound('Punkt nicht gefunden');
+    return reply.code(204).send();
+  });
+
+  /** New order: the ticket's item ids from top to bottom. */
+  app.put('/api/tickets/:id/checklist/order', { config: { access: 'member' } }, async req => {
+    const { id } = parse(idParam, req.params);
+    const { ids } = parse(z.object({ ids: z.array(z.number().int()).max(500) }), req.body);
+    await db.query(
+      `UPDATE ticket_checklist c SET position = o.n FROM unnest($2::int[]) WITH ORDINALITY AS o(id, n) WHERE c.id = o.id AND c.ticket_id = $1`,
+      [id, ids],
+    );
+    return (await db.query(`${CHECK_SELECT} WHERE ticket_id = $1 ORDER BY position, id`, [id])).rows;
   });
 
   /** The signed-in user's own tracked time: today, this week per day, per area, and the top tickets. */

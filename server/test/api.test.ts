@@ -1,6 +1,11 @@
+import { mkdir, readdir, utimes, writeFile } from 'node:fs/promises';
+import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { hmacSha256 } from '../src/lib/crypto.js';
+import { checkAutoClose } from '../src/services/autoClose.js';
+import { jobs, sendPersonalLists } from '../src/services/jobs.js';
 import { checkPresence } from '../src/services/presence.js';
+import { sweepUploads } from '../src/routes/attachments.js';
 import { fakeHomeAssistant, setup, type FakeHa, type TestApp } from './helpers.js';
 
 let t: TestApp;
@@ -165,6 +170,71 @@ describe('tickets and time', () => {
     expect((await call('POST', '/api/tickets', member, { title: 'x', areaId: a.id, projectId: b.projects[0].id })).statusCode).toBe(400);
   });
 
+  it('keeps a checklist in a ticket and passes it on in a series', async () => {
+    const ticket = (await call('POST', '/api/tickets', member, { title: 'Einkauf', areaId: 1, due: '2030-02-04', recurrence: { every: 1, unit: 'week' } })).json();
+    const url = `/api/tickets/${ticket.id}/checklist`;
+    const added = await call('POST', url, member, { text: '- Milch\n* Brot\n\n1. Eier' });
+    expect(added.statusCode).toBe(201);
+    expect(added.json().map((i: { text: string }) => i.text)).toEqual(['Milch', 'Brot', 'Eier']);
+    const [milch, brot, eier] = added.json() as { id: number }[];
+    await call('PATCH', `/api/checklist/${brot.id}`, member, { done: true });
+    expect((await call('GET', `/api/tickets/${ticket.id}`, member)).json()).toMatchObject({ checkTotal: 3, checkDone: 1 });
+
+    const reordered = (await call('PUT', `${url}/order`, member, { ids: [eier.id, milch.id, brot.id] })).json();
+    expect(reordered.map((i: { text: string }) => i.text)).toEqual(['Eier', 'Milch', 'Brot']);
+    expect((await call('PATCH', `/api/checklist/${milch.id}`, member, { text: 'Hafermilch' })).json().text).toBe('Hafermilch');
+    expect((await call('DELETE', `/api/checklist/${eier.id}`, member)).statusCode).toBe(204);
+    expect((await call('POST', url, member, { text: '  ' })).statusCode).toBe(400);
+    expect((await call('POST', url, reader, { text: 'x' })).statusCode).toBe(403);
+
+    const done = (await call('PATCH', `/api/tickets/${ticket.id}`, member, { status: 'done' })).json();
+    const next = (await call('GET', `/api/tickets/${done.followupId}/checklist`, member)).json();
+    expect(next.map((i: { text: string; done: boolean }) => [i.text, i.done])).toEqual([['Hafermilch', false], ['Brot', false]]);
+  });
+
+  it('stores photos on a ticket and serves them only to signed-in users', async () => {
+    // 1×1 PNG
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+    const ticket = (await call('POST', '/api/tickets', member, { title: 'Mit Foto', areaId: 1 })).json();
+    const upload = (cookie: string, body: Buffer, type: string) => t.app.inject({
+      method: 'POST', url: `/api/tickets/${ticket.id}/attachments?name=${encodeURIComponent('Zähler.png')}`, payload: body, headers: { cookie, 'content-type': type },
+    });
+
+    const res = await upload(member, png, 'image/png');
+    expect(res.statusCode).toBe(201);
+    expect(res.json()).toMatchObject({ fileName: 'Zähler.png', mime: 'image/png', size: png.length });
+    const photo = res.json();
+    expect((await call('GET', `/api/tickets/${ticket.id}`, member)).json().photos).toBe(1);
+
+    const got = await call('GET', `/api/attachments/${photo.id}`, reader);
+    expect(got.statusCode).toBe(200);
+    expect(got.headers['content-type']).toBe('image/png');
+    expect(got.headers['x-content-type-options']).toBe('nosniff');
+    expect(got.rawPayload.equals(png)).toBe(true);
+    expect((await call('GET', `/api/attachments/${photo.id}`)).statusCode).toBe(401);
+
+    expect((await upload(member, Buffer.from('<html>nope</html>'), 'image/png')).statusCode).toBe(400); // not really a PNG
+    expect((await upload(member, Buffer.from('%PDF-1.7'), 'application/pdf')).statusCode).toBe(415);
+    expect((await upload(reader, png, 'image/png')).statusCode).toBe(403);
+
+    const other = await t.login('member');
+    expect((await call('DELETE', `/api/attachments/${photo.id}`, other)).statusCode).toBe(403);
+    expect((await call('DELETE', `/api/attachments/${photo.id}`, member)).statusCode).toBe(204);
+    expect((await call('GET', `/api/attachments/${photo.id}`, member)).statusCode).toBe(404);
+  });
+
+  it('sweeps away photo files of deleted tickets, but not fresh uploads', async () => {
+    const dir = t.ctx.config.UPLOAD_DIR;
+    await mkdir(dir, { recursive: true });
+    await writeFile(path.join(dir, 'verwaist.jpg'), 'x');
+    await writeFile(path.join(dir, 'gerade-hochgeladen.jpg'), 'x');
+    const old = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    await utimes(path.join(dir, 'verwaist.jpg'), old, old);
+    expect(await sweepUploads(t.ctx)).toBe(1);
+    expect(await readdir(dir)).toContain('gerade-hochgeladen.jpg');
+    expect(await readdir(dir)).not.toContain('verwaist.jpg');
+  });
+
   it('assigns tickets to someone else', async () => {
     const reader = await t.login('read');
     const people = (await call('GET', '/api/people', member)).json() as { id: number; name: string }[];
@@ -261,6 +331,77 @@ describe('Tasklog → Home Assistant', () => {
   it('tests the connection without exposing the token', async () => {
     expect((await call('POST', '/api/ha/test', admin, {})).json()).toMatchObject({ ok: true, version: '2026.10.1' });
     expect(JSON.stringify((await call('GET', '/api/settings', admin)).json())).not.toContain('ha-token');
+  });
+
+  it('sends each user their own notifications on the devices they chose', async () => {
+    await call('PATCH', '/api/settings', admin, { quietFrom: '00:00', quietTo: '00:00' }); // no quiet hours during the test
+    const anna = member;
+    const ben = await t.login('member');
+    const benMe = (await call('GET', '/api/me', ben)).json();
+    const sentTo = (service: string) => ha.calls.filter(c => c.path === `/api/services/notify/${service}`).map(c => c.body as { title: string; message: string; data: { url?: string } });
+
+    const prefs = (await call('GET', '/api/me/notifications', anna)).json();
+    expect(prefs).toMatchObject({ targets: [], haConfigured: true, personalActive: false });
+    expect(prefs.devices[0]).toEqual({ id: 'mobile_app_pixel', name: 'Pixel' });
+    expect(Object.values(prefs.kinds).every(Boolean)).toBe(true);
+
+    expect((await call('PUT', '/api/me/notifications', anna, { targets: ['mobile_app_handy'], kinds: { dailyDigest: false } })).json())
+      .toMatchObject({ targets: ['mobile_app_handy'], kinds: { dailyDigest: false, dueSoon: true } });
+    await call('PUT', '/api/me/notifications', ben, { targets: ['mobile_app_tablet'], kinds: {} });
+    expect((await call('PUT', '/api/me/notifications', ben, { targets: ['notify.falsch'], kinds: {} })).statusCode).toBe(400);
+
+    expect((await call('POST', '/api/me/notifications/test', anna)).statusCode).toBe(200);
+    expect(sentTo('mobile_app_handy').at(-1)?.title).toBe('Test von Tasklog');
+
+    // Anna gives Ben a ticket: only Ben hears about it, with a link into the app.
+    const ticket = (await call('POST', '/api/tickets', anna, { title: 'Kinderwagen reparieren', areaId: 2, assigneeId: benMe.id })).json();
+    expect(sentTo('mobile_app_tablet').at(-1)).toMatchObject({ title: 'Neu für dich', message: expect.stringContaining('Kinderwagen reparieren') });
+    expect(sentTo('mobile_app_tablet').at(-1)?.data.url).toContain(`/#/ticket/${ticket.id}`);
+    const pixelBefore = sentTo('mobile_app_handy').length;
+    await call('POST', '/api/tickets', anna, { title: 'Eigenes', areaId: 2 }); // to herself: no message
+
+    // Due in half an hour, assigned to Ben: the reminder goes to Ben only.
+    await t.db.query(`UPDATE tickets SET due_date = (localtimestamp + interval '30 minutes')::date, due_time = (localtimestamp + interval '30 minutes')::time WHERE id = $1`, [ticket.id]);
+    await jobs.dueSoon(t.ctx, new Date());
+    expect(sentTo('mobile_app_tablet').at(-1)?.message).toBe('Kinderwagen reparieren');
+    expect(sentTo('mobile_app_handy')).toHaveLength(pixelBefore);
+
+    // Morning list: Ben gets his, Anna switched hers off.
+    expect(await sendPersonalLists(t.ctx, 'dailyDigest', 't.due_date <= current_date', n => `Heute: ${n}`)).toBe(true);
+    expect(sentTo('mobile_app_tablet').at(-1)?.message).toContain('Kinderwagen reparieren');
+    expect(sentTo('mobile_app_handy')).toHaveLength(pixelBefore);
+
+    for (const who of [anna, ben]) await call('PUT', '/api/me/notifications', who, { targets: [], kinds: {} });
+    await call('PATCH', '/api/settings', admin, { quietFrom: '22:00', quietTo: '07:00' });
+    await t.db.query('DELETE FROM tickets WHERE id = $1', [ticket.id]);
+  });
+
+  it('closes a ticket when a Home Assistant entity changes to a state', async () => {
+    ha.states.set('sensor.waschmaschine', { state: 'idle', attributes: { friendly_name: 'Waschmaschine' } });
+    const entities = (await call('GET', '/api/ha/entities', member)).json();
+    expect(entities).toContainEqual({ id: 'sensor.waschmaschine', name: 'Waschmaschine', state: 'idle' });
+    expect((await call('GET', '/api/ha/entities', reader)).statusCode).toBe(403);
+
+    const autoClose = { entity: 'sensor.waschmaschine', state: 'Idle' };
+    const ticket = (await call('POST', '/api/tickets', member, { title: 'Wäsche aufhängen', areaId: 2, due: '2030-05-06', recurrence: { every: 1, unit: 'week' }, autoClose })).json();
+    expect(ticket.autoClose).toEqual(autoClose);
+    const status = async () => (await call('GET', `/api/tickets/${ticket.id}`, member)).json().status;
+
+    await checkAutoClose(t.ctx); // already idle when created: only remembered
+    expect(await status()).toBe('open');
+    ha.states.set('sensor.waschmaschine', { state: 'running', attributes: {} });
+    await checkAutoClose(t.ctx);
+    expect(await status()).toBe('open');
+    ha.states.set('sensor.waschmaschine', { state: 'idle', attributes: {} });
+    expect(await checkAutoClose(t.ctx)).toBe(1); // finished: closed, the comparison ignores case
+    const done = (await call('GET', `/api/tickets/${ticket.id}`, member)).json();
+    expect(done.status).toBe('done');
+    expect((await call('GET', `/api/tickets/${done.followupId}`, member)).json().autoClose).toEqual(autoClose); // the series keeps it
+
+    expect((await call('PATCH', `/api/tickets/${done.followupId}`, member, { autoClose: { entity: 'Waschmaschine', state: 'idle' } })).statusCode).toBe(400);
+    expect((await call('PATCH', `/api/tickets/${done.followupId}`, member, { autoClose: null })).json().autoClose).toBeNull();
+    ha.states.delete('sensor.waschmaschine');
+    await t.db.query("DELETE FROM tickets WHERE title = 'Wäsche aufhängen'");
   });
 
   it('tells a user what is due when they arrive home', async () => {
@@ -369,6 +510,13 @@ describe('Tasklog → Home Assistant', () => {
 });
 
 describe('configuration and backup', () => {
+  it('generates the dashboard card for the Tasklog integration', async () => {
+    const yaml = (await call('GET', '/api/config/dashboard.yaml', admin)).body;
+    expect(yaml).toContain('type: vertical-stack');
+    expect(yaml).toContain('entity: todo.tasklog_zuhause');
+    expect(yaml).toContain('entity: todo.tasklog_arbeit');
+  });
+
   it('generates both YAML files', async () => {
     const ha = await call('GET', '/api/config/homeassistant.yaml', admin);
     expect(ha.body).toContain('rest_command:');

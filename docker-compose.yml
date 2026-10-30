@@ -26,8 +26,10 @@ services:
       BACKUP_DIR: /backups
     volumes:
       - ./backups:/backups
+      - uploads:/uploads
     ports:
       - "8080:8080"
 
 volumes:
   db-data:
+  uploads:

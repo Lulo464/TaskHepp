@@ -248,7 +248,8 @@
     "email": "E-Mail",
     "quietFrom": "Ruhezeit von",
     "quietTo": "bis",
-    "channelPending": "Push und E-Mail sind noch nicht angebunden. Bis dahin kommen Benachrichtigungen nur über HA-Notify (notify.notify) an."
+    "channelPending": "Push und E-Mail sind noch nicht angebunden. Bis dahin kommen Benachrichtigungen nur über HA-Notify (notify.notify) an.",
+    "personalHint": "Jeder Benutzer kann in der App unter Mehr → Benachrichtigungen seine eigenen Geräte und die gewünschten Arten wählen. Sobald das jemand tut, bekommt jeder nur noch seine eigenen Benachrichtigungen; dieser Kanal und die Schalter hier gelten dann nicht mehr. Die Ruhezeiten gelten weiter für alle."
   },
   "monitor": {
     "widget": {
@@ -356,6 +357,14 @@
   "config": {
     "ha": "Home Assistant (YAML)",
     "tasklog": "Tasklog (YAML)",
+    "dashboard": "Dashboard-Karte",
+    "dashboardHint": "Mit der Tasklog-Integration wird jeder Bereich in Home Assistant eine To-do-Liste (todo.tasklog_…). Abhaken, Anlegen, Umbenennen und Löschen dort landet direkt in Tasklog – auch per Sprachassistent („Füge Milch zu Tasklog Zuhause hinzu“). Die Karte oben zeigt alle Listen im Dashboard. So richtest du die Integration ein:",
+    "dashboardSteps": [
+      "In Tasklog unter Einstellungen → API-Tokens ein Token mit dem Recht tickets:write anlegen.",
+      "In HACS → Integrationen → ⋮ → Benutzerdefinierte Repositories die Adresse dieses Git-Repositorys als „Integration“ hinzufügen und „Tasklog“ installieren (oder den Ordner custom_components/tasklog in das config-Verzeichnis von Home Assistant kopieren).",
+      "Home Assistant neu starten, dann Einstellungen → Geräte & Dienste → Integration hinzufügen → „Tasklog“: Adresse von Tasklog und das Token eintragen.",
+      "Dashboard bearbeiten → Karte hinzufügen → Manuell → das YAML von oben einfügen."
+    ],
     "copy": "Kopieren",
     "copied": "Kopiert",
     "download": "Herunterladen",
@@ -527,6 +536,8 @@
       "noDate": "ohne Datum",
       "howMany": "Wie viele Tickets?",
       "oneTicket": "Ein Ticket",
+      "withChecklist": "Mit Checkliste",
+      "listTitle": "Liste",
       "perLine_one": "{{count}} pro Zeile",
       "perLine_other": "{{count}} – eins pro Zeile",
       "preview": "Diese Tickets entstehen",
@@ -556,9 +567,74 @@
       "admin": "Admin-Oberfläche",
       "monitor": "Tagesmonitor öffnen"
     },
+    "photos": {
+      "title": "Fotos",
+      "add": "Foto",
+      "uploading_one": "Lädt 1 …",
+      "uploading_other": "Lädt {{count}} …",
+      "open": "Foto {{name}} ansehen",
+      "prev": "Vorheriges Foto",
+      "next": "Nächstes Foto",
+      "download": "Herunterladen",
+      "delete": "Foto löschen",
+      "deleteConfirm": "Dieses Foto löschen?",
+      "failed": "„{{name}}“ ließ sich nicht hochladen: {{reason}}",
+      "unsupported": "Dieses Format kann der Browser nicht umwandeln – bitte als JPEG oder PNG"
+    },
+    "autoClose": {
+      "add": "Automatisch erledigen, wenn …",
+      "rule": "Erledigt sich, wenn {{name}} zu „{{state}}“ wechselt",
+      "entity": "Entität aus Home Assistant",
+      "state": "wechselt zu",
+      "now": "{{name}} ist gerade: {{state}}",
+      "noHa": "Home Assistant ist nicht verbunden – die Entität lässt sich trotzdem eintippen.",
+      "how": "Es zählt der Wechsel: Ist die Waschmaschine schon „idle“, erledigt sich „Wäsche aufhängen“ nach ihrem nächsten Lauf. Wiederkehrende Tickets nehmen die Bedingung mit.",
+      "change": "Bedingung ändern",
+      "remove": "Bedingung entfernen"
+    },
+    "checklist": {
+      "title": "Checkliste",
+      "progress": "Fortschritt der Checkliste",
+      "add": "Punkt hinzufügen …",
+      "rename": "Punkt umbenennen",
+      "delete": "„{{text}}“ löschen",
+      "finish": "Alles abgehakt – Ticket erledigen",
+      "count_one": "{{count}} Punkt",
+      "count_other": "{{count}} Punkte"
+    },
     "areaFilter": {
       "label": "Welche Bereiche du siehst",
       "all": "Alle"
+    },
+    "notify": {
+      "title": "Benachrichtigungen",
+      "intro": "Tasklog schickt dir Nachrichten über Home Assistant – auf die Geräte, die du hier auswählst, und nur das, was du willst.",
+      "devices": "Meine Geräte",
+      "noDevices": "Home Assistant meldet keine Geräte. Installiere die Home-Assistant-App auf deinem Handy und melde dich dort an – dann taucht es hier als „notify.mobile_app_…“ auf.",
+      "allDevices": "Alle Geräte (notify.notify)",
+      "test": "Test senden",
+      "tested_one": "Test an {{count}} Gerät gesendet",
+      "tested_other": "Test an {{count}} Geräte gesendet",
+      "kinds": "Was ich bekommen will",
+      "kind": {
+        "dueSoon": "Bald fällig",
+        "dueToday": "Heute fällig",
+        "dailyDigest": "Tagesübersicht",
+        "assigned": "Neu für mich",
+        "haCreated": "Neu von Home Assistant",
+        "longTimer": "Timer läuft lange"
+      },
+      "kindHint": {
+        "dueSoon": "Eine Stunde vor Tickets mit Uhrzeit – meine und nicht zugewiesene",
+        "dueToday": "Um 9 Uhr: was heute ohne Uhrzeit fällig ist",
+        "dailyDigest": "Um 7 Uhr: alles für heute, Überfälliges inklusive",
+        "assigned": "Wenn mir jemand ein Ticket zuweist",
+        "haCreated": "Wenn Home Assistant ein Ticket anlegt (in meinen Bereichen)",
+        "longTimer": "Wenn mein Timer seit über 4 Stunden läuft"
+      },
+      "howOn": "Es gelten die Ruhezeiten aus den Einstellungen; Antippen einer Nachricht öffnet das Ticket.",
+      "howOffPersonal": "Du hast noch kein Gerät gewählt und bekommst deshalb keine Benachrichtigungen.",
+      "howOffGlobal": "Solange niemand eigene Geräte wählt, gehen Benachrichtigungen wie bisher an den Kanal aus den Admin-Einstellungen. Sobald jemand Geräte wählt, bekommt jeder nur noch seine eigenen."
     },
     "presence": {
       "title": "Bei Ankunft erinnern",

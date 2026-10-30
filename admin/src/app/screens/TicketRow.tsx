@@ -19,6 +19,8 @@ export function TicketRow({ ticket, timers, canEdit, showStatus, showDue, showTi
     showStatus && t(`status.${ticket.status}`),
     showDue && ticket.due && formatDue(ticket.due, ticket.dueTime),
     showTime && (isOverdue(ticket.due, ticket.dueTime) ? t('due.overdue') : ticket.dueTime),
+    ticket.checkTotal > 0 && `☑ ${ticket.checkDone}/${ticket.checkTotal}`,
+    ticket.photos > 0 && `📷 ${ticket.photos}`,
     formatMinutes(ticket.minutes),
   ].filter(Boolean).join(' · ');
 

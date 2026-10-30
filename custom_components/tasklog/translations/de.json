@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tasklog verbinden",
+        "description": "Lege in Tasklog unter Admin → Einstellungen → API-Tokens ein Token mit dem Recht tickets:write an.",
+        "data": { "url": "Adresse von Tasklog", "api_token": "API-Token" },
+        "data_description": { "url": "z. B. http://192.168.1.20:8080 oder https://tasklog.example.org" }
+      },
+      "reauth_confirm": {
+        "title": "Neues API-Token für Tasklog",
+        "data": { "api_token": "API-Token" }
+      }
+    },
+    "error": {
+      "cannot_connect": "Tasklog ist unter dieser Adresse nicht erreichbar.",
+      "invalid_auth": "Tasklog lehnt das Token ab. Es braucht das Recht tickets:write."
+    },
+    "abort": {
+      "already_configured": "Dieses Tasklog ist schon eingerichtet.",
+      "reauth_successful": "Das neue Token funktioniert."
+    }
+  }
+}

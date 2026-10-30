@@ -18,7 +18,7 @@ cp .env.example .env      # Passwort, PUBLIC_URL, COOKIE_SECRET und OIDC eintrag
 docker compose up -d      # startet PostgreSQL 16 und Tasklog auf Port 8080
 ```
 
-Beim Start legt Tasklog das Datenbankschema selbst an bzw. aktualisiert es (`server/migrations/`). Nächtliche Backups landen in `./backups`.
+Beim Start legt Tasklog das Datenbankschema selbst an bzw. aktualisiert es (`server/migrations/`). Nächtliche Backups der Datenbank landen in `./backups`, Fotos im Docker-Volume `uploads`.
 
 ## Die App aufs Handy
 
@@ -58,6 +58,10 @@ Auf der Ticket-Seite wählst du aus, **wem ein Ticket zugewiesen** ist, oder üb
 **Welche Bereiche du siehst:** Oben in Heute, Tickets, Planung und Zeit steht eine Leiste mit den Bereichen. Tippst du bei „Alle“ auf einen Bereich, siehst du nur noch diesen. Weitere Bereiche tippst du dazu oder wieder weg, und „Alle“ zeigt wieder alles. Die Auswahl gilt sofort überall: in allen Ansichten, bei „Neu“, im Kalender-Abo und bei den Ankunfts-Erinnerungen. Es ist dieselbe Einstellung wie Mehr → Bereiche.
 
 **Ticket bearbeiten:** Auf der Ticket-Seite macht der Stift neben dem Titel Titel, Beschreibung, Bereich und Projekt bearbeitbar. Wechselt der Bereich, fällt ein Projekt des alten Bereichs weg. Speichern geht per Knopf oder Strg+Enter, Escape bricht ab.
+
+**Checklisten:** Jedes Ticket kann eine Checkliste haben, z. B. „Einkauf“ mit Milch, Brot, Eier. Punkte abhaken, antippen zum Umbenennen, mehrere auf einmal einfügen (eine Zeile pro Punkt). Der Fortschritt (☑ 2/5) steht in den Listen. Ist alles abgehakt, erledigt ein Knopf das Ticket. Bei „Neu“ wird eine eingefügte Liste mit „Mit Checkliste“ zu einem Ticket. Wiederkehrende Tickets nehmen ihre Checkliste mit, alle Punkte wieder offen.
+
+**Fotos:** Auf der Ticket-Seite fügst du unter **Fotos** Bilder aus Kamera oder Galerie hinzu, mehrere auf einmal. Die App verkleinert sie vor dem Hochladen (höchstens 2000 px, JPEG), damit es auch mobil schnell geht. Antippen zeigt ein Foto groß, mit Blättern, Herunterladen und Löschen (eigene Fotos, Admins alle). Die Dateien liegen im Docker-Volume `uploads`. Sichere dieses Volume zusätzlich zum nächtlichen Backup, das nur die Datenbank enthält.
 
 ## Entwicklung
 
@@ -116,13 +120,31 @@ Die passende HA-Konfiguration (rest_command und Automationen) erzeugt Tasklog un
 - `binary_sensor.tasklog_overdue`
 - `sensor.tasklog_next_due`
 
-Benachrichtigungen gehen über `notify.notify`, die Ankunfts-Erinnerungen an den Dienst, den jeder Benutzer dafür wählt. Push und E-Mail sind noch nicht angebunden.
+**Benachrichtigungen** laufen über Home Assistant. Jeder Benutzer wählt in der App unter **Mehr → Benachrichtigungen** seine Geräte (`notify.mobile_app_…`) und was er bekommen will:
+- bald fällig (eine Stunde vorher)
+- heute fällig (9 Uhr)
+- Tagesübersicht (7 Uhr)
+- neu für mich (zugewiesen)
+- neu von Home Assistant
+- Timer läuft lange
+
+Erinnerungen gehen an die zugewiesene Person, sonst an alle, die den Bereich sehen. Übersichten werden pro Person zusammengestellt, und Antippen öffnet das Ticket. Solange niemand eigene Geräte gewählt hat, geht alles wie früher an `notify.notify`. Die Ankunfts-Erinnerungen haben ihre eigene Geräteauswahl. Push und E-Mail sind noch nicht angebunden.
 
 **Kalender (z. B. Abfuhrtermine):** Unter „Kalender“ bindest du einen Kalender aus Home Assistant ein, etwa den von *Waste Collection Schedule*. Tasklog liest die Termine alle 15 Minuten über die HA-API.
 
 - Für jeden Termin entsteht genau ein Ticket, z. B. „Restmüll rausstellen“, fällig am Vortag.
 - Tickets entstehen nur bis zu 14 Tage im Voraus. Ist der Abfuhrtag vorbei, wird das Ticket automatisch erledigt.
 - Ein gelöschtes Ticket wird nicht neu angelegt.
+
+**Tasklog als To-do-Liste in Home Assistant:** Die Integration in `custom_components/tasklog` macht aus jedem Bereich eine HA-To-do-Liste (`todo.tasklog_zuhause` …). Abhaken, Anlegen (mit Datum, Uhrzeit, Beschreibung), Umbenennen und Löschen in Home Assistant landet sofort in Tasklog, auch per Sprachassistent. Erledigte Tickets bleiben zwei Tage abgehakt sichtbar.
+1. In Tasklog ein API-Token mit dem Recht `tickets:write` anlegen.
+2. In HACS → Integrationen → ⋮ → *Benutzerdefinierte Repositories* dieses Repository als *Integration* hinzufügen und „Tasklog“ installieren. Alternativ den Ordner `custom_components/tasklog` ins config-Verzeichnis von Home Assistant kopieren.
+3. Home Assistant neu starten, dann *Einstellungen → Geräte & Dienste → Integration hinzufügen → Tasklog*: Adresse und Token eintragen.
+4. **Dashboard-Karte:** Admin → Konfiguration → *Dashboard-Karte* liefert das YAML mit HAs eingebauter To-do-Karte für jeden Bereich.
+
+**Automatisch erledigen:** Auf der Ticket-Seite unter *Automatisch erledigen, wenn …* eine Entität und einen Zustand wählen, z. B. `sensor.waschmaschine` wechselt zu `idle`. Tasklog prüft jede Minute. Es zählt der Wechsel: Ist die Maschine schon „idle“, erledigt sich das Ticket nach ihrem nächsten Lauf. Wiederkehrende Tickets nehmen die Bedingung mit.
+
+Die Tests der Integration laufen gegen ein echtes Tasklog: `TASKLOG_URL=… TASKLOG_TOKEN=… pytest -c ha-tests/pytest.ini ha-tests` (mit `pytest-homeassistant-custom-component`).
 
 ## E-Mail-Import
 

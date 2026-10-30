@@ -12,7 +12,7 @@ import { OVERDUE_SQL } from '../services/tickets.js';
 const { version } = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')) as { version: string };
 
 /** Tables in dependency order; sessions are deliberately not part of a backup. */
-const BACKUP_TABLES = ['areas', 'projects', 'users', 'group_roles', 'rules', 'tickets', 'time_entries', 'ticket_notes', 'calendar_sources', 'calendar_imports', 'mail_accounts', 'mail_rules', 'mail_imports', 'presence_rules', 'published_entities', 'api_tokens', 'event_log', 'settings'] as const;
+const BACKUP_TABLES = ['areas', 'projects', 'users', 'group_roles', 'rules', 'tickets', 'time_entries', 'ticket_notes', 'ticket_checklist', 'ticket_attachments', 'calendar_sources', 'calendar_imports', 'mail_accounts', 'mail_rules', 'mail_imports', 'presence_rules', 'published_entities', 'api_tokens', 'event_log', 'settings'] as const;
 
 export async function exportAll(db: AppContext['db']) {
   const data: Record<string, unknown[]> = {};
@@ -20,7 +20,7 @@ export async function exportAll(db: AppContext['db']) {
   return { format: 'tasklog-backup', version: 1, exportedAt: new Date().toISOString(), data };
 }
 
-const SERIAL_TABLES = new Set<string>(['areas', 'projects', 'users', 'rules', 'tickets', 'time_entries', 'ticket_notes', 'calendar_sources', 'mail_accounts', 'mail_rules', 'mail_imports', 'presence_rules', 'api_tokens', 'event_log']);
+const SERIAL_TABLES = new Set<string>(['areas', 'projects', 'users', 'rules', 'tickets', 'time_entries', 'ticket_notes', 'ticket_checklist', 'ticket_attachments', 'calendar_sources', 'mail_accounts', 'mail_rules', 'mail_imports', 'presence_rules', 'api_tokens', 'event_log']);
 
 const backupSchema = z.object({
   format: z.literal('tasklog-backup'),

@@ -24,6 +24,8 @@ const schema = z.object({
   HA_TOKEN: z.string().optional(),
   /** Folder with the built admin UI to serve at `/`. */
   ADMIN_DIST: z.string().optional(),
+  /** Folder for photos attached to tickets. */
+  UPLOAD_DIR: z.string().default('./data/uploads'),
   /** Folder for the nightly JSON backup (03:00); unset = no automatic backup. */
   BACKUP_DIR: z.string().optional(),
   SEED_DEMO: z.stringbool().default(false),

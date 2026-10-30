@@ -109,7 +109,7 @@ export function useRefresh() {
 
 export function useApiError() {
   const { error, setError } = useApiState();
-  return { error, clear: () => setError(null) };
+  return { error, setError, clear: () => setError(null) };
 }
 
 /** JSON helpers for changes. */

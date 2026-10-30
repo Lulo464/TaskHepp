@@ -5,7 +5,7 @@ import { hmacSha256, randomToken, safeEqual } from '../lib/crypto.js';
 import { HttpError, notFound, parse } from '../lib/http.js';
 import { enabledEntities, entityCalculators } from '../services/entities.js';
 import { webhookBodySchema } from '../services/webhook.js';
-import { homeAssistantYaml, tasklogYaml } from '../services/yaml.js';
+import { dashboardYaml, homeAssistantYaml, tasklogYaml } from '../services/yaml.js';
 import { findApiToken } from '../auth/sessions.js';
 import { listRules } from './rules.js';
 
@@ -88,6 +88,16 @@ export function integrationRoutes(app: FastifyInstance, ctx: AppContext) {
     return { url: s.ha.url, hasToken: Boolean(s.ha.token), webhookUrl: webhookUrl(config.PUBLIC_URL, s.webhookId), enforceSignature: s.enforceSignature };
   });
 
+  /** Entities to pick from, e.g. for "erledigt, wenn …"; members may read them. */
+  app.get('/api/ha/entities', { config: { access: 'member' } }, async () => {
+    if (!(await ctx.ha.isConfigured())) return [];
+    const states = await ctx.ha.listStates().catch((err: Error) => { throw new HttpError(502, `Home Assistant: ${err.message}`); });
+    return states
+      .filter(s => !/^(zone|sun|weather|update|automation|script|scene|conversation|tts|stt|event|button|todo|calendar)\./.test(s.entity_id))
+      .map(s => ({ id: s.entity_id, name: String(s.attributes.friendly_name ?? s.entity_id), state: s.state }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  });
+
   app.post('/api/ha/test', async () => {
     const result = await ctx.ha.check();
     if (result.ok) ctx.publisher.schedule();
@@ -116,6 +126,11 @@ export function integrationRoutes(app: FastifyInstance, ctx: AppContext) {
     const s = await settings.get();
     reply.type('text/yaml; charset=utf-8');
     return tasklogYaml(await listRules(db), await enabledEntities(db), { haUrl: s.ha.url, webhookUrl: webhookUrl(config.PUBLIC_URL, s.webhookId) });
+  });
+
+  app.get('/api/config/dashboard.yaml', async (_req, reply) => {
+    reply.type('text/yaml; charset=utf-8');
+    return dashboardYaml((await db.query<{ name: string }>('SELECT name FROM areas ORDER BY position, id')).rows);
   });
 
   /** Current values of the published entities, for checking without HA. */
