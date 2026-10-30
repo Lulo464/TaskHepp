@@ -5,9 +5,10 @@ import { useApi } from '../../lib/api';
 import type { Me, Ticket } from '../../lib/types';
 import { useMyAreas } from '../areas';
 import type { Timers } from '../timer';
+import { AreaFilter } from './AreaFilter';
 import { TicketRow } from './TicketRow';
 
-type Filter = 'all' | 'mine' | 'ha' | 'mail' | 'done' | number;
+type Filter = 'all' | 'mine' | 'ha' | 'mail' | 'done';
 
 export function TicketList({ timers, canEdit, selectedId }: { timers: Timers; canEdit: boolean; selectedId?: number }) {
   const { t } = useTranslation();
@@ -20,19 +21,19 @@ export function TicketList({ timers, canEdit, selectedId }: { timers: Timers; ca
   const chips: { value: Filter; label: React.ReactNode }[] = [
     { value: 'all', label: t('common.all') },
     { value: 'mine', label: <><Icon name="user" /> {t('app.assignee.mine')}</> },
-    ...(areas?.visible ?? []).map(a => ({ value: a.id as Filter, label: a.name })),
     { value: 'ha', label: <><Icon name="house-line" /> HA</> },
     { value: 'mail', label: <><Icon name="envelope-simple" /> Mail</> },
     { value: 'done', label: t('status.done') },
   ];
   const rows = (tickets ?? []).filter(x => !areas?.isHidden(x.areaId) &&
     (filter === 'done' ? x.status === 'done' : x.status !== 'done') &&
-    (filter === 'all' || filter === 'done' || (filter === 'mine' ? x.assigneeId === me?.id : filter === 'ha' || filter === 'mail' ? x.source === filter : x.areaId === filter)) &&
+    (filter === 'all' || filter === 'done' || (filter === 'mine' ? x.assigneeId === me?.id : x.source === filter)) &&
     x.title.toLowerCase().includes(query.trim().toLowerCase()));
 
   return (
     <div className="pwa-screen pwa-list">
       <h1 className="pwa-h1">{t('app.tab.tickets')}</h1>
+      <AreaFilter />
       <input className="input pwa-search" type="search" placeholder={t('tickets.search')} value={query} onChange={e => setQuery(e.target.value)} aria-label={t('tickets.search')} />
       <div className="pwa-chips" role="tablist">
         {chips.map(c => (

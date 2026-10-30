@@ -55,6 +55,8 @@ Auf der Ticket-Seite wählst du aus, **wem ein Ticket zugewiesen** ist, oder üb
 
 **Bei Ankunft erinnern:** Unter **Mehr → Bei Ankunft erinnern** legt jeder Benutzer fest: Wenn *Person* (aus Home Assistant) in *Zone* ankommt, schicke an *notify.mobile_app_…*, was im *Bereich* heute ansteht. Überfälliges ist dabei, Tickets anderer Personen nicht, Tickets ohne Datum auf Wunsch. Tasklog prüft jede Minute, schickt pro Ankunft eine Nachricht (höchstens alle 30 Minuten, nicht in den Ruhezeiten) und öffnet beim Antippen die App. Mit „Jetzt testen“ lässt sich das sofort ausprobieren.
 
+**Welche Bereiche du siehst:** Oben in Heute, Tickets, Planung und Zeit steht eine Leiste mit den Bereichen. Tippst du bei „Alle“ auf einen Bereich, siehst du nur noch diesen. Weitere Bereiche tippst du dazu oder wieder weg, und „Alle“ zeigt wieder alles. Die Auswahl gilt sofort überall: in allen Ansichten, bei „Neu“, im Kalender-Abo und bei den Ankunfts-Erinnerungen. Es ist dieselbe Einstellung wie Mehr → Bereiche.
+
 ## Entwicklung
 
 Voraussetzung: Node.js 24 und eine PostgreSQL-Datenbank.

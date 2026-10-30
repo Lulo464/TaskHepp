@@ -191,7 +191,9 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
     // Minutes of entry e inside [from, from + span), running timers counted up to now.
     const clipped = (from: string, span: string) =>
       `GREATEST(extract(epoch FROM (LEAST(COALESCE(e.ended_at, now()), now(), ${from} + interval '${span}') - GREATEST(e.started_at, ${from}))), 0) / 60`;
-    const mine = 'e.user_id IS NOT DISTINCT FROM $1';
+    // Own entries, without the areas the user hid in the app.
+    const mine = `e.user_id IS NOT DISTINCT FROM $1 AND NOT EXISTS (
+      SELECT 1 FROM tickets ht JOIN users hu ON hu.id = $1 WHERE ht.id = e.ticket_id AND ht.area_id = ANY(hu.hidden_areas))`;
     const week = "date_trunc('week', now())";
     const today = "date_trunc('day', now())";
 

@@ -6,6 +6,7 @@ import { describeRecurrence } from '../../lib/recurrence';
 import type { Me, Ticket } from '../../lib/types';
 import { useMyAreas } from '../areas';
 import { usePointerDrag } from '../drag';
+import { AreaFilter } from './AreaFilter';
 import { Snooze } from './Snooze';
 import { navigate } from '../router';
 
@@ -82,6 +83,7 @@ export function Plan({ me }: { me: Me }) {
           <button type="button" role="tab" aria-selected={mine} className={`pwa-chip${mine ? ' is-active' : ''}`} onClick={() => setMine(true)}><Icon name="user" /> {t('app.assignee.mine')}</button>
         </div>
       </div>
+      <AreaFilter />
       {canEdit && <p className="pwa-label pwa-plan-hint">{t('app.plan.hint')}</p>}
 
       <div className="pwa-plan-layout">
