@@ -9,6 +9,7 @@ import { clock, useNow, type Timers } from '../timer';
 import { RepeatPicker } from './Repeat';
 import { Snooze } from './Snooze';
 import { TicketNotes } from './TicketNotes';
+import { TicketText } from './TicketText';
 
 const STATUSES: TicketStatus[] = ['open', 'inProgress', 'done'];
 
@@ -41,8 +42,7 @@ export function TicketDetail({ id, me, timers, canEdit }: { id: number; me: Me; 
         {ticket.source === 'mail' && <span className="tag tag-outline"><Icon name="envelope-simple" />&nbsp;E-Mail</span>}
         {ticket.prio === 'high' && <span className="tag tag-outline">{t('prio.high')}</span>}
       </div>
-      <h1 className="pwa-h1 pwa-detail-title">{ticket.title}</h1>
-      <p className="pwa-desc">{ticket.description || t('app.detail.noDescription')}</p>
+      <TicketText ticket={ticket} canEdit={canEdit} />
       {canEdit ? (
         <div className="pwa-due-edit">
           <Icon name="calendar-blank" />
