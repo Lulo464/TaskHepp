@@ -31,6 +31,8 @@ export interface TicketRow {
   /** Checklist progress: items and how many are ticked off. */
   checkTotal: number;
   checkDone: number;
+  /** How many photos are attached. */
+  photos: number;
 }
 
 export const TICKET_SELECT = `
@@ -39,7 +41,8 @@ export const TICKET_SELECT = `
          t.assignee_id AS "assigneeId", u.name AS assignee,
          COALESCE(tm.minutes, 0)::int AS minutes, COALESCE(tm.running, false) AS running,
          t.created_at AS "createdAt", t.done_at AS "doneAt", t.recurrence, t.followup_id AS "followupId",
-         COALESCE(cl.total, 0)::int AS "checkTotal", COALESCE(cl.done, 0)::int AS "checkDone"
+         COALESCE(cl.total, 0)::int AS "checkTotal", COALESCE(cl.done, 0)::int AS "checkDone",
+         (SELECT count(*) FROM ticket_attachments ta WHERE ta.ticket_id = t.id)::int AS photos
     FROM tickets t
     JOIN areas a ON a.id = t.area_id
     LEFT JOIN projects p ON p.id = t.project_id

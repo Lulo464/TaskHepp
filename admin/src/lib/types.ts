@@ -39,6 +39,17 @@ export interface Ticket {
   followupId: number | null;
   checkTotal: number;
   checkDone: number;
+  photos: number;
+}
+
+export interface Attachment {
+  id: number;
+  fileName: string;
+  mime: string;
+  size: number;
+  createdAt: string;
+  userId: number | null;
+  user: string | null;
 }
 
 export interface ChecklistItem {

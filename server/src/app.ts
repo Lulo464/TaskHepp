@@ -10,6 +10,7 @@ import { HttpError } from './lib/http.js';
 import { adminRoutes } from './routes/admin.js';
 import { areaRoutes } from './routes/areas.js';
 import { calendarRoutes } from './routes/calendars.js';
+import { attachmentRoutes } from './routes/attachments.js';
 import { feedRoutes } from './routes/feed.js';
 import { presenceRoutes } from './routes/presence.js';
 import { integrationRoutes } from './routes/integration.js';
@@ -45,6 +46,7 @@ export async function buildApp(ctx: AppContext, opts: { logger?: boolean | objec
   integrationRoutes(app, ctx);
   calendarRoutes(app, ctx);
   feedRoutes(app, ctx);
+  attachmentRoutes(app, ctx);
   presenceRoutes(app, ctx);
   mailRoutes(app, ctx);
   adminRoutes(app, ctx);

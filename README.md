@@ -18,7 +18,7 @@ cp .env.example .env      # Passwort, PUBLIC_URL, COOKIE_SECRET und OIDC eintrag
 docker compose up -d      # startet PostgreSQL 16 und Tasklog auf Port 8080
 ```
 
-Beim Start legt Tasklog das Datenbankschema selbst an bzw. aktualisiert es (`server/migrations/`). Nächtliche Backups landen in `./backups`.
+Beim Start legt Tasklog das Datenbankschema selbst an bzw. aktualisiert es (`server/migrations/`). Nächtliche Backups der Datenbank landen in `./backups`, Fotos im Docker-Volume `uploads`.
 
 ## Die App aufs Handy
 
@@ -60,6 +60,8 @@ Auf der Ticket-Seite wählst du aus, **wem ein Ticket zugewiesen** ist, oder üb
 **Ticket bearbeiten:** Auf der Ticket-Seite macht der Stift neben dem Titel Titel, Beschreibung, Bereich und Projekt bearbeitbar. Wechselt der Bereich, fällt ein Projekt des alten Bereichs weg. Speichern geht per Knopf oder Strg+Enter, Escape bricht ab.
 
 **Checklisten:** Jedes Ticket kann eine Checkliste haben, z. B. „Einkauf“ mit Milch, Brot, Eier. Punkte abhaken, antippen zum Umbenennen, mehrere auf einmal einfügen (eine Zeile pro Punkt). Der Fortschritt (☑ 2/5) steht in den Listen. Ist alles abgehakt, erledigt ein Knopf das Ticket. Bei „Neu“ wird eine eingefügte Liste mit „Mit Checkliste“ zu einem Ticket. Wiederkehrende Tickets nehmen ihre Checkliste mit, alle Punkte wieder offen.
+
+**Fotos:** Auf der Ticket-Seite fügst du unter **Fotos** Bilder aus Kamera oder Galerie hinzu, mehrere auf einmal. Die App verkleinert sie vor dem Hochladen (höchstens 2000 px, JPEG), damit es auch mobil schnell geht. Antippen zeigt ein Foto groß, mit Blättern, Herunterladen und Löschen (eigene Fotos, Admins alle). Die Dateien liegen im Docker-Volume `uploads`. Sichere dieses Volume zusätzlich zum nächtlichen Backup, das nur die Datenbank enthält.
 
 ## Entwicklung
 

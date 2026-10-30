@@ -7,6 +7,7 @@ import type { HistoryEvent, Me, Ticket, TicketStatus } from '../../lib/types';
 import { href, navigate } from '../router';
 import { clock, useNow, type Timers } from '../timer';
 import { Checklist } from './Checklist';
+import { Photos } from './Photos';
 import { RepeatPicker } from './Repeat';
 import { Snooze } from './Snooze';
 import { TicketNotes } from './TicketNotes';
@@ -45,6 +46,7 @@ export function TicketDetail({ id, me, timers, canEdit }: { id: number; me: Me; 
       </div>
       <TicketText ticket={ticket} canEdit={canEdit} />
       <Checklist ticket={ticket} canEdit={canEdit} />
+      <Photos ticket={ticket} me={me} canEdit={canEdit} />
       {canEdit ? (
         <div className="pwa-due-edit">
           <Icon name="calendar-blank" />

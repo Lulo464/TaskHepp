@@ -1,6 +1,9 @@
+import { mkdir, readdir, utimes, writeFile } from 'node:fs/promises';
+import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { hmacSha256 } from '../src/lib/crypto.js';
 import { checkPresence } from '../src/services/presence.js';
+import { sweepUploads } from '../src/routes/attachments.js';
 import { fakeHomeAssistant, setup, type FakeHa, type TestApp } from './helpers.js';
 
 let t: TestApp;
@@ -185,6 +188,49 @@ describe('tickets and time', () => {
     const done = (await call('PATCH', `/api/tickets/${ticket.id}`, member, { status: 'done' })).json();
     const next = (await call('GET', `/api/tickets/${done.followupId}/checklist`, member)).json();
     expect(next.map((i: { text: string; done: boolean }) => [i.text, i.done])).toEqual([['Hafermilch', false], ['Brot', false]]);
+  });
+
+  it('stores photos on a ticket and serves them only to signed-in users', async () => {
+    // 1×1 PNG
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+    const ticket = (await call('POST', '/api/tickets', member, { title: 'Mit Foto', areaId: 1 })).json();
+    const upload = (cookie: string, body: Buffer, type: string) => t.app.inject({
+      method: 'POST', url: `/api/tickets/${ticket.id}/attachments?name=${encodeURIComponent('Zähler.png')}`, payload: body, headers: { cookie, 'content-type': type },
+    });
+
+    const res = await upload(member, png, 'image/png');
+    expect(res.statusCode).toBe(201);
+    expect(res.json()).toMatchObject({ fileName: 'Zähler.png', mime: 'image/png', size: png.length });
+    const photo = res.json();
+    expect((await call('GET', `/api/tickets/${ticket.id}`, member)).json().photos).toBe(1);
+
+    const got = await call('GET', `/api/attachments/${photo.id}`, reader);
+    expect(got.statusCode).toBe(200);
+    expect(got.headers['content-type']).toBe('image/png');
+    expect(got.headers['x-content-type-options']).toBe('nosniff');
+    expect(got.rawPayload.equals(png)).toBe(true);
+    expect((await call('GET', `/api/attachments/${photo.id}`)).statusCode).toBe(401);
+
+    expect((await upload(member, Buffer.from('<html>nope</html>'), 'image/png')).statusCode).toBe(400); // not really a PNG
+    expect((await upload(member, Buffer.from('%PDF-1.7'), 'application/pdf')).statusCode).toBe(415);
+    expect((await upload(reader, png, 'image/png')).statusCode).toBe(403);
+
+    const other = await t.login('member');
+    expect((await call('DELETE', `/api/attachments/${photo.id}`, other)).statusCode).toBe(403);
+    expect((await call('DELETE', `/api/attachments/${photo.id}`, member)).statusCode).toBe(204);
+    expect((await call('GET', `/api/attachments/${photo.id}`, member)).statusCode).toBe(404);
+  });
+
+  it('sweeps away photo files of deleted tickets, but not fresh uploads', async () => {
+    const dir = t.ctx.config.UPLOAD_DIR;
+    await mkdir(dir, { recursive: true });
+    await writeFile(path.join(dir, 'verwaist.jpg'), 'x');
+    await writeFile(path.join(dir, 'gerade-hochgeladen.jpg'), 'x');
+    const old = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    await utimes(path.join(dir, 'verwaist.jpg'), old, old);
+    expect(await sweepUploads(t.ctx)).toBe(1);
+    expect(await readdir(dir)).toContain('gerade-hochgeladen.jpg');
+    expect(await readdir(dir)).not.toContain('verwaist.jpg');
   });
 
   it('assigns tickets to someone else', async () => {

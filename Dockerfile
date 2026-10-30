@@ -24,6 +24,9 @@ COPY --from=server /build/server/node_modules ./node_modules
 COPY --from=server /build/server/dist ./dist
 COPY --from=server /build/server/migrations ./migrations
 COPY --from=admin /build/admin/dist /app/admin
+# Photos attached to tickets; a named volume on /uploads keeps them (and takes over this owner).
+RUN mkdir -p /uploads && chown node:node /uploads
+ENV UPLOAD_DIR=/uploads
 USER node
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s CMD wget -qO- "http://127.0.0.1:${PORT}/api/health" || exit 1

@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { AppContext } from '../context.js';
+import { sweepUploads } from '../routes/attachments.js';
 import { exportAll } from '../routes/system.js';
 import { syncDueSources } from './calendars.js';
 import { checkPresence } from './presence.js';
@@ -103,6 +104,12 @@ export const jobs: Record<string, Job> = {
       "SELECT title FROM tickets WHERE status <> 'done' AND due_date = current_date AND due_time IS NULL ORDER BY prio = 'high' DESC, id LIMIT 10",
     );
     if (rows.length) await ctx.notifier.notify('dueSoon', 'Heute fällig', rows.map(r => `• ${r.title}`).join('\n'));
+  }),
+
+  /** Files of deleted tickets' photos. */
+  sweepUploads: daily('03:30', async ctx => {
+    const removed = await sweepUploads(ctx);
+    if (removed) await ctx.log.add('out', `Aufgeräumt: ${removed} Foto(s) gelöschter Tickets`, 'done');
   }),
 
   nightlyBackup: daily('03:00', async ctx => {

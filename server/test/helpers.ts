@@ -1,4 +1,7 @@
 import { createServer, type IncomingMessage, type Server } from 'node:http';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../src/app.js';
@@ -22,7 +25,10 @@ export interface TestApp {
 
 /** Fresh schema + demo data for each test file. */
 export async function setup(): Promise<TestApp> {
-  const config = loadConfig({ AUTH_MODE: 'dev', DATABASE_URL: TEST_DB, PUBLIC_URL: 'http://tasklog.test', TZ: 'Europe/Berlin' });
+  const config = loadConfig({
+    AUTH_MODE: 'dev', DATABASE_URL: TEST_DB, PUBLIC_URL: 'http://tasklog.test', TZ: 'Europe/Berlin',
+    UPLOAD_DIR: mkdtempSync(path.join(tmpdir(), 'tasklog-uploads-')),
+  });
   const db = createPool(config.DATABASE_URL, config.TZ);
   await db.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public');
   await migrate(db);

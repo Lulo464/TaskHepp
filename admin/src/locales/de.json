@@ -558,6 +558,20 @@
       "admin": "Admin-Oberfläche",
       "monitor": "Tagesmonitor öffnen"
     },
+    "photos": {
+      "title": "Fotos",
+      "add": "Foto",
+      "uploading_one": "Lädt 1 …",
+      "uploading_other": "Lädt {{count}} …",
+      "open": "Foto {{name}} ansehen",
+      "prev": "Vorheriges Foto",
+      "next": "Nächstes Foto",
+      "download": "Herunterladen",
+      "delete": "Foto löschen",
+      "deleteConfirm": "Dieses Foto löschen?",
+      "failed": "„{{name}}“ ließ sich nicht hochladen: {{reason}}",
+      "unsupported": "Dieses Format kann der Browser nicht umwandeln – bitte als JPEG oder PNG"
+    },
     "checklist": {
       "title": "Checkliste",
       "progress": "Fortschritt der Checkliste",
