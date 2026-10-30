@@ -6,6 +6,7 @@ import type { Me, MyTime, Ticket } from '../../lib/types';
 import { href, navigate } from '../router';
 import type { Timers } from '../timer';
 import { useMyAreas } from '../areas';
+import { AreaFilter } from './AreaFilter';
 import { TicketRow } from './TicketRow';
 
 const isoToday = () => new Date().toLocaleDateString('sv-SE');
@@ -26,7 +27,8 @@ export function Today({ me, timers, canEdit }: { me: Me; timers: Timers; canEdit
   return (
     <div className="pwa-screen pwa-wide">
       <div className="pwa-date">{new Date().toLocaleDateString(i18n.language, { weekday: 'long', day: 'numeric', month: 'long' })}</div>
-      <h1 className="pwa-h1" style={{ marginBottom: 18 }}>{t('app.today.hello', { name: firstName(me.name ?? null) })}</h1>
+      <h1 className="pwa-h1" style={{ marginBottom: 12 }}>{t('app.today.hello', { name: firstName(me.name ?? null) })}</h1>
+      <AreaFilter />
 
       <div className="pwa-today">
         <div className="pwa-hero">

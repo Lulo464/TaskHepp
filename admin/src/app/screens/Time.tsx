@@ -4,6 +4,7 @@ import { useApi } from '../../lib/api';
 import { formatMinutes } from '../../lib/format';
 import type { MyTime } from '../../lib/types';
 import { navigate } from '../router';
+import { AreaFilter } from './AreaFilter';
 
 /** The own tracked time this week, after the design's "Zeit" tab. */
 export function Time() {
@@ -18,6 +19,7 @@ export function Time() {
     <div className="pwa-screen">
       <h1 className="pwa-h1" style={{ marginBottom: 4 }}>{t('app.tab.time')}</h1>
       <div className="pwa-date">{t('app.time.thisWeek', { total: formatMinutes(time.week.total) })}</div>
+      <AreaFilter />
 
       <div className="pwa-bars" role="img" aria-label={t('app.time.chartLabel')}>
         {time.week.days.map(d => {

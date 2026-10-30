@@ -553,6 +553,10 @@
       "admin": "Admin-Oberfläche",
       "monitor": "Tagesmonitor öffnen"
     },
+    "areaFilter": {
+      "label": "Welche Bereiche du siehst",
+      "all": "Alle"
+    },
     "presence": {
       "title": "Bei Ankunft erinnern",
       "intro": "Kommst du nach Hause (oder in eine andere Zone aus Home Assistant), schickt dir Tasklog aufs Handy, was dort heute ansteht – Überfälliges inklusive, Tickets anderer Personen nicht.",
