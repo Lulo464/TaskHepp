@@ -8,6 +8,7 @@ import { Areas } from './screens/Areas';
 import { Login } from './screens/Login';
 import { More } from './screens/More';
 import { NewTicket } from './screens/NewTicket';
+import { Notifications } from './screens/Notifications';
 import { Plan } from './screens/Plan';
 import { Presence } from './screens/Presence';
 import { TicketDetail } from './screens/TicketDetail';
@@ -76,7 +77,7 @@ function Shell({ me }: { me: Me }) {
     { route: { name: 'plan' }, icon: 'calendar-dots', label: t('app.tab.plan'), active: route.name === 'plan' },
     ...(canEdit ? [{ route: { name: 'new' } as Route, icon: 'plus-circle', label: t('app.tab.new'), active: route.name === 'new' }] : []),
     { route: { name: 'time' }, icon: 'chart-bar', label: t('app.tab.time'), active: route.name === 'time' },
-    { route: { name: 'more' }, icon: 'gear', label: t('app.tab.more'), active: route.name === 'more' || route.name === 'areas' || route.name === 'presence' },
+    { route: { name: 'more' }, icon: 'gear', label: t('app.tab.more'), active: route.name === 'more' || route.name === 'areas' || route.name === 'presence' || route.name === 'notifications' },
   ];
 
   return (
@@ -109,6 +110,7 @@ function Shell({ me }: { me: Me }) {
         {route.name === 'more' && <More me={me} />}
         {route.name === 'areas' && <Areas me={me} />}
         {route.name === 'presence' && <Presence />}
+        {route.name === 'notifications' && <Notifications />}
       </main>
 
       {showMini && (

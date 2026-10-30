@@ -2,6 +2,7 @@ import { mkdir, readdir, utimes, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { hmacSha256 } from '../src/lib/crypto.js';
+import { jobs, sendPersonalLists } from '../src/services/jobs.js';
 import { checkPresence } from '../src/services/presence.js';
 import { sweepUploads } from '../src/routes/attachments.js';
 import { fakeHomeAssistant, setup, type FakeHa, type TestApp } from './helpers.js';
@@ -329,6 +330,49 @@ describe('Tasklog → Home Assistant', () => {
   it('tests the connection without exposing the token', async () => {
     expect((await call('POST', '/api/ha/test', admin, {})).json()).toMatchObject({ ok: true, version: '2026.10.1' });
     expect(JSON.stringify((await call('GET', '/api/settings', admin)).json())).not.toContain('ha-token');
+  });
+
+  it('sends each user their own notifications on the devices they chose', async () => {
+    await call('PATCH', '/api/settings', admin, { quietFrom: '00:00', quietTo: '00:00' }); // no quiet hours during the test
+    const anna = member;
+    const ben = await t.login('member');
+    const benMe = (await call('GET', '/api/me', ben)).json();
+    const sentTo = (service: string) => ha.calls.filter(c => c.path === `/api/services/notify/${service}`).map(c => c.body as { title: string; message: string; data: { url?: string } });
+
+    const prefs = (await call('GET', '/api/me/notifications', anna)).json();
+    expect(prefs).toMatchObject({ targets: [], haConfigured: true, personalActive: false });
+    expect(prefs.devices[0]).toEqual({ id: 'mobile_app_pixel', name: 'Pixel' });
+    expect(Object.values(prefs.kinds).every(Boolean)).toBe(true);
+
+    expect((await call('PUT', '/api/me/notifications', anna, { targets: ['mobile_app_handy'], kinds: { dailyDigest: false } })).json())
+      .toMatchObject({ targets: ['mobile_app_handy'], kinds: { dailyDigest: false, dueSoon: true } });
+    await call('PUT', '/api/me/notifications', ben, { targets: ['mobile_app_tablet'], kinds: {} });
+    expect((await call('PUT', '/api/me/notifications', ben, { targets: ['notify.falsch'], kinds: {} })).statusCode).toBe(400);
+
+    expect((await call('POST', '/api/me/notifications/test', anna)).statusCode).toBe(200);
+    expect(sentTo('mobile_app_handy').at(-1)?.title).toBe('Test von Tasklog');
+
+    // Anna gives Ben a ticket: only Ben hears about it, with a link into the app.
+    const ticket = (await call('POST', '/api/tickets', anna, { title: 'Kinderwagen reparieren', areaId: 2, assigneeId: benMe.id })).json();
+    expect(sentTo('mobile_app_tablet').at(-1)).toMatchObject({ title: 'Neu für dich', message: expect.stringContaining('Kinderwagen reparieren') });
+    expect(sentTo('mobile_app_tablet').at(-1)?.data.url).toContain(`/#/ticket/${ticket.id}`);
+    const pixelBefore = sentTo('mobile_app_handy').length;
+    await call('POST', '/api/tickets', anna, { title: 'Eigenes', areaId: 2 }); // to herself: no message
+
+    // Due in half an hour, assigned to Ben: the reminder goes to Ben only.
+    await t.db.query(`UPDATE tickets SET due_date = (localtimestamp + interval '30 minutes')::date, due_time = (localtimestamp + interval '30 minutes')::time WHERE id = $1`, [ticket.id]);
+    await jobs.dueSoon(t.ctx, new Date());
+    expect(sentTo('mobile_app_tablet').at(-1)?.message).toBe('Kinderwagen reparieren');
+    expect(sentTo('mobile_app_handy')).toHaveLength(pixelBefore);
+
+    // Morning list: Ben gets his, Anna switched hers off.
+    expect(await sendPersonalLists(t.ctx, 'dailyDigest', 't.due_date <= current_date', n => `Heute: ${n}`)).toBe(true);
+    expect(sentTo('mobile_app_tablet').at(-1)?.message).toContain('Kinderwagen reparieren');
+    expect(sentTo('mobile_app_handy')).toHaveLength(pixelBefore);
+
+    for (const who of [anna, ben]) await call('PUT', '/api/me/notifications', who, { targets: [], kinds: {} });
+    await call('PATCH', '/api/settings', admin, { quietFrom: '22:00', quietTo: '07:00' });
+    await t.db.query('DELETE FROM tickets WHERE id = $1', [ticket.id]);
   });
 
   it('tells a user what is due when they arrive home', async () => {

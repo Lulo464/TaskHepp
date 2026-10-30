@@ -248,7 +248,8 @@
     "email": "E-Mail",
     "quietFrom": "Ruhezeit von",
     "quietTo": "bis",
-    "channelPending": "Push und E-Mail sind noch nicht angebunden. Bis dahin kommen Benachrichtigungen nur über HA-Notify (notify.notify) an."
+    "channelPending": "Push und E-Mail sind noch nicht angebunden. Bis dahin kommen Benachrichtigungen nur über HA-Notify (notify.notify) an.",
+    "personalHint": "Jeder Benutzer kann in der App unter Mehr → Benachrichtigungen seine eigenen Geräte und die gewünschten Arten wählen. Sobald das jemand tut, bekommt jeder nur noch seine eigenen Benachrichtigungen; dieser Kanal und die Schalter hier gelten dann nicht mehr. Die Ruhezeiten gelten weiter für alle."
   },
   "monitor": {
     "widget": {
@@ -585,6 +586,36 @@
     "areaFilter": {
       "label": "Welche Bereiche du siehst",
       "all": "Alle"
+    },
+    "notify": {
+      "title": "Benachrichtigungen",
+      "intro": "Tasklog schickt dir Nachrichten über Home Assistant – auf die Geräte, die du hier auswählst, und nur das, was du willst.",
+      "devices": "Meine Geräte",
+      "noDevices": "Home Assistant meldet keine Geräte. Installiere die Home-Assistant-App auf deinem Handy und melde dich dort an – dann taucht es hier als „notify.mobile_app_…“ auf.",
+      "allDevices": "Alle Geräte (notify.notify)",
+      "test": "Test senden",
+      "tested_one": "Test an {{count}} Gerät gesendet",
+      "tested_other": "Test an {{count}} Geräte gesendet",
+      "kinds": "Was ich bekommen will",
+      "kind": {
+        "dueSoon": "Bald fällig",
+        "dueToday": "Heute fällig",
+        "dailyDigest": "Tagesübersicht",
+        "assigned": "Neu für mich",
+        "haCreated": "Neu von Home Assistant",
+        "longTimer": "Timer läuft lange"
+      },
+      "kindHint": {
+        "dueSoon": "Eine Stunde vor Tickets mit Uhrzeit – meine und nicht zugewiesene",
+        "dueToday": "Um 9 Uhr: was heute ohne Uhrzeit fällig ist",
+        "dailyDigest": "Um 7 Uhr: alles für heute, Überfälliges inklusive",
+        "assigned": "Wenn mir jemand ein Ticket zuweist",
+        "haCreated": "Wenn Home Assistant ein Ticket anlegt (in meinen Bereichen)",
+        "longTimer": "Wenn mein Timer seit über 4 Stunden läuft"
+      },
+      "howOn": "Es gelten die Ruhezeiten aus den Einstellungen; Antippen einer Nachricht öffnet das Ticket.",
+      "howOffPersonal": "Du hast noch kein Gerät gewählt und bekommst deshalb keine Benachrichtigungen.",
+      "howOffGlobal": "Solange niemand eigene Geräte wählt, gehen Benachrichtigungen wie bisher an den Kanal aus den Admin-Einstellungen. Sobald jemand Geräte wählt, bekommt jeder nur noch seine eigenen."
     },
     "presence": {
       "title": "Bei Ankunft erinnern",

@@ -28,7 +28,7 @@ export function createContext(config: Config, db: Db, overrides: Partial<AppCont
   const log = overrides.log ?? new EventLog(db);
   const ha = overrides.ha ?? new HomeAssistant(settings);
   const publisher = overrides.publisher ?? new Publisher(db, ha, log);
-  const notifier = overrides.notifier ?? new Notifier(settings, ha, log, config.TZ);
+  const notifier = overrides.notifier ?? new Notifier(settings, ha, log, config.TZ, db, config.PUBLIC_URL);
   const webhook = overrides.webhook ?? new WebhookProcessor(db, log, notifier, publisher);
   const ctx = { config, db, settings, log, ha, publisher, notifier, webhook } as AppContext;
   ctx.mail = overrides.mail ?? new MailImporter(ctx);

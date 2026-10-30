@@ -32,6 +32,27 @@ function daily(at: string, run: Job): Job {
 
 const remindedEntries = new Set<number>();
 
+/**
+ * Morning lists, one per user with devices: their own and unassigned tickets in the areas they see. Returns false
+ * while nobody set up devices, so the caller uses the global channel.
+ */
+export async function sendPersonalLists(ctx: AppContext, kind: 'dailyDigest' | 'dueToday', where: string, title: (n: number) => string): Promise<boolean> {
+  if (!(await ctx.notifier.hasPersonal())) return false;
+  for (const user of await ctx.notifier.recipients(kind)) {
+    const { rows } = await ctx.db.query<{ title: string; overdue: boolean }>(
+      `SELECT t.title, t.due_date < current_date AS overdue FROM tickets t JOIN users u ON u.id = $1
+        WHERE t.status <> 'done' AND ${where} AND (t.assignee_id IS NULL OR t.assignee_id = $1) AND NOT (t.area_id = ANY(u.hidden_areas))
+        ORDER BY t.due_date, t.due_time NULLS LAST, t.prio = 'high' DESC, t.id`,
+      [user.id],
+    );
+    if (!rows.length) continue;
+    const lines = rows.slice(0, 10).map(r => `• ${r.title}${r.overdue ? ' (überfällig)' : ''}`);
+    if (rows.length > 10) lines.push(`… und ${rows.length - 10} weitere`);
+    await ctx.notifier.sendTo([user], title(rows.length), lines.join('\n'), { tag: `tasklog-${kind}` });
+  }
+  return true;
+}
+
 export const jobs: Record<string, Job> = {
   publishEntities: async ctx => {
     await ctx.publisher.publishAll();
@@ -60,19 +81,21 @@ export const jobs: Record<string, Job> = {
   longTimerReminder: async ctx => {
     const s = await ctx.settings.get();
     if (!s.timeRules.longTimer) return;
-    const { rows } = await ctx.db.query<{ id: number; title: string }>(
-      `SELECT e.id, t.title FROM time_entries e JOIN tickets t ON t.id = e.ticket_id
+    const { rows } = await ctx.db.query<{ id: number; title: string; ticketId: number; userId: number | null }>(
+      `SELECT e.id, t.title, t.id AS "ticketId", e.user_id AS "userId" FROM time_entries e JOIN tickets t ON t.id = e.ticket_id
         WHERE e.ended_at IS NULL AND e.started_at < now() - make_interval(hours => $1)`,
       [LONG_TIMER_HOURS],
     );
     for (const r of rows) {
       if (remindedEntries.has(r.id)) continue;
       remindedEntries.add(r.id);
-      await ctx.notifier.notify(null, 'Timer läuft noch', `„${r.title}“ läuft seit über ${LONG_TIMER_HOURS} Stunden.`);
+      await ctx.notifier.deliver('longTimer', null, { userIds: r.userId ? [r.userId] : [] }, 'Timer läuft noch',
+        `„${r.title}“ läuft seit über ${LONG_TIMER_HOURS} Stunden.`, { path: `/#/ticket/${r.ticketId}` });
     }
   },
 
   dailyDigest: daily('07:00', async ctx => {
+    if (await sendPersonalLists(ctx, 'dailyDigest', 't.due_date <= current_date', n => `Heute: ${n} Ticket${n === 1 ? '' : 's'}`)) return;
     const { rows } = await ctx.db.query<{ title: string }>(
       "SELECT title FROM tickets WHERE status <> 'done' AND due_date <= current_date ORDER BY prio = 'high' DESC, id LIMIT 10",
     );
@@ -86,20 +109,22 @@ export const jobs: Record<string, Job> = {
 
   /** Tickets with a time: one reminder an hour before. */
   dueSoon: async ctx => {
-    const { rows } = await ctx.db.query<{ id: number; title: string; at: string }>(
-      `SELECT id, title, to_char(due_time, 'HH24:MI') AS at FROM tickets
+    const { rows } = await ctx.db.query<{ id: number; title: string; at: string; assigneeId: number | null; areaId: number }>(
+      `SELECT id, title, to_char(due_time, 'HH24:MI') AS at, assignee_id AS "assigneeId", area_id AS "areaId" FROM tickets
         WHERE status <> 'done' AND due_time IS NOT NULL AND due_notified_at IS NULL
           AND due_date + due_time > localtimestamp AND due_date + due_time <= localtimestamp + interval '60 minutes'
         ORDER BY due_date + due_time`,
     );
     for (const r of rows) {
       await ctx.db.query('UPDATE tickets SET due_notified_at = now() WHERE id = $1', [r.id]);
-      await ctx.notifier.notify('dueSoon', `Um ${r.at} fällig`, r.title);
+      // Personally: the assignee, or everyone who sees the area when nobody is assigned.
+      await ctx.notifier.deliver('dueSoon', 'dueSoon', r.assigneeId ? { userIds: [r.assigneeId] } : { areaId: r.areaId }, `Um ${r.at} fällig`, r.title, { path: `/#/ticket/${r.id}` });
     }
   },
 
   /** Tickets without a time: in the morning. */
   dueToday: daily('09:00', async ctx => {
+    if (await sendPersonalLists(ctx, 'dueToday', 't.due_date = current_date AND t.due_time IS NULL', () => 'Heute fällig')) return;
     const { rows } = await ctx.db.query<{ title: string }>(
       "SELECT title FROM tickets WHERE status <> 'done' AND due_date = current_date AND due_time IS NULL ORDER BY prio = 'high' DESC, id LIMIT 10",
     );

@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { userId } from '../auth/plugin.js';
 import type { AppContext } from '../context.js';
@@ -56,6 +56,15 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
     }
   };
 
+  /** "Neu für dich": the new assignee hears about it, unless they assigned it to themselves. */
+  const tellAssignee = async (req: FastifyRequest, ticketId: number, assigneeId: number) => {
+    if (assigneeId === userId(req)) return;
+    const ticket = await getTicket(db, ticketId);
+    const by = req.principal?.kind === 'user' ? req.principal.user.name : 'Home Assistant';
+    if (!ticket) return;
+    await ctx.notifier.sendTo(await ctx.notifier.recipients('assigned', { userIds: [assigneeId] }), 'Neu für dich', `${ticket.title} – von ${by}`, { path: `/#/ticket/${ticketId}` });
+  };
+
   app.get('/api/people', async () => (await db.query(`${PEOPLE_SQL} ORDER BY name, id`)).rows);
 
   app.get('/api/tickets', async req => {
@@ -88,6 +97,7 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
     await checkPlace(body.areaId, body.projectId);
     const id = await createTicket(db, { ...body, assigneeId: body.assigneeId === undefined ? userId(req) : body.assigneeId });
     publisher.schedule();
+    if (body.assigneeId) await tellAssignee(req, id, body.assigneeId);
     reply.code(201);
     return getTicket(db, id);
   });
@@ -96,6 +106,7 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
     const { id } = parse(idParam, req.params);
     const body = parse(ticketInput.partial(), req.body);
     await checkAssignee(body.assigneeId);
+    const assignedBefore = body.assigneeId ? (await db.query<{ a: number | null }>('SELECT assignee_id AS a FROM tickets WHERE id = $1', [id])).rows[0]?.a : undefined;
     if ('areaId' in body || 'projectId' in body) {
       const current = await getTicket(db, id);
       if (!current) throw notFound('Ticket nicht gefunden');
@@ -123,6 +134,7 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
       if (body.status) await setStatus(c, [id], body.status);
     });
     publisher.schedule();
+    if (body.assigneeId && body.assigneeId !== assignedBefore) await tellAssignee(req, id, body.assigneeId);
     return (await getTicket(db, id)) ?? Promise.reject(notFound('Ticket nicht gefunden'));
   });
 

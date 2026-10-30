@@ -120,7 +120,15 @@ Die passende HA-Konfiguration (rest_command und Automationen) erzeugt Tasklog un
 - `binary_sensor.tasklog_overdue`
 - `sensor.tasklog_next_due`
 
-Benachrichtigungen gehen über `notify.notify`, die Ankunfts-Erinnerungen an den Dienst, den jeder Benutzer dafür wählt. Push und E-Mail sind noch nicht angebunden.
+**Benachrichtigungen** laufen über Home Assistant. Jeder Benutzer wählt in der App unter **Mehr → Benachrichtigungen** seine Geräte (`notify.mobile_app_…`) und was er bekommen will:
+- bald fällig (eine Stunde vorher)
+- heute fällig (9 Uhr)
+- Tagesübersicht (7 Uhr)
+- neu für mich (zugewiesen)
+- neu von Home Assistant
+- Timer läuft lange
+
+Erinnerungen gehen an die zugewiesene Person, sonst an alle, die den Bereich sehen. Übersichten werden pro Person zusammengestellt, und Antippen öffnet das Ticket. Solange niemand eigene Geräte gewählt hat, geht alles wie früher an `notify.notify`. Die Ankunfts-Erinnerungen haben ihre eigene Geräteauswahl. Push und E-Mail sind noch nicht angebunden.
 
 **Kalender (z. B. Abfuhrtermine):** Unter „Kalender“ bindest du einen Kalender aus Home Assistant ein, etwa den von *Waste Collection Schedule*. Tasklog liest die Termine alle 15 Minuten über die HA-API.
 

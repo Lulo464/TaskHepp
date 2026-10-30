@@ -34,6 +34,7 @@ export function Notifications() {
         </Field>
       </div>
       {settings.channel !== 'haNotify' && <Note>{t('notify.channelPending')}</Note>}
+      <Note>{t('notify.personalHint')}</Note>
     </>
   );
 }
