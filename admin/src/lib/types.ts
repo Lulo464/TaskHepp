@@ -37,6 +37,15 @@ export interface Ticket {
   recurrence: Recurrence | null;
   /** The next ticket of the series, once this one is done. */
   followupId: number | null;
+  checkTotal: number;
+  checkDone: number;
+}
+
+export interface ChecklistItem {
+  id: number;
+  text: string;
+  done: boolean;
+  position: number;
 }
 
 /** How a ticket repeats; weekdays 1 = Monday … 7 = Sunday. */

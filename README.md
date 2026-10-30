@@ -59,6 +59,8 @@ Auf der Ticket-Seite wählst du aus, **wem ein Ticket zugewiesen** ist, oder üb
 
 **Ticket bearbeiten:** Auf der Ticket-Seite macht der Stift neben dem Titel Titel, Beschreibung, Bereich und Projekt bearbeitbar. Wechselt der Bereich, fällt ein Projekt des alten Bereichs weg. Speichern geht per Knopf oder Strg+Enter, Escape bricht ab.
 
+**Checklisten:** Jedes Ticket kann eine Checkliste haben, z. B. „Einkauf“ mit Milch, Brot, Eier. Punkte abhaken, antippen zum Umbenennen, mehrere auf einmal einfügen (eine Zeile pro Punkt). Der Fortschritt (☑ 2/5) steht in den Listen. Ist alles abgehakt, erledigt ein Knopf das Ticket. Bei „Neu“ wird eine eingefügte Liste mit „Mit Checkliste“ zu einem Ticket. Wiederkehrende Tickets nehmen ihre Checkliste mit, alle Punkte wieder offen.
+
 ## Entwicklung
 
 Voraussetzung: Node.js 24 und eine PostgreSQL-Datenbank.

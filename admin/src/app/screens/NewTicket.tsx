@@ -5,7 +5,7 @@ import { post, useAction } from '../../lib/api';
 import { describeRecurrence } from '../../lib/recurrence';
 import type { Recurrence, Ticket } from '../../lib/types';
 import { useMyAreas } from '../areas';
-import { linesOf, looksLikeList, parseQuick, shortTitle, splitMessages, takeShared, type Shared } from '../quickAdd';
+import { isListLine, linesOf, looksLikeList, parseQuick, shortTitle, splitMessages, stripBullet, takeShared, type Shared } from '../quickAdd';
 import { href, navigate } from '../router';
 import { RepeatPicker } from './Repeat';
 import type { Timers } from '../timer';
@@ -23,7 +23,7 @@ interface Draft {
 
 /**
  * New ticket from free text: "Oma Arzt Donnerstag 10 Uhr" fills in date and time by itself. Pasted or shared text
- * with several lines or WhatsApp messages can become several tickets at once.
+ * with several lines or WhatsApp messages can become several tickets at once, or one ticket with a checklist.
  */
 export function NewTicket({ timers }: { timers: Timers }) {
   const { t, i18n } = useTranslation();
@@ -34,6 +34,7 @@ export function NewTicket({ timers }: { timers: Timers }) {
   const [shared] = useState<Shared | null>(() => takeShared());
   const [text, setText] = useState(() => shared?.text ?? '');
   const [several, setSeveral] = useState(() => looksLikeList(shared?.text ?? ''));
+  const [asChecklist, setAsChecklist] = useState(false);
   const [detect, setDetect] = useState(true);
   const [skipped, setSkipped] = useState<Set<number>>(new Set());
   const [description, setDescription] = useState('');
@@ -86,8 +87,24 @@ export function NewTicket({ timers }: { timers: Timers }) {
       skipped: skipped.has(i),
     };
   });
+  // — one ticket with a checklist: a first line that is no list item becomes the title —
+  const rawLines = body.split('\n').filter(l => l.trim());
+  const hasHead = rawLines.length > 0 && !isListLine(rawLines[0]);
+  const head = hasHead ? rawLines[0].replace(/:\s*$/, '').trim() : t('app.new.listTitle');
+  const checkItems = (hasHead ? rawLines.slice(1) : rawLines).map(stripBullet).filter(Boolean);
+  const headFound = detect && !touched ? parseQuick(head) : null;
+  const headDetected = Boolean(headFound && (headFound.due || headFound.dueTime || headFound.repeat));
+  const listTicket: Draft = {
+    title: shortTitle(headDetected ? headFound!.title : head).title,
+    description: join(description, senders.length === 1 ? fromNote(senders[0]) : null, shared?.url),
+    due: headDetected ? headFound!.due : fieldDue,
+    dueTime: headDetected ? headFound!.dueTime : fieldTime,
+    recurrence: !repeatTouched && headFound?.repeat ? headFound.repeat : repeat,
+  };
+
   const asList = several && multiline;
-  const chosen = asList ? items.filter(x => !x.skipped) : single.title ? [single] : [];
+  const checklist = asChecklist && multiline && !asList;
+  const chosen = asList ? items.filter(x => !x.skipped) : checklist ? [listTicket] : single.title ? [single] : [];
 
   const when = (d: Pick<Draft, 'due' | 'dueTime' | 'recurrence'>) => {
     const repeats = d.recurrence ? `↻ ${describeRecurrence(d.recurrence)} · ` : '';
@@ -104,6 +121,7 @@ export function NewTicket({ timers }: { timers: Timers }) {
     for (const d of chosen) {
       const ticket = await act(() => post<Ticket>('/api/tickets', { ...d, areaId, source: 'app' }));
       if (!ticket) break;
+      if (checklist && checkItems.length) await act(() => post(`/api/tickets/${ticket.id}/checklist`, { text: checkItems.join('\n') }));
       made.push(ticket);
     }
     setBusy(false);
@@ -118,18 +136,19 @@ export function NewTicket({ timers }: { timers: Timers }) {
 
   const changeDate = (next: { due?: string; dueTime?: string }) => {
     // Keep what the text said for the field that was not changed.
-    if (!touched && detected && !asList) {
-      setDue(single.due ?? '');
-      setDueTime(single.dueTime ?? '');
+    if (!touched && (checklist ? headDetected : detected && !asList)) {
+      setDue((checklist ? listTicket : single).due ?? '');
+      setDueTime((checklist ? listTicket : single).dueTime ?? '');
     }
     if (next.due !== undefined) setDue(next.due);
     if (next.dueTime !== undefined) setDueTime(next.dueTime);
     setTouched(true);
   };
   // With several tickets the fields hold the date for lines without one of their own.
-  const own = !asList && !touched && detected;
-  const shownDue = own ? single.due ?? '' : due;
-  const shownTime = own ? single.dueTime ?? '' : dueTime;
+  const own = checklist ? headDetected : !asList && !touched && detected;
+  const ownDraft = checklist ? listTicket : single;
+  const shownDue = own ? ownDraft.due ?? '' : due;
+  const shownTime = own ? ownDraft.dueTime ?? '' : dueTime;
 
   return (
     <div className="pwa-screen">
@@ -151,12 +170,28 @@ export function NewTicket({ timers }: { timers: Timers }) {
         {multiline && (
           <Seg
             label={t('app.new.howMany')}
-            options={[{ value: 'one', label: t('app.new.oneTicket') }, { value: 'lines', label: t('app.new.perLine', { count: items.length }) }]}
-            value={several ? 'lines' : 'one'} onChange={v => setSeveral(v === 'lines')}
+            options={[
+              { value: 'one', label: t('app.new.oneTicket') },
+              { value: 'checklist', label: t('app.new.withChecklist') },
+              { value: 'lines', label: t('app.new.perLine', { count: items.length }) },
+            ]}
+            value={several ? 'lines' : asChecklist ? 'checklist' : 'one'} onChange={v => { setSeveral(v === 'lines'); setAsChecklist(v === 'checklist'); }}
           />
         )}
 
-        {!asList && text.trim() && (found.due || found.dueTime || found.repeat) && (
+        {checklist && (
+          <div className="pwa-quick-list" aria-label={t('app.new.preview')}>
+            <div className="pwa-quick-item">
+              <div className="grow">
+                <div className="pwa-row-title">{listTicket.title}</div>
+                <div className="pwa-row-meta">{when(listTicket)} · {t('app.checklist.count', { count: checkItems.length })}</div>
+              </div>
+            </div>
+            {checkItems.map((c, i) => <div key={i} className="pwa-quick-check"><Icon name="square" /> {c}</div>)}
+          </div>
+        )}
+
+        {!asList && !checklist && text.trim() && (found.due || found.dueTime || found.repeat) && (
           detected ? (
             <div className="pwa-detected">
               <Icon name="sparkle" />
@@ -203,7 +238,7 @@ export function NewTicket({ timers }: { timers: Timers }) {
         </div>
         <div>
           <div className="field-label">{asList ? t('repeat.labelOthers') : t('repeat.label')}</div>
-          <RepeatPicker value={asList ? repeat : singleRepeat} due={asList ? fieldDue : single.due} onChange={r => { setRepeat(r); setRepeatTouched(true); }} />
+          <RepeatPicker value={asList ? repeat : checklist ? listTicket.recurrence : singleRepeat} due={asList ? fieldDue : single.due} onChange={r => { setRepeat(r); setRepeatTouched(true); }} />
         </div>
         <Field label={t('app.new.description')}>
           <textarea className="input" rows={3} placeholder={t('app.new.optional')} value={description} onChange={e => setDescription(e.target.value)} />

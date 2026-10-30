@@ -165,6 +165,28 @@ describe('tickets and time', () => {
     expect((await call('POST', '/api/tickets', member, { title: 'x', areaId: a.id, projectId: b.projects[0].id })).statusCode).toBe(400);
   });
 
+  it('keeps a checklist in a ticket and passes it on in a series', async () => {
+    const ticket = (await call('POST', '/api/tickets', member, { title: 'Einkauf', areaId: 1, due: '2030-02-04', recurrence: { every: 1, unit: 'week' } })).json();
+    const url = `/api/tickets/${ticket.id}/checklist`;
+    const added = await call('POST', url, member, { text: '- Milch\n* Brot\n\n1. Eier' });
+    expect(added.statusCode).toBe(201);
+    expect(added.json().map((i: { text: string }) => i.text)).toEqual(['Milch', 'Brot', 'Eier']);
+    const [milch, brot, eier] = added.json() as { id: number }[];
+    await call('PATCH', `/api/checklist/${brot.id}`, member, { done: true });
+    expect((await call('GET', `/api/tickets/${ticket.id}`, member)).json()).toMatchObject({ checkTotal: 3, checkDone: 1 });
+
+    const reordered = (await call('PUT', `${url}/order`, member, { ids: [eier.id, milch.id, brot.id] })).json();
+    expect(reordered.map((i: { text: string }) => i.text)).toEqual(['Eier', 'Milch', 'Brot']);
+    expect((await call('PATCH', `/api/checklist/${milch.id}`, member, { text: 'Hafermilch' })).json().text).toBe('Hafermilch');
+    expect((await call('DELETE', `/api/checklist/${eier.id}`, member)).statusCode).toBe(204);
+    expect((await call('POST', url, member, { text: '  ' })).statusCode).toBe(400);
+    expect((await call('POST', url, reader, { text: 'x' })).statusCode).toBe(403);
+
+    const done = (await call('PATCH', `/api/tickets/${ticket.id}`, member, { status: 'done' })).json();
+    const next = (await call('GET', `/api/tickets/${done.followupId}/checklist`, member)).json();
+    expect(next.map((i: { text: string; done: boolean }) => [i.text, i.done])).toEqual([['Hafermilch', false], ['Brot', false]]);
+  });
+
   it('assigns tickets to someone else', async () => {
     const reader = await t.login('read');
     const people = (await call('GET', '/api/people', member)).json() as { id: number; name: string }[];

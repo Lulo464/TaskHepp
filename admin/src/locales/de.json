@@ -527,6 +527,8 @@
       "noDate": "ohne Datum",
       "howMany": "Wie viele Tickets?",
       "oneTicket": "Ein Ticket",
+      "withChecklist": "Mit Checkliste",
+      "listTitle": "Liste",
       "perLine_one": "{{count}} pro Zeile",
       "perLine_other": "{{count}} – eins pro Zeile",
       "preview": "Diese Tickets entstehen",
@@ -555,6 +557,16 @@
       "areas": "Bereiche",
       "admin": "Admin-Oberfläche",
       "monitor": "Tagesmonitor öffnen"
+    },
+    "checklist": {
+      "title": "Checkliste",
+      "progress": "Fortschritt der Checkliste",
+      "add": "Punkt hinzufügen …",
+      "rename": "Punkt umbenennen",
+      "delete": "„{{text}}“ löschen",
+      "finish": "Alles abgehakt – Ticket erledigen",
+      "count_one": "{{count}} Punkt",
+      "count_other": "{{count}} Punkte"
     },
     "areaFilter": {
       "label": "Welche Bereiche du siehst",

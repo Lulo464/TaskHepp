@@ -154,7 +154,7 @@ function PlanItem({ ticket, showDate, canEdit, onMove, onPointerDown, dragging, 
           {when && <span className="accent pwa-num">{when} </span>}
           {ticket.prio === 'high' && <Icon name="arrow-up" className="accent" />} {ticket.recurrence && <i className="ph ph-arrows-clockwise accent" aria-label={describeRecurrence(ticket.recurrence)} title={describeRecurrence(ticket.recurrence)} />} {ticket.title}
         </div>
-        <div className="pwa-row-meta pwa-wrap">{ticket.area}{ticket.assignee ? ` · ${ticket.assignee}` : ''}</div>
+        <div className="pwa-row-meta pwa-wrap">{ticket.area}{ticket.assignee ? ` · ${ticket.assignee}` : ''}{ticket.checkTotal ? ` · ☑ ${ticket.checkDone}/${ticket.checkTotal}` : ''}</div>
       </div>
       {canEdit && <Snooze ticket={ticket} />}
       {canEdit && (

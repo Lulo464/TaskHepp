@@ -203,6 +203,62 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
     return reply.code(204).send();
   });
 
+  // — checklist —
+  const CHECK_SELECT = 'SELECT id, text, done, position FROM ticket_checklist';
+  const checkText = z.string().trim().min(1, 'Der Punkt ist leer').max(500);
+
+  app.get('/api/tickets/:id/checklist', async req => {
+    const { id } = parse(idParam, req.params);
+    if (!(await getTicket(db, id))) throw notFound('Ticket nicht gefunden');
+    return (await db.query(`${CHECK_SELECT} WHERE ticket_id = $1 ORDER BY position, id`, [id])).rows;
+  });
+
+  /** One item, or several at once (one per line of `text`), appended at the end. */
+  app.post('/api/tickets/:id/checklist', { config: { access: 'member' } }, async (req, reply) => {
+    const { id } = parse(idParam, req.params);
+    const { text } = parse(z.object({ text: z.string().max(10_000) }), req.body);
+    const lines = text.split(/\r?\n/).map(l => l.replace(/^\s*(?:[-*•–·]|\d{1,3}[.)]|\[\s?[xX ]?\s?\])\s+/, '').trim()).filter(Boolean);
+    if (!lines.length) throw new HttpError(400, 'Der Punkt ist leer');
+    for (const l of lines) parse(checkText, l);
+    if (!(await getTicket(db, id))) throw notFound('Ticket nicht gefunden');
+    const { rows } = await db.query(
+      `INSERT INTO ticket_checklist (ticket_id, text, position)
+       SELECT $1, line, (SELECT COALESCE(max(position), 0) FROM ticket_checklist WHERE ticket_id = $1) + n
+         FROM unnest($2::text[]) WITH ORDINALITY AS l(line, n)
+       RETURNING id, text, done, position`,
+      [id, lines.slice(0, 100)],
+    );
+    return reply.code(201).send(rows);
+  });
+
+  app.patch('/api/checklist/:id', { config: { access: 'member' } }, async req => {
+    const { id } = parse(idParam, req.params);
+    const body = parse(z.object({ text: checkText.optional(), done: z.boolean().optional() }), req.body);
+    const { rows: [item] } = await db.query(
+      `UPDATE ticket_checklist SET text = COALESCE($2, text), done = COALESCE($3, done) WHERE id = $1 RETURNING id, text, done, position`,
+      [id, body.text ?? null, body.done ?? null],
+    );
+    if (!item) throw notFound('Punkt nicht gefunden');
+    return item;
+  });
+
+  app.delete('/api/checklist/:id', { config: { access: 'member' } }, async (req, reply) => {
+    const { id } = parse(idParam, req.params);
+    if (!(await db.query('DELETE FROM ticket_checklist WHERE id = $1', [id])).rowCount) throw notFound('Punkt nicht gefunden');
+    return reply.code(204).send();
+  });
+
+  /** New order: the ticket's item ids from top to bottom. */
+  app.put('/api/tickets/:id/checklist/order', { config: { access: 'member' } }, async req => {
+    const { id } = parse(idParam, req.params);
+    const { ids } = parse(z.object({ ids: z.array(z.number().int()).max(500) }), req.body);
+    await db.query(
+      `UPDATE ticket_checklist c SET position = o.n FROM unnest($2::int[]) WITH ORDINALITY AS o(id, n) WHERE c.id = o.id AND c.ticket_id = $1`,
+      [id, ids],
+    );
+    return (await db.query(`${CHECK_SELECT} WHERE ticket_id = $1 ORDER BY position, id`, [id])).rows;
+  });
+
   /** The signed-in user's own tracked time: today, this week per day, per area, and the top tickets. */
   app.get('/api/me/time', async req => {
     const uid = userId(req);

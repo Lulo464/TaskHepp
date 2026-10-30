@@ -207,6 +207,10 @@ const WA_IOS = /^‎?\[(\d{1,2}\.\d{1,2}\.\d{2,4}),?\s+\d{1,2}:\d{2}(?::\d{2})?\
 const WA_ANDROID = /^‎?(\d{1,2}\.\d{1,2}\.\d{2,4}),?\s+\d{1,2}:\d{2}\s+-\s+([^:\n]{1,60}):\s?(.*)$/;
 const BULLET = /^\s*(?:[-*•–·]|\d{1,3}[.)]|\[\s?[xX ]?\s?\])\s+/;
 
+/** A list line ("- Milch", "1. Brot", "[ ] Eier") and its text without the marker. */
+export const isListLine = (line: string) => BULLET.test(line);
+export const stripBullet = (line: string) => line.replace(BULLET, '').trim();
+
 /** Splits shared text into messages (with sender for WhatsApp) — continuation lines belong to the message above. */
 export function splitMessages(text: string): Message[] {
   const out: Message[] = [];

@@ -6,6 +6,7 @@ import { formatDue, formatMinutes, formatTime, isOverdue } from '../../lib/forma
 import type { HistoryEvent, Me, Ticket, TicketStatus } from '../../lib/types';
 import { href, navigate } from '../router';
 import { clock, useNow, type Timers } from '../timer';
+import { Checklist } from './Checklist';
 import { RepeatPicker } from './Repeat';
 import { Snooze } from './Snooze';
 import { TicketNotes } from './TicketNotes';
@@ -43,6 +44,7 @@ export function TicketDetail({ id, me, timers, canEdit }: { id: number; me: Me; 
         {ticket.prio === 'high' && <span className="tag tag-outline">{t('prio.high')}</span>}
       </div>
       <TicketText ticket={ticket} canEdit={canEdit} />
+      <Checklist ticket={ticket} canEdit={canEdit} />
       {canEdit ? (
         <div className="pwa-due-edit">
           <Icon name="calendar-blank" />
