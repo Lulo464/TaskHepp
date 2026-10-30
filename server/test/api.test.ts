@@ -125,6 +125,29 @@ describe('tickets and time', () => {
     expect((await call('GET', '/api/calendar/kurz.ics')).statusCode).toBe(400);
   });
 
+  it('creates the next ticket of a series when one is done', async () => {
+    const recurrence = { every: 1, unit: 'week', weekdays: [1] };
+    const first = (await call('POST', '/api/tickets', member, { title: 'Müll rausstellen', areaId: 2, due: '2030-01-07', dueTime: '07:00', recurrence })).json();
+    expect(first.recurrence).toEqual(recurrence);
+
+    const done = (await call('PATCH', `/api/tickets/${first.id}`, member, { status: 'done' })).json();
+    expect(done.followupId).toEqual(expect.any(Number));
+    const next = (await call('GET', `/api/tickets/${done.followupId}`, member)).json();
+    expect(next).toMatchObject({ title: 'Müll rausstellen', status: 'open', due: '2030-01-14', dueTime: '07:00', areaId: 2, recurrence });
+
+    // Reopening and finishing again must not start a second series.
+    await call('PATCH', `/api/tickets/${first.id}`, member, { status: 'open' });
+    await call('PATCH', `/api/tickets/${first.id}`, member, { status: 'done' });
+    const series = (await call('GET', '/api/tickets', member)).json().filter((x: { title: string }) => x.title === 'Müll rausstellen');
+    expect(series).toHaveLength(2);
+
+    // Without recurrence nothing follows; a bad recurrence is rejected.
+    const once = (await call('POST', '/api/tickets', member, { title: 'Einmalig', areaId: 1 })).json();
+    expect((await call('PATCH', `/api/tickets/${once.id}`, member, { status: 'done' })).json().followupId).toBeNull();
+    expect((await call('PATCH', `/api/tickets/${next.id}`, member, { recurrence: { every: 0, unit: 'week' } })).statusCode).toBe(400);
+    expect((await call('PATCH', `/api/tickets/${next.id}`, member, { recurrence: null })).json().recurrence).toBeNull();
+  });
+
   it('assigns tickets to someone else', async () => {
     const reader = await t.login('read');
     const people = (await call('GET', '/api/people', member)).json() as { id: number; name: string }[];

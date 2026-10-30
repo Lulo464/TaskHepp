@@ -49,6 +49,8 @@ Auf der Ticket-Seite wählst du aus, **wem ein Ticket zugewiesen** ist, oder üb
 
 **Kalender-Abo:** Unter **Mehr → Kalender-Abo** gibt es einen geheimen Link (iCal), mit dem du deine Tickets mit Datum in Google, Apple oder Outlook Kalender oder in Home Assistant („Remote Calendar“) abonnierst, wahlweise nur die dir zugewiesenen oder nur einen Bereich. Erledigte Tickets verschwinden, ausgeblendete Bereiche bleiben draußen. Google und Outlook brauchen eine aus dem Internet erreichbare Adresse und aktualisieren nur alle paar Stunden. Der Link lässt sich jederzeit erneuern.
 
+**Wiederkehrende Tickets:** Auf der Ticket-Seite und bei „Neu“ unter **Wiederholen** wählen: täglich, werktags, wöchentlich, alle 2 Wochen, monatlich, jährlich oder benutzerdefiniert (alle n Tage/Wochen/Monate/Jahre, an bestimmten Wochentagen, wahlweise ab Erledigung gezählt). Ist ein Ticket erledigt, legt Tasklog das nächste der Serie an. Die Schnelleingabe versteht das auch: „jeden Montag 7 Uhr Müll raus“, „montags und donnerstags Blumen gießen“, „alle 3 Monate nach Erledigung Filter wechseln“, „jeden 1. Miete prüfen“.
+
 ## Entwicklung
 
 Voraussetzung: Node.js 24 und eine PostgreSQL-Datenbank.

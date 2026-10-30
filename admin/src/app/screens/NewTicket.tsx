@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Field, Icon, Loading, Seg } from '../../components/ui';
 import { post, useAction } from '../../lib/api';
-import type { Ticket } from '../../lib/types';
+import { describeRecurrence } from '../../lib/recurrence';
+import type { Recurrence, Ticket } from '../../lib/types';
 import { useMyAreas } from '../areas';
 import { linesOf, looksLikeList, parseQuick, shortTitle, splitMessages, takeShared, type Shared } from '../quickAdd';
 import { href, navigate } from '../router';
+import { RepeatPicker } from './Repeat';
 import type { Timers } from '../timer';
 
 const MAX_TICKETS = 50;
@@ -16,6 +18,7 @@ interface Draft {
   description: string;
   due: string | null;
   dueTime: string | null;
+  recurrence: Recurrence | null;
 }
 
 /**
@@ -39,6 +42,9 @@ export function NewTicket({ timers }: { timers: Timers }) {
   const [due, setDue] = useState(() => new Date().toLocaleDateString('sv-SE'));
   const [dueTime, setDueTime] = useState('');
   const [touched, setTouched] = useState(false);
+  // Same for the repeat: what the text says until it is picked by hand.
+  const [repeat, setRepeat] = useState<Recurrence | null>(null);
+  const [repeatTouched, setRepeatTouched] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => { if (areas?.length && areaId === null) setAreaId(areas[0].id); }, [areas, areaId]);
@@ -55,36 +61,40 @@ export function NewTicket({ timers }: { timers: Timers }) {
   const senders = [...new Set(messages.map(m => m.sender).filter(Boolean))];
   const body = messages.map(m => m.text).join('\n');
   const found = parseQuick(oneLine(body));
-  const detected = detect && !touched && Boolean(found.due || found.dueTime);
+  const detected = detect && !touched && Boolean(found.due || found.dueTime || found.repeat);
+  const singleRepeat = !repeatTouched && detect && found.repeat ? found.repeat : repeat;
   const short = shortTitle(detected ? found.title : body);
   const single: Draft = {
     title: short.title,
     description: join(description, senders.length === 1 ? fromNote(senders[0]) : null, short.cut || body.includes('\n') ? body : null, shared?.url),
     due: detected ? found.due : fieldDue,
     dueTime: detected ? found.dueTime : fieldTime,
+    recurrence: singleRepeat,
   };
 
   // — several tickets, one per line or message —
   const multiline = messages.length > 1 || body.includes('\n');
   const items: (Draft & { skipped: boolean })[] = linesOf(text).slice(0, MAX_TICKETS).map((line, i) => {
     const p = detect ? parseQuick(line.text) : null;
-    const own = Boolean(p && (p.due || p.dueTime));
+    const own = Boolean(p && (p.due || p.dueTime || p.repeat));
     return {
       title: shortTitle(own ? p!.title : line.text).title,
       description: join(description, fromNote(line.sender)),
       due: own ? p!.due : fieldDue,
       dueTime: own ? p!.dueTime : fieldTime,
+      recurrence: p?.repeat ?? repeat,
       skipped: skipped.has(i),
     };
   });
   const asList = several && multiline;
   const chosen = asList ? items.filter(x => !x.skipped) : single.title ? [single] : [];
 
-  const when = (d: Pick<Draft, 'due' | 'dueTime'>) => {
-    if (!d.due) return t('app.new.noDate');
+  const when = (d: Pick<Draft, 'due' | 'dueTime' | 'recurrence'>) => {
+    const repeats = d.recurrence ? `↻ ${describeRecurrence(d.recurrence)} · ` : '';
+    if (!d.due) return repeats + t('app.new.noDate');
     const [y, m, day] = d.due.split('-').map(Number);
     const date = new Date(y, m - 1, day).toLocaleDateString(i18n.language, { weekday: 'short', day: 'numeric', month: 'numeric' });
-    return d.dueTime ? `${date} · ${d.dueTime}` : date;
+    return repeats + (d.dueTime ? `${date} · ${d.dueTime}` : date);
   };
 
   const create = async (start: boolean) => {
@@ -146,7 +156,7 @@ export function NewTicket({ timers }: { timers: Timers }) {
           />
         )}
 
-        {!asList && text.trim() && (found.due || found.dueTime) && (
+        {!asList && text.trim() && (found.due || found.dueTime || found.repeat) && (
           detected ? (
             <div className="pwa-detected">
               <Icon name="sparkle" />
@@ -154,7 +164,7 @@ export function NewTicket({ timers }: { timers: Timers }) {
               <button type="button" className="btn btn-icon btn-ghost" aria-label={t('app.new.ignoreDetected')} title={t('app.new.ignoreDetected')} onClick={() => setDetect(false)}><Icon name="x" /></button>
             </div>
           ) : !touched && (
-            <button type="button" className="btn btn-ghost pwa-detect-again" onClick={() => setDetect(true)}><Icon name="sparkle" /> {t('app.new.detectAgain', { when: when(found) })}</button>
+            <button type="button" className="btn btn-ghost pwa-detect-again" onClick={() => setDetect(true)}><Icon name="sparkle" /> {t('app.new.detectAgain', { when: when({ ...found, recurrence: found.repeat }) })}</button>
           )
         )}
 
@@ -190,6 +200,10 @@ export function NewTicket({ timers }: { timers: Timers }) {
           <Field label={t('app.new.time')}>
             <input className="input" type="time" value={shownTime} disabled={!shownDue} onChange={e => changeDate({ dueTime: e.target.value })} />
           </Field>
+        </div>
+        <div>
+          <div className="field-label">{asList ? t('repeat.labelOthers') : t('repeat.label')}</div>
+          <RepeatPicker value={asList ? repeat : singleRepeat} due={asList ? fieldDue : single.due} onChange={r => { setRepeat(r); setRepeatTouched(true); }} />
         </div>
         <Field label={t('app.new.description')}>
           <textarea className="input" rows={3} placeholder={t('app.new.optional')} value={description} onChange={e => setDescription(e.target.value)} />
