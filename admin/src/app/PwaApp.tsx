@@ -9,11 +9,13 @@ import { Login } from './screens/Login';
 import { More } from './screens/More';
 import { NewTicket } from './screens/NewTicket';
 import { Plan } from './screens/Plan';
+import { Presence } from './screens/Presence';
 import { TicketDetail } from './screens/TicketDetail';
 import { TicketList } from './screens/TicketList';
 import { Time } from './screens/Time';
 import { Today } from './screens/Today';
 import { clock, useNow, useTimers } from './timer';
+import { dismissToast, useToast } from './toast';
 
 const REFRESH_MS = 60_000;
 /** From this width the tabs become a sidebar and tickets show list and detail side by side (matches pwa.css). */
@@ -50,6 +52,7 @@ function Shell({ me }: { me: Me }) {
   const timers = useTimers();
   const refresh = useRefresh();
   const { error, clear } = useApiError();
+  const toast = useToast();
 
   // Fresh data when the app comes back to the foreground, and once a minute while open.
   useEffect(() => {
@@ -73,7 +76,7 @@ function Shell({ me }: { me: Me }) {
     { route: { name: 'plan' }, icon: 'calendar-dots', label: t('app.tab.plan'), active: route.name === 'plan' },
     ...(canEdit ? [{ route: { name: 'new' } as Route, icon: 'plus-circle', label: t('app.tab.new'), active: route.name === 'new' }] : []),
     { route: { name: 'time' }, icon: 'chart-bar', label: t('app.tab.time'), active: route.name === 'time' },
-    { route: { name: 'more' }, icon: 'gear', label: t('app.tab.more'), active: route.name === 'more' || route.name === 'areas' },
+    { route: { name: 'more' }, icon: 'gear', label: t('app.tab.more'), active: route.name === 'more' || route.name === 'areas' || route.name === 'presence' },
   ];
 
   return (
@@ -105,6 +108,7 @@ function Shell({ me }: { me: Me }) {
         {route.name === 'time' && <Time />}
         {route.name === 'more' && <More me={me} />}
         {route.name === 'areas' && <Areas me={me} />}
+        {route.name === 'presence' && <Presence />}
       </main>
 
       {showMini && (
@@ -115,6 +119,14 @@ function Shell({ me }: { me: Me }) {
           <button type="button" className="btn btn-icon btn-ghost" aria-label={t('app.stopTimer')} onClick={e => { e.stopPropagation(); void timers.stop(running.ticketId); }}>
             <Icon name="stop" fill />
           </button>
+        </div>
+      )}
+
+      {toast && (
+        <div key={toast.id} className="pwa-snackbar" role="status">
+          <span className="grow">{toast.text}</span>
+          {toast.action && <button type="button" className="btn btn-ghost" onClick={() => { toast.action!.run(); dismissToast(); }}>{toast.action.label}</button>}
+          <button type="button" className="btn btn-icon btn-ghost" aria-label={t('common.close')} onClick={dismissToast}><Icon name="x" /></button>
         </div>
       )}
 

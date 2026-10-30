@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { AppContext } from '../context.js';
 import { exportAll } from '../routes/system.js';
 import { syncDueSources } from './calendars.js';
+import { checkPresence } from './presence.js';
 
 const LONG_TIMER_HOURS = 4;
 
@@ -76,6 +77,11 @@ export const jobs: Record<string, Job> = {
     );
     if (rows.length) await ctx.notifier.notify('dailyDigest', `Heute: ${rows.length} Ticket${rows.length === 1 ? '' : 's'}`, rows.map(r => `• ${r.title}`).join('\n'));
   }),
+
+  /** "Wenn ich nach Hause komme": arrivals in a zone bring what is due there. */
+  presence: async (ctx, now) => {
+    await checkPresence(ctx, now);
+  },
 
   /** Tickets with a time: one reminder an hour before. */
   dueSoon: async ctx => {

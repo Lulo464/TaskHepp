@@ -161,6 +161,59 @@ a.btn { text-decoration: none; }
 
 textarea.input { min-height: 80px; }
 
+/* — snooze menu + snackbar — */
+.pwa-snooze { position: relative; flex: none; display: inline-flex; }
+.pwa-row .pwa-snooze .btn-icon, .pwa-plan-item .pwa-snooze .btn-icon { width: 40px; height: 40px; font-size: 19px; }
+.pwa-due-edit .pwa-snooze .btn-icon { width: 34px; height: 34px; }
+.pwa-snooze-picker { position: absolute; inset: 0; opacity: 0; pointer-events: none; width: 100%; }
+.pwa-menu {
+  position: fixed; z-index: 30; min-width: 220px; padding: 6px; border-radius: 12px; display: flex; flex-direction: column;
+  border: 1px solid var(--color-neutral-700); background: var(--color-surface, var(--color-neutral-900)); box-shadow: var(--shadow-md);
+}
+.pwa-menu.is-up { transform: translateY(-100%); }
+.pwa-menu button {
+  all: unset; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  padding: 10px 12px; border-radius: 8px; font-size: 14px; cursor: pointer; min-height: 40px;
+}
+.pwa-menu button:hover, .pwa-menu button:focus-visible { background: var(--color-neutral-800); }
+.pwa-menu button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+.pwa-menu button:disabled { opacity: .4; cursor: default; }
+.pwa-snackbar {
+  position: fixed; z-index: 25; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom));
+  width: min(480px, calc(100% - 24px)); display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 14px; font-size: 14px;
+  border: 1px solid var(--color-neutral-700); border-radius: var(--radius-md); background: var(--color-surface, var(--color-neutral-900)); box-shadow: var(--shadow-md);
+  animation: pwa-in .18s ease-out;
+}
+.pwa-snackbar .btn-ghost:not(.btn-icon) { color: var(--color-accent); font-weight: 500; flex: none; }
+@keyframes pwa-in { from { opacity: 0; transform: translate(-50%, 8px); } }
+@media (prefers-reduced-motion: reduce) { .pwa-snackbar { animation: none; } }
+
+/* — calendar feed — */
+.pwa-feed-row { display: flex; align-items: center; gap: 12px; padding-top: 12px; border-top: 1px solid var(--color-neutral-800); }
+.pwa-feed-row .input { width: auto; max-width: 55%; min-height: 34px; padding: 4px 8px; font-size: 13px; }
+.pwa-feed-url { font-size: 12px; min-height: 36px; }
+.pwa-feed-help-toggle, .pwa-feed-renew { align-self: flex-start; margin-left: -10px; font-size: 13px; }
+.pwa-feed-help { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.5; color: var(--color-neutral-300); display: flex; flex-direction: column; gap: 6px; }
+
+/* — repeat — */
+.pwa-repeat { display: flex; flex-direction: column; gap: 8px; margin: -6px 0 18px; }
+.stack .pwa-repeat { margin: 0; }
+.pwa-repeat-row { display: flex; align-items: center; gap: 8px; color: var(--color-neutral-400); }
+.pwa-repeat .input { flex: 1; min-width: 0; min-height: 34px; padding: 4px 8px; font-size: 13px; }
+.pwa-repeat .pwa-repeat-n { flex: none; width: 64px; }
+.pwa-repeat-custom { display: flex; flex-direction: column; gap: 8px; padding-left: 24px; }
+.pwa-repeat-days { display: flex; flex-wrap: wrap; gap: 6px; }
+.pwa-repeat-days .pwa-chip { padding: 4px 10px; font-size: 12px; }
+.pwa-repeat-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-neutral-300); }
+.pwa-followup { margin: -10px 0 14px -12px; font-size: 13px; }
+
+/* — presence — */
+.pwa-presence.is-off > :not(.pwa-presence-head) { opacity: .5; }
+.pwa-presence-head { padding-top: 0; border-top: none; }
+.pwa-presence-field { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--color-neutral-300); }
+.pwa-presence-field > span { flex: none; width: 84px; }
+.pwa-presence-field .input { flex: 1; min-width: 0; min-height: 34px; padding: 4px 8px; font-size: 13px; }
+
 /* — quick add — */
 .pwa-quick { field-sizing: content; min-height: 44px; max-height: 40vh; resize: none; line-height: 1.4; }
 .pwa-shared { display: flex; align-items: center; gap: 8px; margin: -6px 0 14px; font-size: 13px; color: var(--color-neutral-300); }
@@ -272,6 +325,7 @@ textarea.input { min-height: 80px; }
   .pwa-split-empty { height: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--color-neutral-400); font-size: 14px; }
 
   .pwa-bars { height: 220px; }
+  .pwa-snackbar { bottom: 24px; left: calc(50% + 116px); }
   .pwa-plan-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
   .pwa-screen.pwa-plan { max-width: 1320px; }
   /* Unplanned tickets as a column beside the days, always in reach while dragging. */

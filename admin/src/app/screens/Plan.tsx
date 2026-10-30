@@ -2,9 +2,11 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon, Loading } from '../../components/ui';
 import { patch, useAction, useApi } from '../../lib/api';
+import { describeRecurrence } from '../../lib/recurrence';
 import type { Me, Ticket } from '../../lib/types';
 import { useMyAreas } from '../areas';
 import { usePointerDrag } from '../drag';
+import { Snooze } from './Snooze';
 import { navigate } from '../router';
 
 const DAYS = 7;
@@ -148,10 +150,11 @@ function PlanItem({ ticket, showDate, canEdit, onMove, onPointerDown, dragging, 
         onPointerDown={onPointerDown} onContextMenu={canEdit ? e => e.preventDefault() : undefined}>
         <div className="pwa-row-title pwa-ellipsis">
           {when && <span className="accent pwa-num">{when} </span>}
-          {ticket.prio === 'high' && <Icon name="arrow-up" className="accent" />} {ticket.title}
+          {ticket.prio === 'high' && <Icon name="arrow-up" className="accent" />} {ticket.recurrence && <i className="ph ph-arrows-clockwise accent" aria-label={describeRecurrence(ticket.recurrence)} title={describeRecurrence(ticket.recurrence)} />} {ticket.title}
         </div>
         <div className="pwa-row-meta pwa-ellipsis">{ticket.area}{ticket.assignee ? ` · ${ticket.assignee}` : ''}</div>
       </div>
+      {canEdit && <Snooze ticket={ticket} />}
       {canEdit && (
         <span className="pwa-plan-move">
           <button type="button" className="btn btn-icon btn-ghost" aria-label={t('app.plan.move', { title: ticket.title })} title={t('app.plan.move', { title: ticket.title })}

@@ -47,6 +47,14 @@ Auf der Ticket-Seite wählst du aus, **wem ein Ticket zugewiesen** ist, oder üb
 
 **Teilen aus WhatsApp & Co. (Android):** Ist die App installiert (HTTPS nötig), steht Tasklog im **Teilen**-Menü. Eine Nachricht lange drücken → Teilen → Tasklog öffnet „Neu“ mit dem Text, erkanntem Termin und „Von Oma per WhatsApp“ in der Beschreibung. Mehrere geteilte Nachrichten werden mehrere Tickets. Das iPhone erlaubt Web-Apps nicht im Teilen-Menü; dort Text kopieren und in „Neu“ einfügen.
 
+**Später:** Das Uhr-Symbol an jedem offenen Ticket (Heute, Tickets, Planung, Ticket-Seite) schiebt es auf morgen, aufs Wochenende, auf nächste Woche oder auf ein gewähltes Datum. Die Uhrzeit bleibt. Ein Hinweis unten erlaubt „Rückgängig“.
+
+**Kalender-Abo:** Unter **Mehr → Kalender-Abo** gibt es einen geheimen Link (iCal), mit dem du deine Tickets mit Datum in Google, Apple oder Outlook Kalender oder in Home Assistant („Remote Calendar“) abonnierst, wahlweise nur die dir zugewiesenen oder nur einen Bereich. Erledigte Tickets verschwinden, ausgeblendete Bereiche bleiben draußen. Google und Outlook brauchen eine aus dem Internet erreichbare Adresse und aktualisieren nur alle paar Stunden. Der Link lässt sich jederzeit erneuern.
+
+**Wiederkehrende Tickets:** Auf der Ticket-Seite und bei „Neu“ unter **Wiederholen** wählen: täglich, werktags, wöchentlich, alle 2 Wochen, monatlich, jährlich oder benutzerdefiniert (alle n Tage/Wochen/Monate/Jahre, an bestimmten Wochentagen, wahlweise ab Erledigung gezählt). Ist ein Ticket erledigt, legt Tasklog das nächste der Serie an. Die Schnelleingabe versteht das auch: „jeden Montag 7 Uhr Müll raus“, „montags und donnerstags Blumen gießen“, „alle 3 Monate nach Erledigung Filter wechseln“, „jeden 1. Miete prüfen“.
+
+**Bei Ankunft erinnern:** Unter **Mehr → Bei Ankunft erinnern** legt jeder Benutzer fest: Wenn *Person* (aus Home Assistant) in *Zone* ankommt, schicke an *notify.mobile_app_…*, was im *Bereich* heute ansteht. Überfälliges ist dabei, Tickets anderer Personen nicht, Tickets ohne Datum auf Wunsch. Tasklog prüft jede Minute, schickt pro Ankunft eine Nachricht (höchstens alle 30 Minuten, nicht in den Ruhezeiten) und öffnet beim Antippen die App. Mit „Jetzt testen“ lässt sich das sofort ausprobieren.
+
 ## Entwicklung
 
 Voraussetzung: Node.js 24 und eine PostgreSQL-Datenbank.
@@ -104,7 +112,7 @@ Die passende HA-Konfiguration (rest_command und Automationen) erzeugt Tasklog un
 - `binary_sensor.tasklog_overdue`
 - `sensor.tasklog_next_due`
 
-Benachrichtigungen gehen über `notify.notify`. Push und E-Mail sind noch nicht angebunden.
+Benachrichtigungen gehen über `notify.notify`, die Ankunfts-Erinnerungen an den Dienst, den jeder Benutzer dafür wählt. Push und E-Mail sind noch nicht angebunden.
 
 **Kalender (z. B. Abfuhrtermine):** Unter „Kalender“ bindest du einen Kalender aus Home Assistant ein, etwa den von *Waste Collection Schedule*. Tasklog liest die Termine alle 15 Minuten über die HA-API.
 

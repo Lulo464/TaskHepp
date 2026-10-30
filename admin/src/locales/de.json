@@ -553,6 +553,48 @@
       "admin": "Admin-Oberfläche",
       "monitor": "Tagesmonitor öffnen"
     },
+    "presence": {
+      "title": "Bei Ankunft erinnern",
+      "intro": "Kommst du nach Hause (oder in eine andere Zone aus Home Assistant), schickt dir Tasklog aufs Handy, was dort heute ansteht – Überfälliges inklusive, Tickets anderer Personen nicht.",
+      "noHa": "Home Assistant ist noch nicht verbunden. Ein Admin richtet das unter Admin → Verbindung ein.",
+      "noPersons": "In Home Assistant gibt es noch keine Personen. Lege dort unter Einstellungen → Personen eine an und verknüpfe dein Handy (Companion-App).",
+      "summary": "Wenn {{person}} in „{{zone}}“ ankommt",
+      "now": "Gerade: {{state}}",
+      "atHome": "zuhause",
+      "away": "unterwegs",
+      "person": "Person",
+      "zone": "Zone",
+      "area": "Tickets aus",
+      "notify": "Senden an",
+      "undated": "Auch Tickets ohne Datum mitschicken",
+      "test": "Jetzt testen",
+      "tested_one": "Gesendet an notify.{{service}} – {{count}} Ticket",
+      "tested_other": "Gesendet an notify.{{service}} – {{count}} Tickets",
+      "delete": "Löschen",
+      "deleteConfirm": "Diese Erinnerung löschen?",
+      "add": "Erinnerung hinzufügen",
+      "how": "Tasklog schaut jede Minute nach, wo die Person ist. Pro Ankunft kommt eine Nachricht (höchstens alle 30 Minuten), in den Ruhezeiten keine. Für dein Handy wähle notify.mobile_app_… – das ist die Home-Assistant-App auf deinem Telefon."
+    },
+    "calendar": {
+      "title": "Kalender-Abo",
+      "intro": "Deine Tickets mit Datum als Kalender – für Google, Apple, Outlook oder Home Assistant. Ausgeblendete Bereiche bleiben draußen, erledigte Tickets verschwinden.",
+      "mine": "Nur mir zugewiesene Tickets",
+      "area": "Bereich",
+      "allAreas": "Alle Bereiche",
+      "link": "Abo-Link",
+      "copy": "Link kopieren",
+      "copied": "Kopiert",
+      "copyManually": "Link kopieren:",
+      "subscribe": "Abonnieren",
+      "how": "So richtest du es ein",
+      "helpGoogle": "Google Kalender (am Computer): links bei „Weitere Kalender“ auf + → „Per URL“ → Link einfügen. Er erscheint danach auch am Handy.",
+      "helpApple": "iPhone/Mac: „Abonnieren“ tippen, oder Einstellungen → Kalender → Accounts → Account hinzufügen → Andere → Kalenderabo hinzufügen.",
+      "helpOutlook": "Outlook: Kalender hinzufügen → Aus dem Internet abonnieren → Link einfügen.",
+      "helpHa": "Home Assistant: Einstellungen → Geräte & Dienste → Integration hinzufügen → „Remote Calendar“ → Link einfügen.",
+      "helpDelay": "Google und Outlook holen den Kalender von ihren eigenen Servern – Tasklog muss dafür aus dem Internet erreichbar sein (HTTPS), und Änderungen kommen nur alle paar Stunden an. iPhone und Home Assistant holen direkt und deutlich öfter, auch im Heimnetz.",
+      "renew": "Neuen Link erzeugen",
+      "renewConfirm": "Neuen Link erzeugen? Kalender mit dem alten Link bekommen danach keine Änderungen mehr."
+    },
     "areas": {
       "week": "{{time}} diese Woche",
       "prefsHint": "Reihenfolge und Sichtbarkeit gelten nur für dich. Ausgeblendete Bereiche verschwinden aus Heute, Tickets und Neu.",
@@ -690,6 +732,62 @@
       "ignored": "Ignoriert",
       "nomatch": "Keine Regel – unberührt",
       "error": "Fehler"
+    }
+  },
+  "snooze": {
+    "title": "Später",
+    "label": "„{{title}}“ verschieben",
+    "tomorrow": "Morgen",
+    "weekend": "Am Wochenende",
+    "nextWeek": "Nächste Woche",
+    "pick": "Datum wählen …",
+    "moved": "„{{title}}“ auf {{when}} verschoben",
+    "undo": "Rückgängig"
+  },
+  "repeat": {
+    "label": "Wiederholen",
+    "labelOthers": "Wiederholen (für Zeilen ohne eigene Angabe)",
+    "preset": {
+      "none": "Nicht wiederholen",
+      "daily": "Täglich",
+      "workdays": "Werktags (Mo–Fr)",
+      "weekly": "Wöchentlich",
+      "biweekly": "Alle 2 Wochen",
+      "monthly": "Monatlich",
+      "yearly": "Jährlich",
+      "custom": "Benutzerdefiniert …"
+    },
+    "every": "Alle",
+    "count": "Anzahl",
+    "unit": "Einheit",
+    "unitName": {
+      "day_one": "Tag",
+      "day_other": "Tage",
+      "week_one": "Woche",
+      "week_other": "Wochen",
+      "month_one": "Monat",
+      "month_other": "Monate",
+      "year_one": "Jahr",
+      "year_other": "Jahre"
+    },
+    "weekdays": "Wochentage",
+    "fromDone": "Ab Erledigung neu zählen (statt vom Fälligkeitsdatum)",
+    "next": "Nächstes Ticket dieser Serie",
+    "text": {
+      "day_one": "Täglich",
+      "day_other": "Alle {{count}} Tage",
+      "week_one": "Wöchentlich",
+      "week_other": "Alle {{count}} Wochen",
+      "month_one": "Monatlich",
+      "month_other": "Alle {{count}} Monate",
+      "year_one": "Jährlich",
+      "year_other": "Alle {{count}} Jahre",
+      "workdays": "Werktags",
+      "onDays": "Jeden {{days}}",
+      "everyWeeksOn_one": "Jede Woche {{days}}",
+      "everyWeeksOn_other": "Alle {{count}} Wochen: {{days}}",
+      "onMonthDay": "am {{day}}.",
+      "fromDone": "nach Erledigung"
     }
   }
 }
