@@ -25,7 +25,11 @@ COPY --from=server /build/server/dist ./dist
 COPY --from=server /build/server/migrations ./migrations
 COPY --from=admin /build/admin/dist /app/admin
 # Photos attached to tickets; a named volume on /uploads keeps them (and takes over this owner).
-RUN mkdir -p /uploads && chown node:node /uploads
+# npm, corepack and yarn are only needed to build; without them the image is smaller and carries none of their
+# vulnerabilities (the server runs with plain `node`).
+RUN mkdir -p /uploads && chown node:node /uploads \
+ && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-* \
+           /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 ENV UPLOAD_DIR=/uploads
 USER node
 EXPOSE 8080

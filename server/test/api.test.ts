@@ -646,6 +646,8 @@ describe('due time', () => {
     const { fakeHomeAssistant } = await import('./helpers.js');
     const ha = await fakeHomeAssistant();
     await call('PATCH', '/api/settings', admin2, { ha: { url: ha.url, token: 'ha-token' }, channel: 'haNotify', quietFrom: '00:00', quietTo: '00:00', notifications: { dueSoon: true } });
+    // Only this ticket may be due soon (late in the evening "tomorrow 00:00" from the test above would be, too).
+    await t.db.query("UPDATE tickets SET status = 'done'");
     const ticket = (await call('POST', '/api/tickets', member, { title: 'Bald fällig', areaId: 1 })).json();
     await t.db.query(
       "UPDATE tickets SET due_date = (localtimestamp + interval '30 minutes')::date, due_time = (localtimestamp + interval '30 minutes')::time WHERE id = $1",
