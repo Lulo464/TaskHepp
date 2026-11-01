@@ -168,6 +168,15 @@ Unter **Admin → Import → E-Mail** bindest du Postfächer per IMAP ein (SSL/T
 
 Jede Mail wird genau einmal verarbeitet. Die **Vorschau** zeigt für die neuesten Mails, welche Tickets entstehen würden, ohne etwas zu importieren. Unter **Ausprobieren** lassen sich die Regeln an einer eingetippten Beispielmail testen.
 
+## Datenschutz
+
+- **Keine fremden Server:** Tasklog lädt keine Schriften, Skripte oder Tracker von außen. Die Schrift Inter wird mitgeliefert. Gesetzt wird nur das technisch notwendige Anmelde-Cookie, deshalb braucht es kein Cookie-Banner.
+- **Impressum und Datenschutzerklärung:** unter Admin → *Datenschutz*. „Vorlage einfügen“ erzeugt Texte, die zu dieser Installation passen, Platzhalter in `[eckigen Klammern]` ersetzt du selbst. Die Links erscheinen auf der Anmeldeseite und unter Mehr, sobald ein Text hinterlegt ist. Die Seiten sind ohne Anmeldung erreichbar (`/#/impressum`, `/#/datenschutz`).
+- **Meine Daten:** Jeder lädt unter Mehr → *Meine Daten* alles herunter, was über ihn gespeichert ist (JSON, Art. 15/20 DSGVO), und kann sein Konto löschen (Art. 17). Admins können Benutzer unter *Benutzer & Rollen* löschen. Tickets, Zeiten, Notizen und Fotos bleiben dabei ohne Namen erhalten, der letzte Admin lässt sich nicht löschen.
+- **Aufbewahrung:** Jede Nacht werden abgelaufene Anmeldungen und Protokolleinträge älter als 90 Tage gelöscht, auf Wunsch auch lange erledigte Tickets (Admin → *Datenschutz*).
+
+Für eine rein private Nutzung in der Familie gilt die DSGVO nicht (Haushaltsausnahme). Nutzen auch andere Tasklog, braucht es Impressum und Datenschutzerklärung. Das ist keine Rechtsberatung.
+
 ## Tagesmonitor
 
 `<PUBLIC_URL>/monitor?t=<token>` ist eine Vollbildansicht für ein Wanddisplay oder einen Browser-Tab, ohne Login. Den Link gibt es unter „Tagesmonitor“, dort lässt er sich auch erneuern.

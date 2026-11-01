@@ -5,7 +5,9 @@ import { api, setOnUnauthorized, useApiError, useRefresh } from '../lib/api';
 import type { Me } from '../lib/types';
 import { href, navigate, useRoute, type Route } from './router';
 import { Areas } from './screens/Areas';
+import { Legal } from './screens/Legal';
 import { Login } from './screens/Login';
+import { MyData } from './screens/MyData';
 import { More } from './screens/More';
 import { NewTicket } from './screens/NewTicket';
 import { Notifications } from './screens/Notifications';
@@ -36,12 +38,15 @@ function useWide() {
 /** App after design/Ticket App.dc.html: tabs Heute · Tickets · Neu · Zeit · Mehr; on wide screens a sidebar instead. */
 export function PwaApp() {
   const [me, setMe] = useState<Me | null | undefined>(undefined); // undefined = still checking
+  const route = useRoute();
   useEffect(() => {
     setOnUnauthorized(() => setMe(null));
     api<Me>('/api/me', { noLoginRedirect: true }).then(setMe).catch(() => setMe(null));
   }, []);
 
   if (me === undefined) return <div className="pwa-splash"><Icon name="check-square-offset" /></div>;
+  // Imprint and privacy notice are public, the sign-in page links to them.
+  if ((me === null || me.kind !== 'user') && (route.name === 'impressum' || route.name === 'datenschutz')) return <Legal doc={route.name} standalone />;
   if (me === null || me.kind !== 'user') return <Login />;
   return <Shell me={me} />;
 }
@@ -77,7 +82,7 @@ function Shell({ me }: { me: Me }) {
     { route: { name: 'plan' }, icon: 'calendar-dots', label: t('app.tab.plan'), active: route.name === 'plan' },
     ...(canEdit ? [{ route: { name: 'new' } as Route, icon: 'plus-circle', label: t('app.tab.new'), active: route.name === 'new' }] : []),
     { route: { name: 'time' }, icon: 'chart-bar', label: t('app.tab.time'), active: route.name === 'time' },
-    { route: { name: 'more' }, icon: 'gear', label: t('app.tab.more'), active: route.name === 'more' || route.name === 'areas' || route.name === 'presence' || route.name === 'notifications' },
+    { route: { name: 'more' }, icon: 'gear', label: t('app.tab.more'), active: route.name === 'more' || route.name === 'areas' || route.name === 'presence' || route.name === 'notifications' || route.name === 'mydata' || route.name === 'impressum' || route.name === 'datenschutz' },
   ];
 
   return (
@@ -111,6 +116,8 @@ function Shell({ me }: { me: Me }) {
         {route.name === 'areas' && <Areas me={me} />}
         {route.name === 'presence' && <Presence />}
         {route.name === 'notifications' && <Notifications />}
+        {route.name === 'mydata' && <MyData me={me} />}
+        {(route.name === 'impressum' || route.name === 'datenschutz') && <Legal doc={route.name} />}
       </main>
 
       {showMini && (

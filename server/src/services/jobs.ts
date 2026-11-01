@@ -6,6 +6,7 @@ import { exportAll } from '../routes/system.js';
 import { checkAutoClose } from './autoClose.js';
 import { syncDueSources } from './calendars.js';
 import { checkPresence } from './presence.js';
+import { applyRetention } from './privacy.js';
 
 const LONG_TIMER_HOURS = 4;
 
@@ -135,6 +136,12 @@ export const jobs: Record<string, Job> = {
       "SELECT title FROM tickets WHERE status <> 'done' AND due_date = current_date AND due_time IS NULL ORDER BY prio = 'high' DESC, id LIMIT 10",
     );
     if (rows.length) await ctx.notifier.notify('dueSoon', 'Heute fällig', rows.map(r => `• ${r.title}`).join('\n'));
+  }),
+
+  /** Storage limits: expired sign-ins, old log entries, long-done tickets (Admin → Datenschutz). */
+  retention: daily('03:15', async ctx => {
+    const r = await applyRetention(ctx);
+    if (r.log || r.tickets) await ctx.log.add('out', `Aufbewahrung: ${r.log} Protokolleinträge, ${r.tickets} erledigte Tickets gelöscht`, 'done');
   }),
 
   /** Files of deleted tickets' photos. */

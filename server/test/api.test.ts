@@ -661,3 +661,76 @@ describe('due time', () => {
     await ha.close();
   });
 });
+
+describe('privacy', () => {
+  // Earlier tests restore a backup, which ends all sessions: sign in afresh.
+  let boss: string;
+  beforeAll(async () => { boss = await t.login('admin'); });
+
+  it('serves imprint and privacy notice publicly and offers a template', async () => {
+    expect((await call('GET', '/api/legal')).json()).toEqual({ imprint: '', privacy: '' });
+    const template = (await call('GET', '/api/legal/template', boss)).json();
+    expect(template.imprint).toContain('§ 5 DDG');
+    expect(template.privacy).toContain('http://tasklog.test');
+    expect(template.privacy).toContain('§ 25 Abs. 2 TDDDG');
+    await call('PATCH', '/api/settings', boss, { legal: { imprint: 'Impressum: Familie Test', privacy: template.privacy } });
+    expect((await call('GET', '/api/legal')).json().imprint).toBe('Impressum: Familie Test');
+    expect((await call('GET', '/api/legal/template', await t.login('member'))).statusCode).toBe(403);
+  });
+
+  it('lets people download their data and delete their account', async () => {
+    const anna = await t.login('member');
+    const annaId = (await call('GET', '/api/me', anna)).json().id;
+    const ticket = (await call('POST', '/api/tickets', anna, { title: 'Annas Ticket', areaId: 1 })).json();
+    await call('POST', `/api/tickets/${ticket.id}/notes`, anna, { body: 'Annas Notiz' });
+    await call('POST', `/api/tickets/${ticket.id}/time`, anna, { minutes: 15 });
+
+    const res = await call('GET', '/api/me/export', anna);
+    expect(res.headers['content-disposition']).toContain('attachment; filename="tasklog-meine-daten-');
+    const data = res.json();
+    expect(data.account).toMatchObject({ id: annaId, email: expect.stringContaining('@example.com') });
+    expect(data.assignedTickets.map((x: { title: string }) => x.title)).toContain('Annas Ticket');
+    expect(data.notes[0].body).toBe('Annas Notiz');
+    expect(data.timeEntries).toHaveLength(1);
+    expect(data.sessions.length).toBeGreaterThan(0);
+
+    expect((await call('DELETE', '/api/me', anna)).statusCode).toBe(204);
+    expect((await call('GET', '/api/me', anna)).statusCode).toBe(401); // signed out
+    const after = (await call('GET', `/api/tickets/${ticket.id}`, boss)).json();
+    expect(after.assigneeId).toBeNull(); // the ticket stays for the others, without her name
+    expect((await call('GET', `/api/tickets/${ticket.id}/notes`, boss)).json()[0]).toMatchObject({ body: 'Annas Notiz', user: null });
+  });
+
+  it('keeps the last admin and lets admins delete others', async () => {
+    const ben = await t.login('member');
+    const benId = (await call('GET', '/api/me', ben)).json().id;
+    expect((await call('DELETE', `/api/users/${benId}`, ben)).statusCode).toBe(403);
+    expect((await call('DELETE', `/api/users/${benId}`, boss)).statusCode).toBe(204);
+
+    // Only one admin left: that one cannot delete the account.
+    const lone = await t.login('admin');
+    const loneId = (await call('GET', '/api/me', lone)).json().id;
+    const others = (await t.db.query<{ id: number }>("UPDATE users SET role = 'member' WHERE role = 'admin' AND id <> $1 RETURNING id", [loneId])).rows.map(r => r.id);
+    expect((await call('DELETE', '/api/me', lone)).statusCode).toBe(409);
+    expect((await call('GET', '/api/me', lone)).json().id).toBe(loneId);
+    await t.db.query("UPDATE users SET role = 'admin' WHERE id = ANY($1::int[])", [others]);
+  });
+
+  it('deletes expired sessions, old log entries and, if set, long-done tickets', async () => {
+    const { applyRetention } = await import('../src/services/privacy.js');
+    const old = (await call('POST', '/api/tickets', boss, { title: 'Längst erledigt', areaId: 1 })).json();
+    await t.db.query("UPDATE tickets SET status = 'done', done_at = now() - interval '400 days' WHERE id = $1", [old.id]);
+    await t.db.query("INSERT INTO event_log (at, direction, message, status) VALUES (now() - interval '200 days', 'out', 'uralt', 'sent')");
+    await t.db.query("UPDATE sessions SET expires_at = now() - interval '1 day' WHERE id = (SELECT id FROM sessions ORDER BY created_at LIMIT 1)");
+
+    let r = await applyRetention(t.ctx); // defaults: log 90 days, tickets kept
+    expect(r.sessions).toBe(1);
+    expect(r.log).toBeGreaterThanOrEqual(1);
+    expect(r.tickets).toBe(0);
+    await call('PATCH', '/api/settings', boss, { retention: { doneTicketsDays: 365 } });
+    r = await applyRetention(t.ctx);
+    expect(r.tickets).toBeGreaterThanOrEqual(1);
+    expect((await call('GET', `/api/tickets/${old.id}`, boss)).statusCode).toBe(404);
+    expect((await call('PATCH', '/api/settings', boss, { retention: { logDays: -1 } })).statusCode).toBe(400);
+  });
+});

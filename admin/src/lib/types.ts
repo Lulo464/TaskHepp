@@ -161,6 +161,8 @@ export interface Settings {
   webhookId: string;
   ha: { url: string; hasToken: boolean };
   lastBackupAt: string | null;
+  legal: { imprint: string; privacy: string };
+  retention: { logDays: number; doneTicketsDays: number };
 }
 
 export interface HaInfo {

@@ -11,7 +11,10 @@ export type Route =
   | { name: 'more' }
   | { name: 'areas' }
   | { name: 'presence' }
-  | { name: 'notifications' };
+  | { name: 'notifications' }
+  | { name: 'mydata' }
+  | { name: 'impressum' }
+  | { name: 'datenschutz' };
 
 export function parseRoute(hash: string): Route {
   const [, name, arg] = hash.replace(/^#/, '').split('/');
@@ -25,6 +28,9 @@ export function parseRoute(hash: string): Route {
     case 'areas': return { name: 'areas' };
     case 'presence': return { name: 'presence' };
     case 'notifications': return { name: 'notifications' };
+    case 'mydata': return { name: 'mydata' };
+    case 'impressum': return { name: 'impressum' };
+    case 'datenschutz': return { name: 'datenschutz' };
     default: return { name: 'today' };
   }
 }

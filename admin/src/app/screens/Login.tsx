@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '../../components/ui';
 import { redirectToLogin, useApi } from '../../lib/api';
 import type { AuthInfo } from '../../lib/types';
+import { LegalLinks } from './Legal';
 
 export function Login() {
   const { t } = useTranslation();
@@ -23,6 +24,7 @@ export function Login() {
         <Icon name="key" /> {t('app.login.button')}
       </button>
       <p className="pwa-login-hint">{t(info?.mode === 'dev' ? 'app.login.devHint' : 'app.login.hint')}</p>
+      <LegalLinks />
     </div>
   );
 }
