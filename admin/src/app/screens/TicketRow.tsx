@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../components/ui';
-import { formatDue, formatMinutes, isOverdue } from '../../lib/format';
+import { formatDue, formatTracked, isOverdue } from '../../lib/format';
 import { describeRecurrence } from '../../lib/recurrence';
 import type { Ticket } from '../../lib/types';
 import { navigate } from '../router';
@@ -21,7 +21,7 @@ export function TicketRow({ ticket, timers, canEdit, showStatus, showDue, showTi
     showTime && (isOverdue(ticket.due, ticket.dueTime) ? t('due.overdue') : ticket.dueTime),
     ticket.checkTotal > 0 && `☑ ${ticket.checkDone}/${ticket.checkTotal}`,
     ticket.photos > 0 && `📷 ${ticket.photos}`,
-    formatMinutes(ticket.minutes),
+    formatTracked(ticket),
   ].filter(Boolean).join(' · ');
 
   return (

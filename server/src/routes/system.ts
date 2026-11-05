@@ -44,13 +44,14 @@ async function monitorData(ctx: AppContext, s: Settings, areaId?: number) {
       WHERE e.ended_at IS NULL AND ($1::int IS NULL OR t.area_id = $1) ORDER BY e.started_at DESC LIMIT 1`,
     [area],
   );
-  const { rows: [totals] } = await db.query<{ openTickets: number; todayMinutes: number }>(
+  const { rows: [{ todaySeconds, ...counts }] } = await db.query<{ openTickets: number; todaySeconds: number }>(
     `SELECT (SELECT count(*)::int FROM tickets WHERE status <> 'done' AND ($1::int IS NULL OR area_id = $1)) AS "openTickets",
-            (SELECT COALESCE(round(sum(extract(epoch FROM (COALESCE(e.ended_at, now()) - GREATEST(e.started_at, date_trunc('day', now()))))) / 60), 0)::int
+            (SELECT COALESCE(round(sum(extract(epoch FROM (COALESCE(e.ended_at, now()) - GREATEST(e.started_at, date_trunc('day', now())))))), 0)::int
                FROM time_entries e LEFT JOIN tickets t ON t.id = e.ticket_id
-              WHERE COALESCE(e.ended_at, now()) > date_trunc('day', now()) AND ($1::int IS NULL OR t.area_id = $1)) AS "todayMinutes"`,
+              WHERE COALESCE(e.ended_at, now()) > date_trunc('day', now()) AND ($1::int IS NULL OR t.area_id = $1)) AS "todaySeconds"`,
     [area],
   );
+  const totals = { ...counts, todaySeconds, todayMinutes: Math.round(todaySeconds / 60), exactTime: s.rounding === 0 };
   const { rows: today } = await db.query<{ id: number; title: string; prio: string; area: string; overdue: boolean; dueTime: string | null }>(
     `SELECT t.id, t.title, t.prio, a.name AS area, ${OVERDUE_SQL} AS overdue, to_char(t.due_time, 'HH24:MI') AS "dueTime"
        FROM tickets t JOIN areas a ON a.id = t.area_id
@@ -106,6 +107,8 @@ export function systemRoutes(app: FastifyInstance, ctx: AppContext) {
       auth: { mode: config.AUTH_MODE, issuer: config.OIDC_ISSUER ?? null, clientId: config.OIDC_CLIENT_ID ?? null },
       language: 'de',
       timezone: config.TZ,
+      /** Times are kept and shown to the second (no rounding). */
+      exactTime: s.rounding === 0,
       lastBackupAt: s.lastBackupAt,
       monitorUrl: new URL(`/monitor?t=${s.monitorToken}`, config.PUBLIC_URL).toString(),
     };

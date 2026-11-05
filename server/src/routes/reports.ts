@@ -23,10 +23,11 @@ export function reportRoutes(app: FastifyInstance, ctx: AppContext) {
   /** Tracked minutes in the current week (from Monday) or month, clipped to the range. */
   app.get('/api/reports/time', async (req, reply) => {
     const q = parse(query, req.query);
-    const { rows } = await db.query<{ name: string; minutes: number }>(
+    const exact = (await ctx.settings.get()).rounding === 0;
+    const { rows: raw } = await db.query<{ name: string; seconds: number }>(
       `WITH bounds AS (SELECT date_trunc($1, now()) AS start)
        SELECT ${GROUP_SQL[q.groupBy]} AS name,
-              round(sum(extract(epoch FROM (COALESCE(e.ended_at, now()) - GREATEST(e.started_at, b.start)))) / 60)::int AS minutes
+              round(sum(extract(epoch FROM (COALESCE(e.ended_at, now()) - GREATEST(e.started_at, b.start)))))::int AS seconds
          FROM time_entries e
          CROSS JOIN bounds b
          JOIN tickets t ON t.id = e.ticket_id
@@ -38,16 +39,22 @@ export function reportRoutes(app: FastifyInstance, ctx: AppContext) {
         ORDER BY 2 DESC, 1`,
       [q.range],
     );
-    const total = rows.reduce((sum, r) => sum + r.minutes, 0);
+    const rows = raw.map(r => ({ ...r, minutes: Math.round(r.seconds / 60) }));
+    const totalSeconds = rows.reduce((sum, r) => sum + r.seconds, 0);
+    const total = Math.round(totalSeconds / 60);
 
     if (q.format === 'csv') {
       const head = { area: 'Bereich', project: 'Projekt', person: 'Person' }[q.groupBy];
-      const lines = [`${head};Minuten;Stunden`, ...rows.map(r => `${csvCell(r.name)};${r.minutes};${(r.minutes / 60).toFixed(2).replace('.', ',')}`)];
+      const hms = (s: number) => `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+      // To the second: also the exact duration, and hours from seconds.
+      const lines = exact
+        ? [`${head};Dauer;Sekunden;Stunden`, ...rows.map(r => `${csvCell(r.name)};${hms(r.seconds)};${r.seconds};${(r.seconds / 3600).toFixed(4).replace('.', ',')}`)]
+        : [`${head};Minuten;Stunden`, ...rows.map(r => `${csvCell(r.name)};${r.minutes};${(r.minutes / 60).toFixed(2).replace('.', ',')}`)];
       reply.header('Content-Type', 'text/csv; charset=utf-8');
       reply.header('Content-Disposition', `attachment; filename="zeitbericht-${q.range}-${q.groupBy}.csv"`);
       return '﻿' + lines.join('\r\n') + '\r\n'; // BOM so Excel reads UTF-8
     }
-    return { rows, total };
+    return { rows, total, totalSeconds, exactTime: exact };
   });
 
   app.get('/api/overview', async () => {

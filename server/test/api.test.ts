@@ -601,7 +601,7 @@ describe('app endpoints', () => {
     const ticket = (await call('POST', '/api/tickets', cookie, { title: 'Meine Zeit', areaId: 2 })).json();
     await call('POST', `/api/tickets/${ticket.id}/time`, cookie, { minutes: 30 });
     const time = (await call('GET', '/api/me/time', cookie)).json();
-    expect(time.today).toEqual({ total: 30, byArea: [{ name: 'Zuhause', icon: 'house', minutes: 30 }] });
+    expect(time.today).toEqual({ total: 30, totalSeconds: 1800, byArea: [{ name: 'Zuhause', icon: 'house', minutes: 30, seconds: 1800 }] });
     expect(time.week.days).toHaveLength(7);
     expect(time.week.total).toBe(30);
     expect(time.top[0]).toMatchObject({ title: 'Meine Zeit', minutes: 30 });
@@ -822,5 +822,30 @@ describe('changes sent later by the offline app', () => {
     expect(after.minutes).toBeGreaterThanOrEqual(40); // 30 tracked (or rounded up) + 10 added
     expect(after.minutes).toBeLessThanOrEqual(55);
     expect((await call('POST', `/api/tickets/${ticket.id}/timer`, who, { at: ago(8 * 24 * 60) })).statusCode).toBe(400);
+  });
+});
+
+describe('time rounding', () => {
+  it('rounds to any number of minutes or keeps seconds', async () => {
+    const boss = await t.login('admin');
+    const who = await t.login('member');
+    const ago = (s: number) => new Date(Date.now() - s * 1000).toISOString();
+    const track = async (seconds: number) => {
+      const ticket = (await call('POST', '/api/tickets', who, { title: `Raster ${seconds}`, areaId: 1 })).json();
+      await call('POST', `/api/tickets/${ticket.id}/timer`, who, { at: ago(seconds) });
+      await call('POST', '/api/timer/stop', who, { ticketId: ticket.id });
+      return (await call('GET', `/api/tickets/${ticket.id}`, who)).json();
+    };
+    expect((await call('PATCH', '/api/settings', boss, { rounding: 6 })).statusCode).toBe(200);
+    expect((await track(7 * 60)).minutes).toBe(12); // 7 min → next 6-minute step
+    await call('PATCH', '/api/settings', boss, { rounding: 0 });
+    const exact = await track(95);
+    expect(exact.seconds).toBeGreaterThanOrEqual(95);
+    expect(exact.seconds).toBeLessThan(98);
+    expect((await call('GET', '/api/system', who)).json().exactTime).toBe(true);
+    const csv = (await call('GET', '/api/reports/time?format=csv', boss)).body;
+    expect(csv.split('\r\n')[0]).toContain('Dauer;Sekunden;Stunden');
+    expect((await call('PATCH', '/api/settings', boss, { rounding: 481 })).statusCode).toBe(400);
+    await call('PATCH', '/api/settings', boss, { rounding: 15 });
   });
 });

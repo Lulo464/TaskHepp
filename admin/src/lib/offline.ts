@@ -158,7 +158,7 @@ function tempTicket(op: Op): Ticket {
     prio: (b.prio as Ticket['prio']) ?? 'normal', due: (b.due as string) ?? null, dueTime: (b.dueTime as string) ?? null, source: 'app',
     areaId, area: known.areas.find(a => a.id === areaId)?.name ?? '', projectId: (b.projectId as number) ?? null, project: null,
     assigneeId, assignee: known.people.find(p => p.id === assigneeId)?.name ?? (assigneeId === known.me?.id ? known.me?.name ?? null : null),
-    minutes: 0, running: false, createdAt: op.at, doneAt: null, recurrence: (b.recurrence as Ticket['recurrence']) ?? null, followupId: null,
+    minutes: 0, seconds: 0, running: false, createdAt: op.at, doneAt: null, recurrence: (b.recurrence as Ticket['recurrence']) ?? null, followupId: null,
     checkTotal: 0, checkDone: 0, photos: 0, autoClose: (b.autoClose as Ticket['autoClose']) ?? null,
   };
 }
@@ -190,7 +190,7 @@ function applyToTicket(t: Ticket | null, ticketId: number): Ticket | null {
     if (op.method === 'PATCH') cur = patchTicket(cur, op.body ?? {}, op.at);
     else if (op.method === 'DELETE') return null;
     else if (op.path.endsWith('/timer')) cur = { ...cur, running: true, status: cur.status === 'open' ? 'inProgress' : cur.status };
-    else if (op.path.endsWith('/time')) cur = { ...cur, minutes: cur.minutes + Number(op.body?.minutes ?? 0) };
+    else if (op.path.endsWith('/time')) cur = { ...cur, minutes: cur.minutes + Number(op.body?.minutes ?? 0), seconds: (cur.seconds ?? 0) + Number(op.body?.minutes ?? 0) * 60 };
     else if (op.path.endsWith('/checklist')) {
       const n = String(op.body?.text ?? '').split('\n').filter(l => l.trim()).length;
       cur = { ...cur, checkTotal: cur.checkTotal + n };

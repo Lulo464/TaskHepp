@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon, Loading, Seg } from '../components/ui';
 import { useApi } from '../lib/api';
-import { formatMinutes } from '../lib/format';
+import { formatTracked } from '../lib/format';
 
 type GroupBy = 'area' | 'project' | 'person';
 type Range = 'week' | 'month';
@@ -12,7 +12,7 @@ export function Reports() {
   const [groupBy, setGroupBy] = useState<GroupBy>('area');
   const [range, setRange] = useState<Range>('week');
   const query = `groupBy=${groupBy}&range=${range}`;
-  const report = useApi<{ rows: { name: string; minutes: number }[]; total: number }>(`/api/reports/time?${query}`);
+  const report = useApi<{ rows: { name: string; minutes: number; seconds: number }[]; total: number; totalSeconds: number }>(`/api/reports/time?${query}`);
 
   const max = report?.rows[0]?.minutes || 1;
 
@@ -29,12 +29,12 @@ export function Reports() {
       {!report ? <Loading /> : (
         <div className="card" style={{ padding: 22, gap: 0 }}>
           <div className="stat-label" style={{ marginBottom: 4 }}>{t(range === 'week' ? 'reports.totalWeek' : 'reports.totalMonth')}</div>
-          <div className="report-total">{formatMinutes(report.total)}</div>
+          <div className="report-total">{formatTracked({ minutes: report.total, seconds: report.totalSeconds })}</div>
           {report.rows.map(r => (
             <div key={r.name} className="bar-row">
               <span>{r.name}</span>
               <span className="bar"><span className="bar-fill" style={{ width: `${Math.round((r.minutes / max) * 100)}%` }} /></span>
-              <span className="soft" style={{ textAlign: 'right' }}>{formatMinutes(r.minutes)}</span>
+              <span className="soft" style={{ textAlign: 'right' }}>{formatTracked(r)}</span>
             </div>
           ))}
           {report.rows.length === 0 && <div className="muted">{t('reports.empty')}</div>}

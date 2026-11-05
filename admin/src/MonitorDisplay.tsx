@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from './components/ui';
-import { formatMinutes } from './lib/format';
+import { formatTracked, setExactTime } from './lib/format';
 import type { MonitorData } from './lib/types';
 
 /** Full-screen day view for a wall display or browser tab: /monitor?t=<token>[&area=<id>]. No login needed. */
@@ -39,6 +39,7 @@ export function MonitorDisplay() {
   }, []);
 
   if (!data) return <div className="monitor-screen"><div className="muted">{error ?? t('common.loading')}</div></div>;
+  setExactTime(data.exactTime);
 
   const elapsed = data.timer ? Math.max(0, Math.floor((now.getTime() - new Date(data.timer.startedAt).getTime()) / 1000)) : 0;
   const hms = [Math.floor(elapsed / 3600), Math.floor((elapsed % 3600) / 60), elapsed % 60].map(n => String(n).padStart(2, '0')).join(':');
@@ -56,7 +57,7 @@ export function MonitorDisplay() {
           </div>
         )}
         <div className="ms-totals">
-          <div><div className="ms-kicker">{t('display.trackedToday')}</div><div className="ms-total">{formatMinutes(data.todayMinutes)}</div></div>
+          <div><div className="ms-kicker">{t('display.trackedToday')}</div><div className="ms-total">{formatTracked({ minutes: data.todayMinutes, seconds: data.todaySeconds })}</div></div>
           <div><div className="ms-kicker">{t('display.stillOpen')}</div><div className="ms-total">{t('display.tickets', { count: data.openTickets })}</div></div>
         </div>
       </div>

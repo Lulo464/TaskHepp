@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon, Loading, Seg } from '../components/ui';
 import { patch, post, useAction, useApi } from '../lib/api';
-import { firstName, formatDue, formatMinutes, nextStatus, ticketTag } from '../lib/format';
+import { firstName, formatDue, formatTracked, nextStatus, ticketTag } from '../lib/format';
 import type { Area, Ticket } from '../lib/types';
 
 const HA_FILTER = '__ha';
@@ -88,7 +88,7 @@ export function Tickets() {
                   <td>{t(`prio.${x.prio}`)}</td>
                   <td>{firstName(x.assignee)}</td>
                   <td>{formatDue(x.due, x.dueTime)}</td>
-                  <td className="right">{formatMinutes(x.minutes)}</td>
+                  <td className="right">{formatTracked(x)}</td>
                 </tr>
               );
             })}

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/ui';
-import { api, setOnUnauthorized, useApiError, useRefresh } from '../lib/api';
-import type { Me } from '../lib/types';
+import { api, setOnUnauthorized, useApi, useApiError, useRefresh } from '../lib/api';
+import { setExactTime } from '../lib/format';
+import type { Me, SystemInfo } from '../lib/types';
 import { OfflineBar } from './OfflineBar';
 import { href, navigate, useRoute, type Route } from './router';
 import { Areas } from './screens/Areas';
@@ -59,6 +60,9 @@ function Shell({ me }: { me: Me }) {
   const route = useRoute();
   const wide = useWide();
   const timers = useTimers();
+  // "To the second" (Admin → System) shows tracked time with seconds.
+  const system = useApi<SystemInfo>('/api/system');
+  if (system) setExactTime(system.exactTime);
   const refresh = useRefresh();
   const { error, clear } = useApiError();
   const toast = useToast();

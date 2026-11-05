@@ -2,7 +2,8 @@ import { useEffect, useState, type ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from './components/ui';
 import { post, useApi, useApiError } from './lib/api';
-import type { Me } from './lib/types';
+import { setExactTime } from './lib/format';
+import type { Me, SystemInfo } from './lib/types';
 import { Areas } from './sections/Areas';
 import { Calendars } from './sections/Calendars';
 import { Config } from './sections/Config';
@@ -68,6 +69,8 @@ export function App() {
   }, []);
 
   const me = useApi<Me>('/api/me');
+  const system = useApi<SystemInfo>('/api/system');
+  if (system) setExactTime(system.exactTime);
   const { error, clear } = useApiError();
   const View = current.view;
 

@@ -291,29 +291,35 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
   /** The signed-in user's own tracked time: today, this week per day, per area, and the top tickets. */
   app.get('/api/me/time', async req => {
     const uid = userId(req);
-    // Minutes of entry e inside [from, from + span), running timers counted up to now.
+    // Seconds of entry e inside [from, from + span), running timers counted up to now.
     const clipped = (from: string, span: string) =>
-      `GREATEST(extract(epoch FROM (LEAST(COALESCE(e.ended_at, now()), now(), ${from} + interval '${span}') - GREATEST(e.started_at, ${from}))), 0) / 60`;
+      `GREATEST(extract(epoch FROM (LEAST(COALESCE(e.ended_at, now()), now(), ${from} + interval '${span}') - GREATEST(e.started_at, ${from}))), 0)`;
     // Own entries, without the areas the user hid in the app.
     const mine = `e.user_id IS NOT DISTINCT FROM $1 AND NOT EXISTS (
       SELECT 1 FROM tickets ht JOIN users hu ON hu.id = $1 WHERE ht.id = e.ticket_id AND ht.area_id = ANY(hu.hidden_areas))`;
     const week = "date_trunc('week', now())";
     const today = "date_trunc('day', now())";
+    // Minutes for the views, seconds for "to the second".
+    const withMinutes = <T extends { seconds: number }>(r: T) => ({ ...r, minutes: Math.round(r.seconds / 60) });
+    const total = (rows: { seconds: number }[]) => {
+      const seconds = rows.reduce((s, r) => s + r.seconds, 0);
+      return { total: Math.round(seconds / 60), totalSeconds: seconds };
+    };
 
-    const { rows: days } = await db.query<{ date: string; minutes: number }>(
+    const { rows: days } = await db.query<{ date: string; seconds: number }>(
       `SELECT d::date::text AS date,
-              COALESCE((SELECT round(sum(${clipped('d', '1 day')}))::int FROM time_entries e WHERE ${mine}), 0) AS minutes
+              COALESCE((SELECT round(sum(${clipped('d', '1 day')}))::int FROM time_entries e WHERE ${mine}), 0) AS seconds
          FROM generate_series(${week}, ${week} + interval '6 days', interval '1 day') d ORDER BY d`,
       [uid],
     );
-    const perArea = async (from: string, span: string) => (await db.query<{ name: string; icon: string; minutes: number }>(
-      `SELECT a.name, a.icon, round(sum(${clipped(from, span)}))::int AS minutes
+    const perArea = async (from: string, span: string) => (await db.query<{ name: string; icon: string; seconds: number }>(
+      `SELECT a.name, a.icon, round(sum(${clipped(from, span)}))::int AS seconds
          FROM time_entries e JOIN tickets t ON t.id = e.ticket_id JOIN areas a ON a.id = t.area_id
         WHERE ${mine} GROUP BY a.id ORDER BY a.position, a.id`,
       [uid],
-    )).rows.filter(r => r.minutes > 0);
-    const { rows: top } = await db.query<{ id: number; title: string; minutes: number }>(
-      `SELECT t.id, t.title, round(sum(${clipped(week, '7 days')}))::int AS minutes
+    )).rows.filter(r => r.seconds > 0).map(withMinutes);
+    const { rows: top } = await db.query<{ id: number; title: string; seconds: number }>(
+      `SELECT t.id, t.title, round(sum(${clipped(week, '7 days')}))::int AS seconds
          FROM time_entries e JOIN tickets t ON t.id = e.ticket_id
         WHERE ${mine} GROUP BY t.id ORDER BY 3 DESC, t.id LIMIT 5`,
       [uid],
@@ -321,9 +327,9 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
 
     const todayAreas = await perArea(today, '1 day');
     return {
-      today: { total: todayAreas.reduce((s, r) => s + r.minutes, 0), byArea: todayAreas },
-      week: { total: days.reduce((s, d) => s + d.minutes, 0), days, byArea: await perArea(week, '7 days') },
-      top: top.filter(r => r.minutes > 0),
+      today: { ...total(todayAreas), byArea: todayAreas },
+      week: { ...total(days), days: days.map(withMinutes), byArea: await perArea(week, '7 days') },
+      top: top.filter(r => r.seconds > 0).map(withMinutes),
     };
   });
 

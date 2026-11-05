@@ -333,8 +333,12 @@
       }
     },
     "roundTo": "Runden auf",
-    "roundNone": "Keine",
+    "roundExact": "Sekundengenau",
     "roundMin": "{{n}} min",
+    "roundOwn": "Eigener Takt:",
+    "roundOwnUnit": "Minuten (1–480)",
+    "roundExactHint": "Keine Rundung: Timer zählen auf die Sekunde, und App, Admin, Berichte und Monitor zeigen Zeiten als Stunden:Minuten:Sekunden.",
+    "roundHint": "Ein gestoppter Timer wird auf volle {{n}} min aufgerundet. Bereits erfasste Zeiten bleiben, wie sie sind.",
     "oidc": "Zugang · OIDC",
     "issuer": "Issuer",
     "clientId": "Client-ID",
