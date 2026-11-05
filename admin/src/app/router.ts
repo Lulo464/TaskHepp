@@ -23,7 +23,8 @@ export function parseRoute(hash: string): Route {
   switch (name) {
     case 'tickets': return { name: 'tickets' };
     case 'plan': return { name: 'plan' };
-    case 'ticket': return Number(arg) > 0 ? { name: 'ticket', id: Number(arg) } : { name: 'tickets' };
+    // Tickets created offline have a temporary negative id until they reach Tasklog.
+    case 'ticket': return Number.isInteger(Number(arg)) && Number(arg) !== 0 ? { name: 'ticket', id: Number(arg) } : { name: 'tickets' };
     case 'new': return { name: 'new' };
     case 'time': return { name: 'time' };
     case 'more': return { name: 'more' };

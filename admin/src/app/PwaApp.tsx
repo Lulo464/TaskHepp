@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/ui';
 import { api, setOnUnauthorized, useApiError, useRefresh } from '../lib/api';
 import type { Me } from '../lib/types';
+import { OfflineBar } from './OfflineBar';
 import { href, navigate, useRoute, type Route } from './router';
 import { Areas } from './screens/Areas';
 import { Legal } from './screens/Legal';
@@ -89,6 +90,7 @@ function Shell({ me }: { me: Me }) {
 
   return (
     <div className="pwa">
+      <OfflineBar />
       {error && (
         <div className="pwa-toast" role="alert" onClick={clear}>
           <Icon name="warning" /> <span className="grow">{error}</span> <Icon name="x" />

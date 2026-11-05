@@ -31,6 +31,17 @@ const ticketInput = z.object({
   }).nullable().optional(),
 });
 
+/** When it happened, for changes the app made offline and sends later: within the last 7 days, never in the future. */
+const happenedAt = z.iso.datetime({ offset: true }).optional().transform((v, ctx) => {
+  if (!v) return null;
+  const at = new Date(v);
+  if (Date.now() - at.getTime() > 7 * 24 * 3600_000) {
+    ctx.addIssue({ code: 'custom', message: 'Zeitpunkt liegt mehr als 7 Tage zurück' });
+    return z.NEVER;
+  }
+  return at.getTime() > Date.now() ? null : at;
+});
+
 const listQuery = z.object({
   q: z.string().optional(),
   areaId: z.coerce.number().int().optional(),
@@ -331,30 +342,31 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
 
   app.post('/api/tickets/:id/timer', { config: { access: 'member' } }, async req => {
     const { id } = parse(idParam, req.params);
+    const { at } = parse(z.object({ at: happenedAt }), req.body ?? {});
     if (!(await getTicket(db, id))) throw notFound('Ticket nicht gefunden');
     const s = await ctx.settings.get();
-    await withTransaction(db, c => startTimer(c, id, userId(req), { single: s.timeRules.singleTimer, rounding: s.rounding }));
+    await withTransaction(db, c => startTimer(c, id, userId(req), { single: s.timeRules.singleTimer, rounding: s.rounding }, at));
     publisher.schedule();
     return getTicket(db, id);
   });
 
   app.post('/api/timer/stop', { config: { access: 'member' } }, async req => {
-    const body = parse(z.object({ ticketId: z.number().int().optional() }).default({}), req.body ?? {});
+    const body = parse(z.object({ ticketId: z.number().int().optional(), at: happenedAt }), req.body ?? {});
     const uid = userId(req);
     const s = await ctx.settings.get();
     const params: unknown[] = [uid];
     let where = 'user_id IS NOT DISTINCT FROM $1';
     if (body.ticketId) { params.push(body.ticketId); where += ' AND ticket_id = $2'; }
-    const stopped = await stopEntries(db, where, params, s.rounding);
+    const stopped = await stopEntries(db, where, params, s.rounding, body.at);
     publisher.schedule();
     return { stopped };
   });
 
   app.post('/api/tickets/:id/time', { config: { access: 'member' } }, async (req, reply) => {
     const { id } = parse(idParam, req.params);
-    const { minutes } = parse(z.object({ minutes: z.number().int().min(1).max(24 * 60) }), req.body);
+    const { minutes, at } = parse(z.object({ minutes: z.number().int().min(1).max(24 * 60), at: happenedAt }), req.body);
     if (!(await getTicket(db, id))) throw notFound('Ticket nicht gefunden');
-    await addManualTime(db, id, userId(req), minutes);
+    await addManualTime(db, id, userId(req), minutes, at);
     publisher.schedule();
     reply.code(201);
     return getTicket(db, id);

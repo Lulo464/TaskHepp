@@ -807,3 +807,20 @@ describe('nfc tags', () => {
     expect(other.statusCode).toBe(409);
   });
 });
+
+describe('changes sent later by the offline app', () => {
+  it('starts, stops and adds time at the moment it happened', async () => {
+    const who = await t.login('member');
+    const ticket = (await call('POST', '/api/tickets', who, { title: 'Offline-Zeit', areaId: 1 })).json();
+    const ago = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
+    expect((await call('POST', `/api/tickets/${ticket.id}/timer`, who, { at: ago(50) })).statusCode).toBe(200);
+    const [running] = (await call('GET', '/api/timer', who)).json();
+    expect(Math.round((Date.now() - Date.parse(running.startedAt)) / 60_000)).toBe(50);
+    await call('POST', '/api/timer/stop', who, { ticketId: ticket.id, at: ago(20) });
+    await call('POST', `/api/tickets/${ticket.id}/time`, who, { minutes: 10, at: ago(5) });
+    const after = (await call('GET', `/api/tickets/${ticket.id}`, who)).json();
+    expect(after.minutes).toBeGreaterThanOrEqual(40); // 30 tracked (or rounded up) + 10 added
+    expect(after.minutes).toBeLessThanOrEqual(55);
+    expect((await call('POST', `/api/tickets/${ticket.id}/timer`, who, { at: ago(8 * 24 * 60) })).statusCode).toBe(400);
+  });
+});

@@ -34,6 +34,14 @@ Die App unter `<PUBLIC_URL>/` ist eine PWA:
 
 Danach startet Tasklog im Vollbild mit eigenem Icon, wie eine normale App.
 
+**Offline:** Die App merkt sich, was sie zuletzt geladen hat, und funktioniert auch ohne Verbindung, im Keller, im Garten oder wenn der Server gerade neu startet. Oben steht dann „Offline · Stand 12:00“. Du kannst trotzdem:
+- Tickets anlegen (auch per Schnelleingabe) und abhaken
+- Titel, Datum, Bereich und Zuweisung ändern
+- Notizen schreiben, Checklisten abhaken und Zeit nachtragen
+- Timer starten und stoppen. Die Uhrzeit zählt ab dem Moment, in dem du tippst, nicht ab dem Senden.
+
+Die Änderungen warten auf dem Gerät („3 Änderungen warten“) und gehen der Reihe nach raus, sobald Tasklog wieder antwortet. Was Tasklog ablehnt, meldet die App. Fotos, Einstellungen und der Admin-Bereich brauchen eine Verbindung. Beim Abmelden löscht die App die gespeicherten Daten vom Gerät.
+
 Der Tab **Planung** zeigt die offenen Tickets der nächsten 7 Tage nach Tag, darüber die überfälligen. Tickets ohne Datum stehen unter **Ungeplant**, am Desktop als Spalte daneben. Zum Einplanen ziehst du ein Ticket auf einen Tag (am Handy kurz gedrückt halten) oder nimmst das Kalender-Symbol. Zurück auf „Ungeplant“ gezogen verliert es sein Datum. „Meine“ zeigt nur die eigenen Tickets.
 
 Auf der Ticket-Seite lassen sich **Notizen** anhängen, z. B. „Ersatzteil bestellt, kommt Freitag“. Jede Notiz zeigt, wer sie wann geschrieben hat. Alle sehen die Notizen, Mitglieder und Admins schreiben sie, und löschen darf jeder seine eigenen (Admins alle).

@@ -621,6 +621,21 @@
       "toLogin": "Zur Anmeldung",
       "missing": "Dieser Text wurde noch nicht hinterlegt."
     },
+    "offline": {
+      "offline": "Offline",
+      "dataFrom": "Stand {{time}}",
+      "pending_one": "1 Änderung wartet",
+      "pending_other": "{{count}} Änderungen warten",
+      "syncing_one": "Überträgt 1 Änderung …",
+      "syncing_other": "Überträgt {{count}} Änderungen …",
+      "retry": "Jetzt senden",
+      "synced_one": "1 Änderung übertragen",
+      "synced_other": "{{count}} Änderungen übertragen",
+      "failed_one": "1 Änderung ging nicht durch: {{error}}",
+      "failed_other": "{{count}} Änderungen gingen nicht durch, z. B.: {{error}}",
+      "logoutConfirm_one": "1 Änderung ist noch nicht übertragen und geht beim Abmelden verloren. Trotzdem abmelden?",
+      "logoutConfirm_other": "{{count}} Änderungen sind noch nicht übertragen und gehen beim Abmelden verloren. Trotzdem abmelden?"
+    },
     "tags": {
       "title": "NFC-Tags",
       "intro": "Klebe einen NFC-Tag an die Mülltonne, die Waschmaschine oder den Schreibtisch. Hältst du das Handy daran, erledigt Tasklog das Ticket, startet oder stoppt den Timer oder legt ein Ticket an.",

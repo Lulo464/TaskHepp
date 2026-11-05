@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Icon, Switch } from '../../components/ui';
 import { patch, post, useAction, useApi } from '../../lib/api';
+import { clearOffline, getOfflineState } from '../../lib/offline';
 import type { AuthInfo, Me, Rule, SystemInfo } from '../../lib/types';
 import { href } from '../router';
 import { CalendarFeed } from './CalendarFeed';
@@ -16,7 +17,11 @@ export function More({ me }: { me: Me }) {
   const isAdmin = me.role === 'admin';
 
   const logout = async () => {
+    const waiting = getOfflineState().pending;
+    if (waiting && !window.confirm(t('app.offline.logoutConfirm', { count: waiting }))) return;
     await post('/api/logout');
+    // Nothing personal stays on the device.
+    clearOffline();
     window.location.reload();
   };
 

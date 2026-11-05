@@ -447,3 +447,13 @@ textarea.input { min-height: 80px; }
 .pwa-scan-icon.is-error { color: var(--color-neutral-400); }
 .pwa-scan .pwa-h1 { margin: 6px 0; }
 .pwa-scan-actions { width: 100%; max-width: 360px; gap: 10px; margin-top: 28px; }
+
+/* — offline — */
+.pwa-offline { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 10px; padding: 8px 16px; font-size: 13px; background: var(--color-neutral-800); color: var(--color-neutral-100); }
+.pwa-offline.is-offline { background: #4a3b1f; }
+.pwa-offline > i { font-size: 18px; flex: none; }
+.pwa-offline .btn { padding: 4px 10px; min-height: 0; font-size: 13px; }
+@media (min-width: 960px) {
+  .pwa { grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: 'nav offline' 'nav content' 'nav mini'; }
+  .pwa-offline { grid-area: offline; }
+}
