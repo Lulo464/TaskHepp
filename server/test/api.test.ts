@@ -862,7 +862,8 @@ describe('home assistant to-do lists linked to areas', () => {
       { uid: 'b', summary: 'Alt, schon erledigt', status: 'completed' },
       { uid: 'c', summary: 'Brot', status: 'needs_action', due: '2030-06-01' },
     ]);
-    ha.states.set('todo.einkaufsliste', { state: '2', attributes: { friendly_name: 'Einkaufsliste' } });
+    // 127: create, delete, update, move, due date, due time, description — like a local to-do list.
+    ha.states.set('todo.einkaufsliste', { state: '2', attributes: { friendly_name: 'Einkaufsliste', supported_features: 127 } });
     ha.states.set('todo.tasklog_zuhause', { state: '3', attributes: {} });
     const mine = (await call('POST', '/api/tickets', boss, { title: 'Eier', areaId: area.id, due: '2030-06-02', dueTime: '18:00' })).json();
 
@@ -905,12 +906,36 @@ describe('home assistant to-do lists linked to areas', () => {
     await syncHaTodos(t.ctx);
     expect(list().some(i => i.summary === 'Milch')).toBe(false);
 
+    // Due date and description: set in HA, changed in Tasklog, cleared in HA.
+    const eggs = list().find(i => i.summary === 'Eier (10)')!;
+    eggs.status = 'needs_action';
+    await syncHaTodos(t.ctx);
+    const cheese = { uid: 'k', summary: 'Käse', status: 'needs_action' as const };
+    list().push(cheese);
+    await syncHaTodos(t.ctx);
+    const cheeseTicket = (await inArea()).find(x => x.title === 'Käse')!;
+    Object.assign(cheese, { due: '2030-07-01T09:30:00+02:00', description: 'Gouda' });
+    await syncHaTodos(t.ctx);
+    expect((await call('GET', `/api/tickets/${cheeseTicket.id}`, boss)).json()).toMatchObject({ due: '2030-07-01', dueTime: '09:30', description: 'Gouda' });
+    await call('PATCH', `/api/tickets/${cheeseTicket.id}`, boss, { due: '2030-07-03', dueTime: null, description: 'Emmentaler' });
+    await syncHaTodos(t.ctx);
+    expect(cheese).toMatchObject({ due: '2030-07-03', description: 'Emmentaler' });
+    delete (cheese as { due?: string }).due;
+    await syncHaTodos(t.ctx);
+    expect((await call('GET', `/api/tickets/${cheeseTicket.id}`, boss)).json().due).toBeNull();
+
+    // Links from before this knew no dates: what HA has wins once.
+    await t.db.query("UPDATE ha_todo_links SET due = NULL, description = NULL WHERE uid = 'k'");
+    cheese.due = '2030-08-08';
+    await syncHaTodos(t.ctx);
+    expect((await call('GET', `/api/tickets/${cheeseTicket.id}`, boss)).json().due).toBe('2030-08-08');
+
     // Running it again changes nothing.
     const before = JSON.stringify(list());
     const calls = ha.calls.length;
     await syncHaTodos(t.ctx);
     expect(JSON.stringify(list())).toBe(before);
-    expect(ha.calls.filter((c, i) => i >= calls && !c.path.includes('get_items'))).toHaveLength(0);
+    expect(ha.calls.filter((c, i) => i >= calls && c.method === 'POST' && !c.path.includes('get_items'))).toHaveLength(0);
 
     // A shopping list without dates takes the title alone; one list belongs to one area.
     const shop = (await call('POST', '/api/areas', boss, { name: 'Laden', icon: 'storefront' })).json();
