@@ -20,6 +20,11 @@ docker compose up -d      # startet PostgreSQL 16 und Tasklog auf Port 8080
 
 Beim Start legt Tasklog das Datenbankschema selbst an bzw. aktualisiert es (`server/migrations/`). Nächtliche Backups der Datenbank landen in `./backups`, Fotos im Docker-Volume `uploads`.
 
+**Aktuell halten:** Sicherheits-Updates von Node, Alpine und Postgres kommen über die Basis-Images. Deshalb ab und zu neu bauen und dabei die neuesten Images holen:
+```sh
+docker compose pull db && docker compose build --pull && docker compose up -d
+```
+
 ## Die App aufs Handy
 
 Die App unter `<PUBLIC_URL>/` ist eine PWA:
