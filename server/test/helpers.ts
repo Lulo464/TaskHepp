@@ -102,6 +102,11 @@ export async function fakeHomeAssistant(token = 'ha-token'): Promise<FakeHa> {
           if (!item) return send(400, { message: 'item not found' });
           if (data.rename) item.summary = data.rename;
           if (data.status) item.status = data.status;
+          if ('due_date' in data || 'due_datetime' in data) {
+            const due = data.due_datetime ?? data.due_date;
+            if (due) item.due = due; else delete item.due;
+          }
+          if ('description' in data) item.description = data.description;
           return send(200, []);
         }
         case 'remove_item':
