@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Icon, Switch } from '../../components/ui';
 import { patch, post, useAction, useApi } from '../../lib/api';
+import { clearOffline, getOfflineState } from '../../lib/offline';
 import type { AuthInfo, Me, Rule, SystemInfo } from '../../lib/types';
 import { href } from '../router';
 import { CalendarFeed } from './CalendarFeed';
@@ -16,7 +17,11 @@ export function More({ me }: { me: Me }) {
   const isAdmin = me.role === 'admin';
 
   const logout = async () => {
+    const waiting = getOfflineState().pending;
+    if (waiting && !window.confirm(t('app.offline.logoutConfirm', { count: waiting }))) return;
     await post('/api/logout');
+    // Nothing personal stays on the device.
+    clearOffline();
     window.location.reload();
   };
 
@@ -71,6 +76,7 @@ export function More({ me }: { me: Me }) {
       <div className="stack" style={{ gap: 10, marginTop: 22 }}>
         <a className="btn btn-secondary btn-block" href={href({ name: 'areas' })}><Icon name="folders" /> {t('app.more.areas')}</a>
         <a className="btn btn-secondary btn-block" href={href({ name: 'notifications' })}><Icon name="bell-ringing" /> {t('app.notify.title')}</a>
+        <a className="btn btn-secondary btn-block" href={href({ name: 'tags' })}><Icon name="contactless-payment" /> {t('app.tags.title')}</a>
         <a className="btn btn-secondary btn-block" href={href({ name: 'presence' })}><Icon name="map-pin-area" /> {t('app.presence.title')}</a>
         <a className="btn btn-secondary btn-block" href={href({ name: 'mydata' })}><Icon name="shield-check" /> {t('app.mydata.title')}</a>
         {isAdmin && <a className="btn btn-secondary btn-block" href="/admin"><Icon name="gear-six" /> {t('app.more.admin')}</a>}

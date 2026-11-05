@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Icon, Loading } from '../../components/ui';
 import { useApi } from '../../lib/api';
-import { formatMinutes } from '../../lib/format';
+import { formatTracked } from '../../lib/format';
 import type { MyTime } from '../../lib/types';
 import { navigate } from '../router';
 import { AreaFilter } from './AreaFilter';
@@ -18,7 +18,7 @@ export function Time() {
   return (
     <div className="pwa-screen">
       <h1 className="pwa-h1" style={{ marginBottom: 4 }}>{t('app.tab.time')}</h1>
-      <div className="pwa-date">{t('app.time.thisWeek', { total: formatMinutes(time.week.total) })}</div>
+      <div className="pwa-date">{t('app.time.thisWeek', { total: formatTracked({ minutes: time.week.total, seconds: time.week.totalSeconds }) })}</div>
       <AreaFilter />
 
       <div className="pwa-bars" role="img" aria-label={t('app.time.chartLabel')}>
@@ -26,7 +26,7 @@ export function Time() {
           const isToday = d.date === today;
           const [y, m, day] = d.date.split('-').map(Number);
           return (
-            <div key={d.date} className="pwa-bar-col" title={formatMinutes(d.minutes)}>
+            <div key={d.date} className="pwa-bar-col" title={formatTracked(d)}>
               <div className={`pwa-bar${isToday ? ' is-today' : ''}`} style={{ '--share': d.minutes / max } as React.CSSProperties} />
               <span className={isToday ? 'is-today' : ''}>{new Date(y, m - 1, day).toLocaleDateString(i18n.language, { weekday: 'short' }).replace('.', '')}</span>
             </div>
@@ -39,7 +39,7 @@ export function Time() {
           {time.week.byArea.map(a => (
             <div key={a.name} className="card pwa-area-card">
               <div className="pwa-label"><Icon name={a.icon} /> {a.name}</div>
-              <div className="pwa-area-value">{formatMinutes(a.minutes)}</div>
+              <div className="pwa-area-value">{formatTracked(a)}</div>
             </div>
           ))}
         </div>
@@ -49,7 +49,7 @@ export function Time() {
       {time.top.map(x => (
         <div key={x.id} className="pwa-top-row" role="button" tabIndex={0} onClick={() => navigate({ name: 'ticket', id: x.id })} onKeyDown={e => e.key === 'Enter' && navigate({ name: 'ticket', id: x.id })}>
           <span className="pwa-ellipsis">{x.title}</span>
-          <span className="pwa-num soft">{formatMinutes(x.minutes)}</span>
+          <span className="pwa-num soft">{formatTracked(x)}</span>
         </div>
       ))}
       {time.top.length === 0 && <div className="pwa-empty">{t('app.time.nothing')}</div>}

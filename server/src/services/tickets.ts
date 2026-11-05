@@ -22,6 +22,7 @@ export interface TicketRow {
   assigneeId: number | null;
   assignee: string | null;
   minutes: number;
+  seconds: number;
   running: boolean;
   createdAt: string;
   doneAt: string | null;
@@ -46,7 +47,7 @@ export const TICKET_SELECT = `
   SELECT t.id, t.title, t.description, t.status, t.prio, t.due_date AS due, to_char(t.due_time, 'HH24:MI') AS "dueTime", t.source, t.rule_id AS "ruleId",
          t.area_id AS "areaId", a.name AS area, t.project_id AS "projectId", p.name AS project,
          t.assignee_id AS "assigneeId", u.name AS assignee,
-         COALESCE(tm.minutes, 0)::int AS minutes, COALESCE(tm.running, false) AS running,
+         COALESCE(round(tm.seconds / 60), 0)::int AS minutes, COALESCE(round(tm.seconds), 0)::int AS seconds, COALESCE(tm.running, false) AS running,
          t.created_at AS "createdAt", t.done_at AS "doneAt", t.recurrence, t.followup_id AS "followupId", t.auto_close AS "autoClose",
          COALESCE(cl.total, 0)::int AS "checkTotal", COALESCE(cl.done, 0)::int AS "checkDone",
          (SELECT count(*) FROM ticket_attachments ta WHERE ta.ticket_id = t.id)::int AS photos
@@ -55,7 +56,7 @@ export const TICKET_SELECT = `
     LEFT JOIN projects p ON p.id = t.project_id
     LEFT JOIN users u ON u.id = t.assignee_id
     LEFT JOIN LATERAL (
-      SELECT round(sum(extract(epoch FROM (COALESCE(e.ended_at, now()) - e.started_at))) / 60) AS minutes,
+      SELECT sum(extract(epoch FROM (COALESCE(e.ended_at, now()) - e.started_at))) AS seconds,
              bool_or(e.ended_at IS NULL) AS running
         FROM time_entries e WHERE e.ticket_id = t.id
     ) tm ON true

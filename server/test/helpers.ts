@@ -60,13 +60,16 @@ export interface FakeHa {
   /** Calendar entity → events (HA format, e.g. { summary, start: { date } }). */
   calendars: Map<string, { summary: string; start: { date?: string; dateTime?: string } }[]>;
   calls: { method: string; path: string; body: unknown; auth?: string }[];
+  /** To-do entity → items, as todo.get_items returns them; add/update/remove_item change them like HA does. */
+  todos: Map<string, { uid: string; summary: string; status: 'needs_action' | 'completed'; due?: string; description?: string }[]>;
   fail: boolean;
   close: () => Promise<void>;
 }
 
 /** Minimal Home Assistant REST API: config, states, notify. */
 export async function fakeHomeAssistant(token = 'ha-token'): Promise<FakeHa> {
-  const fake: Omit<FakeHa, 'url' | 'close'> = { states: new Map(), calendars: new Map(), calls: [], fail: false };
+  const fake: Omit<FakeHa, 'url' | 'close'> = { states: new Map(), calendars: new Map(), calls: [], todos: new Map(), fail: false };
+  let nextUid = 1;
   const readBody = (req: IncomingMessage) => new Promise<string>(r => { let b = ''; req.on('data', c => (b += c)); req.on('end', () => r(b)); });
   const server: Server = createServer(async (req, res) => {
     const body = await readBody(req);
@@ -80,6 +83,32 @@ export async function fakeHomeAssistant(token = 'ha-token'): Promise<FakeHa> {
     if (path === '/api/states') return send(200, [...fake.states].map(([entity_id, st]) => ({ entity_id, ...st })));
     if (path === '/api/services') return send(200, [{ domain: 'notify', services: { notify: {}, mobile_app_pixel: {} } }, { domain: 'light', services: { turn_on: {} } }]);
     if (path.startsWith('/api/services/notify/')) return send(200, []);
+    const todo = path.match(/^\/api\/services\/todo\/(\w+)(\?return_response)?$/);
+    if (todo) {
+      const data = JSON.parse(body || '{}');
+      const list = fake.todos.get(data.entity_id);
+      if (!list) return send(400, { message: `Entity ${data.entity_id} not found` });
+      const find = (item: string) => list.find(i => i.uid === item) ?? list.find(i => i.summary === item);
+      switch (todo[1]) {
+        case 'get_items':
+          return todo[2] ? send(200, { changed_states: [], service_response: { [data.entity_id]: { items: list } } }) : send(400, { message: 'needs return_response' });
+        case 'add_item':
+          // Like the shopping list: no dates on lists whose name says so.
+          if (data.entity_id.includes('shopping') && (data.due_date || data.due_datetime || data.description)) return send(400, { message: 'not supported' });
+          list.push({ uid: `u${nextUid++}`, summary: data.item, status: 'needs_action', ...(data.due_date || data.due_datetime ? { due: data.due_date ?? data.due_datetime } : {}), ...(data.description ? { description: data.description } : {}) });
+          return send(200, []);
+        case 'update_item': {
+          const item = find(data.item);
+          if (!item) return send(400, { message: 'item not found' });
+          if (data.rename) item.summary = data.rename;
+          if (data.status) item.status = data.status;
+          return send(200, []);
+        }
+        case 'remove_item':
+          for (const uid of [data.item].flat()) { const i = list.findIndex(x => x.uid === uid); if (i >= 0) list.splice(i, 1); }
+          return send(200, []);
+      }
+    }
     if (m && req.method === 'POST') { fake.states.set(decodeURIComponent(m[1]), JSON.parse(body)); return send(200, {}); }
     if (m) return fake.states.has(decodeURIComponent(m[1])) ? send(200, fake.states.get(decodeURIComponent(m[1]))) : send(404, {});
     if (path === '/api/calendars') return send(200, [...fake.calendars.keys()].map(id => ({ entity_id: id, name: id.split('.')[1] })));

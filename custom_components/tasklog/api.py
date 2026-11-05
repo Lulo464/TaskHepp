@@ -62,3 +62,7 @@ class TasklogApi:
 
     async def delete_ticket(self, ticket_id: int) -> None:
         await self._request("DELETE", f"/api/tickets/{ticket_id}")
+
+    async def tag_scanned(self, tag_id: str) -> dict[str, Any]:
+        """Hands a scanned Home Assistant tag to Tasklog, which runs the linked action (or remembers it for linking)."""
+        return await self._request("POST", "/api/tags/ha", {"tagId": tag_id})

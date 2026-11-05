@@ -4,6 +4,7 @@ import type { AppContext } from '../context.js';
 import { sweepUploads } from '../routes/attachments.js';
 import { exportAll } from '../routes/system.js';
 import { checkAutoClose } from './autoClose.js';
+import { syncHaTodos } from './haTodo.js';
 import { syncDueSources } from './calendars.js';
 import { checkPresence } from './presence.js';
 import { applyRetention } from './privacy.js';
@@ -62,6 +63,11 @@ export const jobs: Record<string, Job> = {
 
   pollMail: async ctx => {
     await ctx.mail.pollDue();
+  },
+
+  /** Areas linked to a Home Assistant to-do list (Admin → Home Assistant). */
+  syncHaTodos: async ctx => {
+    await syncHaTodos(ctx);
   },
 
   syncCalendars: async ctx => {
@@ -175,6 +181,8 @@ export function startJobs(ctx: AppContext, onError: (job: string, err: unknown) 
     }
     busy = false;
   };
+  // Changes in Tasklog reach linked to-do lists within seconds, not only on the next tick.
+  ctx.publisher.onChange(() => syncHaTodos(ctx));
   const interval = setInterval(() => void tick(), 60_000);
   void tick();
   ctx.jobsActive = () => Object.keys(jobs).length;

@@ -1,4 +1,5 @@
 import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { enqueue, flush, localAnswer, mustWait, offlineEnabled, overlay, queueable, realPath, remember, setOffline } from './offline';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -17,24 +18,59 @@ export function setOnUnauthorized(handler: () => void) {
   onUnauthorized = handler;
 }
 
-/** JSON (or text) request against the Tasklog API. A 401 sends the browser to the login. */
-export async function api<T>(path: string, init: { method?: string; body?: unknown; text?: boolean; noLoginRedirect?: boolean } = {}): Promise<T> {
-  const res = await fetch(path, {
-    method: init.method ?? 'GET',
-    credentials: 'same-origin',
-    headers: init.body === undefined ? undefined : { 'Content-Type': 'application/json' },
-    body: init.body === undefined ? undefined : JSON.stringify(init.body),
-  });
+/** How long a change may take before the app treats Tasklog as unreachable and keeps it for later. */
+const CHANGE_TIMEOUT_MS = 10_000;
+
+/**
+ * JSON (or text) request against the Tasklog API. A 401 sends the browser to the login.
+ * In the app, changes made without a connection wait in the outbox (see offline.ts).
+ */
+export async function api<T>(rawPath: string, init: { method?: string; body?: unknown; text?: boolean; noLoginRedirect?: boolean } = {}): Promise<T> {
+  const method = init.method ?? 'GET';
+  const path = realPath(rawPath);
+  if (method === 'GET' && !init.text) {
+    const local = localAnswer(path);
+    if (local.found) return local.data as T;
+  }
+  if (method !== 'GET' && mustWait(method, path)) {
+    const answer = enqueue(method, path, init.body);
+    void flush();
+    return answer as T;
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(path, {
+      method,
+      credentials: 'same-origin',
+      headers: init.body === undefined ? undefined : { 'Content-Type': 'application/json' },
+      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+      signal: method === 'GET' || !offlineEnabled() ? undefined : AbortSignal.timeout(CHANGE_TIMEOUT_MS),
+    });
+  } catch {
+    if (!offlineEnabled()) throw new ApiError(0, 'Tasklog ist nicht erreichbar');
+    setOffline(true);
+    if (queueable(method, path)) return enqueue(method, path, init.body) as T;
+    throw new ApiError(0, method === 'GET' ? 'Offline – diese Daten sind auf dem Gerät noch nicht gespeichert' : 'Offline – das geht erst wieder mit Verbindung');
+  }
+  const cachedCopy = res.headers.get('X-Tasklog-Offline') === '1';
+  if (offlineEnabled()) setOffline(cachedCopy, res.headers.get('X-Tasklog-Cached-At'));
   if (res.status === 401 && !init.noLoginRedirect) {
     onUnauthorized();
     throw new ApiError(401, 'Nicht angemeldet');
   }
   if (!res.ok) {
     const data = await res.json().catch(() => null);
-    throw new ApiError(res.status, data?.error ?? `${res.status} ${res.statusText}`);
+    throw new ApiError(cachedCopy ? 0 : res.status, data?.error ?? `${res.status} ${res.statusText}`);
   }
   if (res.status === 204) return undefined as T;
-  return (init.text ? res.text() : res.json()) as Promise<T>;
+  if (init.text) return res.text() as Promise<T>;
+  const data = (await res.json()) as T;
+  if (method === 'GET') {
+    remember(path, data);
+    return overlay(path, data);
+  }
+  return data;
 }
 
 interface ApiState {

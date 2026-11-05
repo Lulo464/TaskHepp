@@ -31,6 +31,17 @@ const ticketInput = z.object({
   }).nullable().optional(),
 });
 
+/** When it happened, for changes the app made offline and sends later: within the last 7 days, never in the future. */
+const happenedAt = z.iso.datetime({ offset: true }).optional().transform((v, ctx) => {
+  if (!v) return null;
+  const at = new Date(v);
+  if (Date.now() - at.getTime() > 7 * 24 * 3600_000) {
+    ctx.addIssue({ code: 'custom', message: 'Zeitpunkt liegt mehr als 7 Tage zurück' });
+    return z.NEVER;
+  }
+  return at.getTime() > Date.now() ? null : at;
+});
+
 const listQuery = z.object({
   q: z.string().optional(),
   areaId: z.coerce.number().int().optional(),
@@ -280,29 +291,35 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
   /** The signed-in user's own tracked time: today, this week per day, per area, and the top tickets. */
   app.get('/api/me/time', async req => {
     const uid = userId(req);
-    // Minutes of entry e inside [from, from + span), running timers counted up to now.
+    // Seconds of entry e inside [from, from + span), running timers counted up to now.
     const clipped = (from: string, span: string) =>
-      `GREATEST(extract(epoch FROM (LEAST(COALESCE(e.ended_at, now()), now(), ${from} + interval '${span}') - GREATEST(e.started_at, ${from}))), 0) / 60`;
+      `GREATEST(extract(epoch FROM (LEAST(COALESCE(e.ended_at, now()), now(), ${from} + interval '${span}') - GREATEST(e.started_at, ${from}))), 0)`;
     // Own entries, without the areas the user hid in the app.
     const mine = `e.user_id IS NOT DISTINCT FROM $1 AND NOT EXISTS (
       SELECT 1 FROM tickets ht JOIN users hu ON hu.id = $1 WHERE ht.id = e.ticket_id AND ht.area_id = ANY(hu.hidden_areas))`;
     const week = "date_trunc('week', now())";
     const today = "date_trunc('day', now())";
+    // Minutes for the views, seconds for "to the second".
+    const withMinutes = <T extends { seconds: number }>(r: T) => ({ ...r, minutes: Math.round(r.seconds / 60) });
+    const total = (rows: { seconds: number }[]) => {
+      const seconds = rows.reduce((s, r) => s + r.seconds, 0);
+      return { total: Math.round(seconds / 60), totalSeconds: seconds };
+    };
 
-    const { rows: days } = await db.query<{ date: string; minutes: number }>(
+    const { rows: days } = await db.query<{ date: string; seconds: number }>(
       `SELECT d::date::text AS date,
-              COALESCE((SELECT round(sum(${clipped('d', '1 day')}))::int FROM time_entries e WHERE ${mine}), 0) AS minutes
+              COALESCE((SELECT round(sum(${clipped('d', '1 day')}))::int FROM time_entries e WHERE ${mine}), 0) AS seconds
          FROM generate_series(${week}, ${week} + interval '6 days', interval '1 day') d ORDER BY d`,
       [uid],
     );
-    const perArea = async (from: string, span: string) => (await db.query<{ name: string; icon: string; minutes: number }>(
-      `SELECT a.name, a.icon, round(sum(${clipped(from, span)}))::int AS minutes
+    const perArea = async (from: string, span: string) => (await db.query<{ name: string; icon: string; seconds: number }>(
+      `SELECT a.name, a.icon, round(sum(${clipped(from, span)}))::int AS seconds
          FROM time_entries e JOIN tickets t ON t.id = e.ticket_id JOIN areas a ON a.id = t.area_id
         WHERE ${mine} GROUP BY a.id ORDER BY a.position, a.id`,
       [uid],
-    )).rows.filter(r => r.minutes > 0);
-    const { rows: top } = await db.query<{ id: number; title: string; minutes: number }>(
-      `SELECT t.id, t.title, round(sum(${clipped(week, '7 days')}))::int AS minutes
+    )).rows.filter(r => r.seconds > 0).map(withMinutes);
+    const { rows: top } = await db.query<{ id: number; title: string; seconds: number }>(
+      `SELECT t.id, t.title, round(sum(${clipped(week, '7 days')}))::int AS seconds
          FROM time_entries e JOIN tickets t ON t.id = e.ticket_id
         WHERE ${mine} GROUP BY t.id ORDER BY 3 DESC, t.id LIMIT 5`,
       [uid],
@@ -310,9 +327,9 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
 
     const todayAreas = await perArea(today, '1 day');
     return {
-      today: { total: todayAreas.reduce((s, r) => s + r.minutes, 0), byArea: todayAreas },
-      week: { total: days.reduce((s, d) => s + d.minutes, 0), days, byArea: await perArea(week, '7 days') },
-      top: top.filter(r => r.minutes > 0),
+      today: { ...total(todayAreas), byArea: todayAreas },
+      week: { ...total(days), days: days.map(withMinutes), byArea: await perArea(week, '7 days') },
+      top: top.filter(r => r.seconds > 0).map(withMinutes),
     };
   });
 
@@ -331,30 +348,31 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
 
   app.post('/api/tickets/:id/timer', { config: { access: 'member' } }, async req => {
     const { id } = parse(idParam, req.params);
+    const { at } = parse(z.object({ at: happenedAt }), req.body ?? {});
     if (!(await getTicket(db, id))) throw notFound('Ticket nicht gefunden');
     const s = await ctx.settings.get();
-    await withTransaction(db, c => startTimer(c, id, userId(req), { single: s.timeRules.singleTimer, rounding: s.rounding }));
+    await withTransaction(db, c => startTimer(c, id, userId(req), { single: s.timeRules.singleTimer, rounding: s.rounding }, at));
     publisher.schedule();
     return getTicket(db, id);
   });
 
   app.post('/api/timer/stop', { config: { access: 'member' } }, async req => {
-    const body = parse(z.object({ ticketId: z.number().int().optional() }).default({}), req.body ?? {});
+    const body = parse(z.object({ ticketId: z.number().int().optional(), at: happenedAt }), req.body ?? {});
     const uid = userId(req);
     const s = await ctx.settings.get();
     const params: unknown[] = [uid];
     let where = 'user_id IS NOT DISTINCT FROM $1';
     if (body.ticketId) { params.push(body.ticketId); where += ' AND ticket_id = $2'; }
-    const stopped = await stopEntries(db, where, params, s.rounding);
+    const stopped = await stopEntries(db, where, params, s.rounding, body.at);
     publisher.schedule();
     return { stopped };
   });
 
   app.post('/api/tickets/:id/time', { config: { access: 'member' } }, async (req, reply) => {
     const { id } = parse(idParam, req.params);
-    const { minutes } = parse(z.object({ minutes: z.number().int().min(1).max(24 * 60) }), req.body);
+    const { minutes, at } = parse(z.object({ minutes: z.number().int().min(1).max(24 * 60), at: happenedAt }), req.body);
     if (!(await getTicket(db, id))) throw notFound('Ticket nicht gefunden');
-    await addManualTime(db, id, userId(req), minutes);
+    await addManualTime(db, id, userId(req), minutes, at);
     publisher.schedule();
     reply.code(201);
     return getTicket(db, id);

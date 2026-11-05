@@ -14,10 +14,20 @@ export class Publisher {
 
   constructor(private db: Queryable, private ha: HomeAssistant, private log: EventLog, private debounceMs = 2000) {}
 
+  private changeListeners: (() => Promise<void>)[] = [];
+
+  /** Also run after data changed, e.g. to bring linked to-do lists in step without waiting for the next minute. */
+  onChange(listener: () => Promise<void>) {
+    this.changeListeners.push(listener);
+  }
+
   /** Debounced publish after data changed. */
   schedule() {
     clearTimeout(this.timer);
-    this.timer = setTimeout(() => void this.publishAll().catch(() => {}), this.debounceMs);
+    this.timer = setTimeout(() => {
+      void this.publishAll().catch(() => {});
+      for (const l of this.changeListeners) void l().catch(() => {});
+    }, this.debounceMs);
     this.timer.unref?.();
   }
 

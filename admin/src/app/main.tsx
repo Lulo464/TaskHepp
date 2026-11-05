@@ -8,11 +8,14 @@ import '../styles/app.css';
 import './pwa.css';
 import '../i18n';
 import { ApiProvider } from '../lib/api';
+import { enableOffline } from '../lib/offline';
 import { PwaApp } from './PwaApp';
 import { captureShare } from './quickAdd';
 
 // "Teilen → Tasklog" on Android arrives as /share?text=…; keep it and continue on the new-ticket screen.
 captureShare();
+// Changes made without a connection wait on the device and are sent later.
+enableOffline();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -7,6 +7,20 @@ export function formatMinutes(minutes: number): string {
   return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')} h`;
 }
 
+/** Whether times are kept to the second (Admin → System: no rounding); set once the setting is known. */
+let exactTime = false;
+export function setExactTime(exact: boolean) {
+  exactTime = exact;
+}
+export const isExactTime = () => exactTime;
+
+/** Tracked time: "1:30 h", or "1:30:05 h" when times are kept to the second. */
+export function formatTracked(t: { minutes: number; seconds?: number }): string {
+  if (!exactTime || t.seconds === undefined) return formatMinutes(t.minutes);
+  const s = Math.max(0, Math.round(t.seconds));
+  return `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')} h`;
+}
+
 const dayDiff = (iso: string) => {
   const [y, m, d] = iso.split('-').map(Number);
   const today = new Date();

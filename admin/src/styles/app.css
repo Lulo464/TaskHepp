@@ -280,3 +280,9 @@ button.tag:focus-visible { outline: 2px solid var(--color-accent); outline-offse
 .editor .seg-btn.seg-fill { flex: 1 1 auto; }
 
 .legal-edit { font-size: 12px; line-height: 1.5; min-height: 320px; }
+
+/* — HA to-do lists per area — */
+.todo-link-row { gap: 12px; padding: 12px 0; }
+.todo-link-row > i { font-size: 20px; color: var(--color-accent); flex: none; }
+.todo-link-row select { width: min(320px, 45%); flex: none; }
+.todo-link-error { color: #f0a477; }

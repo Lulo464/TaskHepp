@@ -31,6 +31,8 @@ export interface Ticket {
   assigneeId: number | null;
   assignee: string | null;
   minutes: number;
+  /** Exact tracked time, for "to the second". */
+  seconds: number;
   running: boolean;
   createdAt: string;
   doneAt: string | null;
@@ -156,7 +158,8 @@ export interface Settings {
   monitorInterval: 15 | 30 | 60;
   monitorToken: string;
   timeRules: { autoStop: boolean; longTimer: boolean; singleTimer: boolean };
-  rounding: 0 | 5 | 15;
+  /** Minutes a stopped timer is rounded up to; 0 = to the second. */
+  rounding: number;
   enforceSignature: boolean;
   webhookId: string;
   ha: { url: string; hasToken: boolean };
@@ -182,6 +185,7 @@ export interface SystemInfo {
   timezone: string;
   lastBackupAt: string | null;
   monitorUrl: string;
+  exactTime: boolean;
 }
 
 export interface Overview {
@@ -201,6 +205,8 @@ export interface MonitorData {
   widgets: Settings['widgets'];
   openTickets: number;
   todayMinutes: number;
+  todaySeconds: number;
+  exactTime: boolean;
   timer: { title: string; area: string; source: string; startedAt: string; user: string | null } | null;
   next: MonitorItem[];
   later: MonitorItem[];
@@ -265,9 +271,9 @@ export interface HistoryEvent {
 }
 
 export interface MyTime {
-  today: { total: number; byArea: { name: string; icon: string; minutes: number }[] };
-  week: { total: number; days: { date: string; minutes: number }[]; byArea: { name: string; icon: string; minutes: number }[] };
-  top: { id: number; title: string; minutes: number }[];
+  today: { total: number; totalSeconds: number; byArea: { name: string; icon: string; minutes: number; seconds: number }[] };
+  week: { total: number; totalSeconds: number; days: { date: string; minutes: number; seconds: number }[]; byArea: { name: string; icon: string; minutes: number; seconds: number }[] };
+  top: { id: number; title: string; minutes: number; seconds: number }[];
 }
 
 export interface AuthInfo {
@@ -354,4 +360,33 @@ export interface MailImportEntry {
 export interface Person {
   id: number;
   name: string;
+}
+
+/** An NFC tag (or QR code): scanning it closes a ticket, starts/stops its timer or creates a ticket. */
+export interface Tag {
+  id: number;
+  code: string;
+  name: string;
+  action: 'done' | 'timer' | 'create';
+  ticketId: number | null;
+  ticket: string | null;
+  ticketStatus: TicketStatus | null;
+  title: string | null;
+  areaId: number | null;
+  area: string | null;
+  prio: Prio;
+  haTagId: string | null;
+  scans: number;
+  lastScanAt: string | null;
+  lastScanBy: string | null;
+}
+
+export interface TagScan {
+  tag: string;
+  tagId: number;
+  action: Tag['action'];
+  result: 'done' | 'alreadyDone' | 'started' | 'stopped' | 'created' | 'exists' | 'missing';
+  ticketId?: number;
+  title?: string;
+  followupId?: number | null;
 }

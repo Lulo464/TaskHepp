@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Assignee } from './Assignee';
 import { Icon, Loading } from '../../components/ui';
 import { del, patch, post, useAction, useApi } from '../../lib/api';
-import { formatDue, formatMinutes, formatTime, isOverdue } from '../../lib/format';
+import { formatDue, formatTime, formatTracked, isOverdue } from '../../lib/format';
 import type { HistoryEvent, Me, Ticket, TicketStatus } from '../../lib/types';
 import { href, navigate } from '../router';
 import { clock, useNow, type Timers } from '../timer';
@@ -11,6 +11,7 @@ import { Checklist } from './Checklist';
 import { Photos } from './Photos';
 import { RepeatPicker } from './Repeat';
 import { Snooze } from './Snooze';
+import { TicketTags } from './Tags';
 import { TicketNotes } from './TicketNotes';
 import { TicketText } from './TicketText';
 
@@ -65,6 +66,7 @@ export function TicketDetail({ id, me, timers, canEdit }: { id: number; me: Me; 
         <RepeatPicker value={ticket.recurrence} due={ticket.due} disabled={!canEdit} onChange={recurrence => act(() => patch(`/api/tickets/${id}`, { recurrence }))} />
       )}
       <AutoClose ticket={ticket} canEdit={canEdit} />
+      <TicketTags ticket={ticket} canEdit={canEdit} />
       {ticket.followupId && (
         <a className="btn btn-ghost pwa-followup" href={href({ name: 'ticket', id: ticket.followupId })}><Icon name="arrow-right" /> {t('repeat.next')}</a>
       )}
@@ -81,13 +83,13 @@ export function TicketDetail({ id, me, timers, canEdit }: { id: number; me: Me; 
         {running ? (
           <>
             {/* The total from the server already includes the running session up to the last load. */}
-            <div className="pwa-label">{t('app.detail.trackedRunning', { total: formatMinutes(ticket.minutes) })}</div>
+            <div className="pwa-label">{t('app.detail.trackedRunning', { total: formatTracked(ticket) })}</div>
             <div className="pwa-time-value pwa-num">{clock(now - Date.parse(running.startedAt))}</div>
           </>
         ) : (
           <>
             <div className="pwa-label">{t('app.detail.tracked')}</div>
-            <div className="pwa-time-value pwa-num">{formatMinutes(ticket.minutes)}</div>
+            <div className="pwa-time-value pwa-num">{formatTracked(ticket)}</div>
           </>
         )}
         {canEdit && (

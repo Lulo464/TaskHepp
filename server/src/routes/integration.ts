@@ -2,7 +2,8 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AppContext } from '../context.js';
 import { hmacSha256, randomToken, safeEqual } from '../lib/crypto.js';
-import { HttpError, notFound, parse } from '../lib/http.js';
+import { HttpError, idParam, notFound, parse } from '../lib/http.js';
+import { OWN_LISTS, syncHaTodos } from '../services/haTodo.js';
 import { enabledEntities, entityCalculators } from '../services/entities.js';
 import { webhookBodySchema } from '../services/webhook.js';
 import { dashboardYaml, homeAssistantYaml, tasklogYaml } from '../services/yaml.js';
@@ -96,6 +97,55 @@ export function integrationRoutes(app: FastifyInstance, ctx: AppContext) {
       .filter(s => !/^(zone|sun|weather|update|automation|script|scene|conversation|tts|stt|event|button|todo|calendar)\./.test(s.entity_id))
       .map(s => ({ id: s.entity_id, name: String(s.attributes.friendly_name ?? s.entity_id), state: s.state }))
       .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  });
+
+  // — to-do lists linked to areas —
+
+  /** Each area with its linked list, and the lists Home Assistant has. */
+  app.get('/api/ha/todo-links', async () => {
+    const { rows: areas } = await ctx.db.query(
+      `SELECT a.id, a.name, a.icon, a.ha_todo_entity AS entity, a.ha_todo_synced_at AS "syncedAt", a.ha_todo_error AS error,
+              (SELECT count(*)::int FROM ha_todo_links l WHERE l.area_id = a.id AND l.entity = a.ha_todo_entity) AS linked
+         FROM areas a ORDER BY a.position, a.id`,
+    );
+    let lists: { id: string; name: string; open: number }[] = [];
+    let haError: string | null = null;
+    if (await ctx.ha.isConfigured()) {
+      try {
+        lists = (await ctx.ha.listStates())
+          .filter(s => s.entity_id.startsWith('todo.') && !OWN_LISTS.test(s.entity_id))
+          .map(s => ({ id: s.entity_id, name: String(s.attributes.friendly_name ?? s.entity_id), open: Number(s.state) || 0 }))
+          .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+      } catch (err) {
+        haError = (err as Error).message;
+      }
+    }
+    return { configured: await ctx.ha.isConfigured(), haError, lists, areas };
+  });
+
+  app.put('/api/areas/:id/ha-todo', async req => {
+    const { id } = parse(idParam, req.params);
+    const { entity } = parse(z.object({
+      entity: z.string().regex(/^todo\.[a-z0-9_]+$/, 'Eine To-do-Liste aus Home Assistant, z. B. todo.einkaufsliste').nullable(),
+    }), req.body);
+    if (entity && OWN_LISTS.test(entity)) throw new HttpError(400, 'Das ist eine Liste der Tasklog-Integration selbst; sie zeigt den Bereich schon');
+    if (entity) {
+      const { rows: [other] } = await ctx.db.query<{ name: string }>('SELECT name FROM areas WHERE ha_todo_entity = $1 AND id <> $2', [entity, id]);
+      if (other) throw new HttpError(409, `Diese Liste ist schon mit „${other.name}“ verknüpft`);
+    }
+    const { rowCount } = await ctx.db.query(
+      'UPDATE areas SET ha_todo_entity = $2, ha_todo_synced_at = NULL, ha_todo_error = NULL WHERE id = $1', [id, entity],
+    );
+    if (!rowCount) throw notFound('Bereich nicht gefunden');
+    // Another list (or none) starts fresh; tickets and items themselves stay.
+    await ctx.db.query('DELETE FROM ha_todo_links WHERE area_id = $1 AND entity IS DISTINCT FROM $2', [id, entity]);
+    if (entity) await syncHaTodos(ctx);
+    return { ok: true };
+  });
+
+  app.post('/api/ha/todo-links/sync', async () => {
+    await syncHaTodos(ctx);
+    return { ok: true };
   });
 
   app.post('/api/ha/test', async () => {

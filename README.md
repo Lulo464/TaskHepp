@@ -34,6 +34,16 @@ Die App unter `<PUBLIC_URL>/` ist eine PWA:
 
 Danach startet Tasklog im Vollbild mit eigenem Icon, wie eine normale App.
 
+**Zeitraster:** Unter Admin → System → *Runden auf* stellst du ein, wie gestoppte Timer gerundet werden. Wählbar sind 5, 10, 15 oder 30 Minuten, oder unter *Eigener Takt* jede Zahl von 1 bis 480 Minuten (z. B. 6 für Zehntelstunden). Mit **Sekundengenau** wird nicht gerundet: App, Admin, Berichte und Tagesmonitor zeigen Zeiten dann als `1:23:45 h`, und der CSV-Bericht enthält Dauer, Sekunden und Stunden mit vier Nachkommastellen. Die Rundung gilt beim Stoppen. Schon erfasste Zeiten ändern sich nicht.
+
+**Offline:** Die App merkt sich, was sie zuletzt geladen hat, und funktioniert auch ohne Verbindung, im Keller, im Garten oder wenn der Server gerade neu startet. Oben steht dann „Offline · Stand 12:00“. Du kannst trotzdem:
+- Tickets anlegen (auch per Schnelleingabe) und abhaken
+- Titel, Datum, Bereich und Zuweisung ändern
+- Notizen schreiben, Checklisten abhaken und Zeit nachtragen
+- Timer starten und stoppen. Die Uhrzeit zählt ab dem Moment, in dem du tippst, nicht ab dem Senden.
+
+Die Änderungen warten auf dem Gerät („3 Änderungen warten“) und gehen der Reihe nach raus, sobald Tasklog wieder antwortet. Was Tasklog ablehnt, meldet die App. Fotos, Einstellungen und der Admin-Bereich brauchen eine Verbindung. Beim Abmelden löscht die App die gespeicherten Daten vom Gerät.
+
 Der Tab **Planung** zeigt die offenen Tickets der nächsten 7 Tage nach Tag, darüber die überfälligen. Tickets ohne Datum stehen unter **Ungeplant**, am Desktop als Spalte daneben. Zum Einplanen ziehst du ein Ticket auf einen Tag (am Handy kurz gedrückt halten) oder nimmst das Kalender-Symbol. Zurück auf „Ungeplant“ gezogen verliert es sein Datum. „Meine“ zeigt nur die eigenen Tickets.
 
 Auf der Ticket-Seite lassen sich **Notizen** anhängen, z. B. „Ersatzteil bestellt, kommt Freitag“. Jede Notiz zeigt, wer sie wann geschrieben hat. Alle sehen die Notizen, Mitglieder und Admins schreiben sie, und löschen darf jeder seine eigenen (Admins alle).
@@ -60,7 +70,7 @@ Auf der Ticket-Seite wählst du aus, **wem ein Ticket zugewiesen** ist, oder üb
 
 **Bei Ankunft erinnern:** Unter **Mehr → Bei Ankunft erinnern** legt jeder Benutzer fest: Wenn *Person* (aus Home Assistant) in *Zone* ankommt, schicke an *notify.mobile_app_…*, was im *Bereich* heute ansteht. Überfälliges ist dabei, Tickets anderer Personen nicht, Tickets ohne Datum auf Wunsch. Tasklog prüft jede Minute, schickt pro Ankunft eine Nachricht (höchstens alle 30 Minuten, nicht in den Ruhezeiten) und öffnet beim Antippen die App. Mit „Jetzt testen“ lässt sich das sofort ausprobieren.
 
-**Welche Bereiche du siehst:** Oben in Heute, Tickets, Planung und Zeit steht eine Leiste mit den Bereichen. Tippst du bei „Alle“ auf einen Bereich, siehst du nur noch diesen. Weitere Bereiche tippst du dazu oder wieder weg, und „Alle“ zeigt wieder alles. Die Auswahl gilt sofort überall: in allen Ansichten, bei „Neu“, im Kalender-Abo und bei den Ankunfts-Erinnerungen. Es ist dieselbe Einstellung wie Mehr → Bereiche.
+**Welche Bereiche du siehst:** Oben in Heute, Tickets, Planung und Zeit steht eine Leiste mit den Bereichen. Ein Tipp auf einen Bereich zeigt nur diesen, ein Tipp auf einen anderen wechselt direkt dorthin, und ein zweiter Tipp auf denselben oder „Alle“ zeigt wieder alles. Um mehrere Bereiche zu kombinieren, drückst du lange auf einen Bereich (am Desktop: Strg/⌘-Klick). Das nimmt ihn dazu oder wählt ihn ab. Die Auswahl gilt sofort überall: in allen Ansichten, bei „Neu“, im Kalender-Abo und bei den Ankunfts-Erinnerungen. Es ist dieselbe Einstellung wie Mehr → Bereiche.
 
 **Ticket bearbeiten:** Auf der Ticket-Seite macht der Stift neben dem Titel Titel, Beschreibung, Bereich und Projekt bearbeitbar. Wechselt der Bereich, fällt ein Projekt des alten Bereichs weg. Speichern geht per Knopf oder Strg+Enter, Escape bricht ab.
 
@@ -141,6 +151,15 @@ Erinnerungen gehen an die zugewiesene Person, sonst an alle, die den Bereich seh
 - Tickets entstehen nur bis zu 14 Tage im Voraus. Ist der Abfuhrtag vorbei, wird das Ticket automatisch erledigt.
 - Ein gelöschtes Ticket wird nicht neu angelegt.
 
+**Vorhandene To-do-Listen verknüpfen (ohne Installation in HA):** Unter **Admin → Home Assistant → Verbindung → To-do-Listen verknüpfen** wählst du pro Bereich eine To-do-Liste, die es in Home Assistant schon gibt, z. B. die Einkaufsliste, eine „Lokale To-do-Liste“ oder Google Tasks bzw. Todoist, wenn sie in HA eingebunden sind. Danach gleicht Tasklog jede Minute ab und wenige Sekunden nach Änderungen in Tasklog:
+- Neues in der HA-Liste wird ein Ticket im Bereich (mit Datum, falls vorhanden). Offene Tickets des Bereichs landen in der Liste, mit Datum und Uhrzeit, soweit die Liste das kann.
+- Abhaken und Umbenennen kommt auf der jeweils anderen Seite an. Gewinner ist die Seite, die sich seit dem letzten Abgleich geändert hat.
+- In HA entfernt → das Ticket wird erledigt. In Tasklog gelöscht → der Eintrag verschwindet aus der Liste.
+- Beim ersten Verknüpfen werden gleichnamige Einträge zusammengeführt statt doppelt angelegt. Erledigte Tickets und abgehakte Einträge werden nicht neu übertragen.
+- Fehler (z. B. Liste gelöscht) stehen direkt beim Bereich und im Protokoll. Eine Liste gehört zu genau einem Bereich. Die eigenen Listen der Tasklog-Integration (`todo.tasklog_…`) lassen sich nicht verknüpfen, sie zeigen den Bereich ja schon.
+
+Braucht Home Assistant 2024.8 oder neuer. Die Tasklog-Integration unten ist die Alternative, wenn du statt eigener Listen für jeden Bereich eine fertige Tasklog-Liste in HA willst.
+
 **Tasklog als To-do-Liste in Home Assistant:** Die Integration in `custom_components/tasklog` macht aus jedem Bereich eine HA-To-do-Liste (`todo.tasklog_zuhause` …). Abhaken, Anlegen (mit Datum, Uhrzeit, Beschreibung), Umbenennen und Löschen in Home Assistant landet sofort in Tasklog, auch per Sprachassistent. Erledigte Tickets bleiben zwei Tage abgehakt sichtbar.
 1. In Tasklog ein API-Token mit dem Recht `tickets:write` anlegen.
 2. In HACS → Integrationen → ⋮ → *Benutzerdefinierte Repositories* dieses Repository als *Integration* hinzufügen und „Tasklog“ installieren. Alternativ den Ordner `custom_components/tasklog` ins config-Verzeichnis von Home Assistant kopieren.
@@ -148,6 +167,16 @@ Erinnerungen gehen an die zugewiesene Person, sonst an alle, die den Bereich seh
 4. **Dashboard-Karte:** Admin → Konfiguration → *Dashboard-Karte* liefert das YAML mit HAs eingebauter To-do-Karte für jeden Bereich.
 
 **Automatisch erledigen:** Auf der Ticket-Seite unter *Automatisch erledigen, wenn …* eine Entität und einen Zustand wählen, z. B. `sensor.waschmaschine` wechselt zu `idle`. Tasklog prüft jede Minute. Es zählt der Wechsel: Ist die Maschine schon „idle“, erledigt sich das Ticket nach ihrem nächsten Lauf. Wiederkehrende Tickets nehmen die Bedingung mit.
+
+**NFC-Tags:** Ein Aufkleber an der Mülltonne, Waschmaschine oder am Schreibtisch. Hält man das Handy daran, macht Tasklog eins von drei Dingen:
+- **Erledigen:** schließt das Ticket. Bei wiederkehrenden Tickets wirkt der Tag danach auf das nächste der Serie.
+- **Timer:** startet den Timer für die Person, die scannt, und stoppt ihn beim nächsten Scan.
+- **Ticket anlegen:** legt ein Ticket für heute an, z. B. „Entkalken“. Solange es offen ist, entsteht kein zweites.
+
+Anlegen auf der Ticket-Seite (*NFC-Tag für dieses Ticket …*) oder unter **Mehr → NFC-Tags**. Auf den Tag kommt ein Link `…/#/tag/<code>`. Chrome auf Android schreibt ihn direkt aus der App („Auf NFC-Tag schreiben“). Sonst kopierst du den Link in eine App wie „NFC Tools“ oder druckst den **QR-Code** aus. Nach dem Scan zeigt die App, was passiert ist, mit **Rückgängig**. Erneutes Laden scannt nicht nochmal.
+- **iPhone:** Das iPhone liest den Link auch, öffnet ihn aber in Safari, wo man einmal angemeldet sein muss. Alternativ über die Home-Assistant-App.
+- **Home-Assistant-Tags:** Mit der Tasklog-Integration (ab 1.1) meldet HA jeden `tag_scanned` an Tasklog. Im Tag unter *Mit der Home-Assistant-App scannen* auf „Jetzt scannen“ tippen und den Tag mit der HA-App scannen: Tasklog übernimmt die ID. Timer laufen dann für die Person, der das Ticket zugewiesen ist.
+- Geeignet sind NTAG213/215/216-Aufkleber, auf Metall „On-Metal“-Tags.
 
 Die Tests der Integration laufen gegen ein echtes Tasklog: `TASKLOG_URL=… TASKLOG_TOKEN=… pytest -c ha-tests/pytest.ini ha-tests` (mit `pytest-homeassistant-custom-component`).
 

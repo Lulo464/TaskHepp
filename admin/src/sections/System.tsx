@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Field, Icon, Loading, Note, Seg, ToggleList, ToggleRow } from '../components/ui';
 import { api, del, patch, post, put, useAction, useApi } from '../lib/api';
@@ -65,15 +65,7 @@ export function System() {
             items={TIME_RULES.map(k => ({ title: t(`system.timeRule.${k}.title`), desc: t(`system.timeRule.${k}.desc`), on: settings.timeRules[k] }))}
             onToggle={i => save({ timeRules: { [TIME_RULES[i]]: !settings.timeRules[TIME_RULES[i]] } })}
           >
-            <div style={{ padding: '14px 0' }}>
-              <div className="control-label">{t('system.roundTo')}</div>
-              <Seg
-                label={t('system.roundTo')}
-                options={([0, 5, 15] as const).map(n => ({ value: n, label: n ? t('system.roundMin', { n }) : t('system.roundNone') }))}
-                value={settings.rounding}
-                onChange={rounding => save({ rounding })}
-              />
-            </div>
+            <Rounding value={settings.rounding} onChange={rounding => save({ rounding })} />
           </ToggleList>
 
           <div className="card pad" style={{ gap: 14 }}>
@@ -146,5 +138,38 @@ export function System() {
         </div>
       </div>
     </>
+  );
+}
+
+const ROUND_PRESETS = [0, 5, 10, 15, 30];
+
+/** "Runden auf": presets, any number of minutes, or to the second. */
+function Rounding({ value, onChange }: { value: number; onChange: (minutes: number) => void }) {
+  const { t } = useTranslation();
+  const [own, setOwn] = useState(value ? String(value) : '');
+  useEffect(() => setOwn(value ? String(value) : ''), [value]);
+  const n = Number(own);
+  const ownValid = Number.isInteger(n) && n >= 1 && n <= 480;
+  return (
+    <div style={{ padding: '14px 0' }}>
+      <div className="control-label">{t('system.roundTo')}</div>
+      <Seg
+        label={t('system.roundTo')}
+        options={ROUND_PRESETS.map(m => ({ value: m, label: m ? t('system.roundMin', { n: m }) : t('system.roundExact') }))}
+        value={ROUND_PRESETS.includes(value) ? value : -1}
+        onChange={onChange}
+      />
+      <div className="row" style={{ gap: 8, marginTop: 10, alignItems: 'center' }}>
+        <label className="soft" htmlFor="round-own">{t('system.roundOwn')}</label>
+        <input id="round-own" className="input" style={{ width: 90 }} type="number" min={1} max={480} step={1} value={own} placeholder="z. B. 6"
+          onChange={e => setOwn(e.target.value)}
+          onBlur={() => ownValid && n !== value && onChange(n)}
+          onKeyDown={e => e.key === 'Enter' && ownValid && n !== value && onChange(n)} />
+        <span className="soft">{t('system.roundOwnUnit')}</span>
+      </div>
+      <div className="field-hint" style={{ marginTop: 8 }}>
+        {value === 0 ? t('system.roundExactHint') : t('system.roundHint', { n: value })}
+      </div>
+    </div>
   );
 }

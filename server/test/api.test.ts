@@ -601,7 +601,7 @@ describe('app endpoints', () => {
     const ticket = (await call('POST', '/api/tickets', cookie, { title: 'Meine Zeit', areaId: 2 })).json();
     await call('POST', `/api/tickets/${ticket.id}/time`, cookie, { minutes: 30 });
     const time = (await call('GET', '/api/me/time', cookie)).json();
-    expect(time.today).toEqual({ total: 30, byArea: [{ name: 'Zuhause', icon: 'house', minutes: 30 }] });
+    expect(time.today).toEqual({ total: 30, totalSeconds: 1800, byArea: [{ name: 'Zuhause', icon: 'house', minutes: 30, seconds: 1800 }] });
     expect(time.week.days).toHaveLength(7);
     expect(time.week.total).toBe(30);
     expect(time.top[0]).toMatchObject({ title: 'Meine Zeit', minutes: 30 });
@@ -732,5 +732,202 @@ describe('privacy', () => {
     expect(r.tickets).toBeGreaterThanOrEqual(1);
     expect((await call('GET', `/api/tickets/${old.id}`, boss)).statusCode).toBe(404);
     expect((await call('PATCH', '/api/settings', boss, { retention: { logDays: -1 } })).statusCode).toBe(400);
+  });
+});
+
+describe('nfc tags', () => {
+  let anna: string;
+  beforeAll(async () => { anna = await t.login('member'); });
+  const scan = async (code: string, who = anna) => (await call('POST', `/api/tags/scan/${code}`, who)).json();
+
+  it('closes a ticket and follows a repeating series', async () => {
+    const ticket = (await call('POST', '/api/tickets', anna, { title: 'Müll raus', areaId: 2, due: '2030-01-07', recurrence: { every: 1, unit: 'week' } })).json();
+    const tag = (await call('POST', '/api/tags', anna, { name: 'Mülltonne', action: 'done', ticketId: ticket.id })).json();
+    expect(tag.code).toMatch(/^[A-Za-z0-9_-]{12}$/);
+    const first = await scan(tag.code);
+    expect(first).toMatchObject({ tag: 'Mülltonne', action: 'done', result: 'done', ticketId: ticket.id });
+    expect(first.followupId).toBeGreaterThan(ticket.id);
+    // the next scan works on the next ticket of the series
+    const second = await scan(tag.code);
+    expect(second).toMatchObject({ result: 'done', ticketId: first.followupId });
+    const list = (await call('GET', '/api/tags', anna)).json().find((x: { id: number }) => x.id === tag.id);
+    expect(list).toMatchObject({ scans: 2, ticketId: second.followupId, ticketStatus: "open", lastScanBy: expect.any(String) });
+  });
+
+  it('starts and stops the timer for whoever scans', async () => {
+    const ticket = (await call('POST', '/api/tickets', anna, { title: 'Wäsche', areaId: 2 })).json();
+    const tag = (await call('POST', '/api/tags', anna, { name: 'Waschmaschine', action: 'timer', ticketId: ticket.id })).json();
+    expect(await scan(tag.code)).toMatchObject({ action: 'timer', result: 'started' });
+    expect((await call('GET', '/api/timer', anna)).json().map((x: { ticketId: number }) => x.ticketId)).toContain(ticket.id);
+    expect(await scan(tag.code)).toMatchObject({ result: 'stopped' });
+    expect((await call('GET', '/api/timer', anna)).json().map((x: { ticketId: number }) => x.ticketId)).not.toContain(ticket.id);
+  });
+
+  it('creates a ticket once until it is done', async () => {
+    const tag = (await call('POST', '/api/tags', anna, { name: 'Kaffeemaschine', action: 'create', title: 'Entkalken', areaId: 2, prio: 'high' })).json();
+    const made = await scan(tag.code);
+    expect(made).toMatchObject({ action: 'create', result: 'created', title: 'Entkalken' });
+    const ticket = (await call('GET', `/api/tickets/${made.ticketId}`, anna)).json();
+    expect(ticket).toMatchObject({ prio: 'high', area: 'Zuhause', status: 'open', source: 'app' });
+    expect(ticket.due).not.toBeNull();
+    expect(await scan(tag.code)).toMatchObject({ result: 'exists', ticketId: made.ticketId });
+    await call('PATCH', `/api/tickets/${made.ticketId}`, anna, { status: 'done' });
+    expect((await scan(tag.code)).ticketId).not.toBe(made.ticketId);
+  });
+
+  it('checks input and access', async () => {
+    expect((await call('POST', '/api/tags', anna, { name: 'x', action: 'done' })).statusCode).toBe(400);
+    expect((await call('POST', '/api/tags', anna, { name: 'x', action: 'create' })).statusCode).toBe(400);
+    expect((await call('POST', '/api/tags/scan/unbekannt', anna)).statusCode).toBe(404);
+    const ticket = (await call('POST', '/api/tickets', anna, { title: 'Lesen', areaId: 1 })).json();
+    const tag = (await call('POST', '/api/tags', anna, { name: 'Leser', action: 'done', ticketId: ticket.id })).json();
+    const reader2 = await t.login('read');
+    expect((await call('POST', `/api/tags/scan/${tag.code}`, reader2)).statusCode).toBe(403);
+    expect((await call('DELETE', `/api/tags/${tag.id}`, anna)).statusCode).toBe(204);
+    expect((await call('POST', `/api/tags/scan/${tag.code}`, anna)).statusCode).toBe(404);
+  });
+
+  it('takes scans from Home Assistant and learns unknown tags', async () => {
+    const boss = await t.login('admin');
+    const { token } = (await call('POST', '/api/tokens', boss, { name: 'HA', scope: 'tickets:write' })).json();
+    const bearer = { authorization: `Bearer ${token}` };
+    const ha = (body: unknown) => call('POST', '/api/tags/ha', undefined, body, bearer);
+
+    expect((await ha({ tagId: 'ha-1234' })).json()).toEqual({ result: 'unknown' });
+    expect((await call('GET', '/api/tags/ha/last', anna)).json()).toMatchObject({ tagId: 'ha-1234' });
+
+    const ticket = (await call('POST', '/api/tickets', anna, { title: 'Spülmaschine ausräumen', areaId: 2, assigneeId: null })).json();
+    const tag = (await call('POST', '/api/tags', anna, { name: 'Spüler', action: 'done', ticketId: ticket.id, haTagId: 'ha-1234' })).json();
+    expect((await call('GET', '/api/tags/ha/last', anna)).json()).toEqual({ tagId: null });
+    expect((await ha({ tagId: 'ha-1234' })).json()).toMatchObject({ result: 'done', ticketId: ticket.id });
+    expect((await call('GET', `/api/tickets/${ticket.id}`, anna)).json().status).toBe('done');
+    // one Home Assistant tag belongs to one Tasklog tag
+    expect((await call('PATCH', `/api/tags/${tag.id}`, anna, { haTagId: 'ha-1234' })).statusCode).toBe(200);
+    const other = (await call('POST', '/api/tags', anna, { name: 'Zweiter', action: 'done', ticketId: ticket.id, haTagId: 'ha-1234' }));
+    expect(other.statusCode).toBe(409);
+  });
+});
+
+describe('changes sent later by the offline app', () => {
+  it('starts, stops and adds time at the moment it happened', async () => {
+    const who = await t.login('member');
+    const ticket = (await call('POST', '/api/tickets', who, { title: 'Offline-Zeit', areaId: 1 })).json();
+    const ago = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
+    expect((await call('POST', `/api/tickets/${ticket.id}/timer`, who, { at: ago(50) })).statusCode).toBe(200);
+    const [running] = (await call('GET', '/api/timer', who)).json();
+    expect(Math.round((Date.now() - Date.parse(running.startedAt)) / 60_000)).toBe(50);
+    await call('POST', '/api/timer/stop', who, { ticketId: ticket.id, at: ago(20) });
+    await call('POST', `/api/tickets/${ticket.id}/time`, who, { minutes: 10, at: ago(5) });
+    const after = (await call('GET', `/api/tickets/${ticket.id}`, who)).json();
+    expect(after.minutes).toBeGreaterThanOrEqual(40); // 30 tracked (or rounded up) + 10 added
+    expect(after.minutes).toBeLessThanOrEqual(55);
+    expect((await call('POST', `/api/tickets/${ticket.id}/timer`, who, { at: ago(8 * 24 * 60) })).statusCode).toBe(400);
+  });
+});
+
+describe('time rounding', () => {
+  it('rounds to any number of minutes or keeps seconds', async () => {
+    const boss = await t.login('admin');
+    const who = await t.login('member');
+    const ago = (s: number) => new Date(Date.now() - s * 1000).toISOString();
+    const track = async (seconds: number) => {
+      const ticket = (await call('POST', '/api/tickets', who, { title: `Raster ${seconds}`, areaId: 1 })).json();
+      await call('POST', `/api/tickets/${ticket.id}/timer`, who, { at: ago(seconds) });
+      await call('POST', '/api/timer/stop', who, { ticketId: ticket.id });
+      return (await call('GET', `/api/tickets/${ticket.id}`, who)).json();
+    };
+    expect((await call('PATCH', '/api/settings', boss, { rounding: 6 })).statusCode).toBe(200);
+    expect((await track(7 * 60)).minutes).toBe(12); // 7 min → next 6-minute step
+    await call('PATCH', '/api/settings', boss, { rounding: 0 });
+    const exact = await track(95);
+    expect(exact.seconds).toBeGreaterThanOrEqual(95);
+    expect(exact.seconds).toBeLessThan(98);
+    expect((await call('GET', '/api/system', who)).json().exactTime).toBe(true);
+    const csv = (await call('GET', '/api/reports/time?format=csv', boss)).body;
+    expect(csv.split('\r\n')[0]).toContain('Dauer;Sekunden;Stunden');
+    expect((await call('PATCH', '/api/settings', boss, { rounding: 481 })).statusCode).toBe(400);
+    await call('PATCH', '/api/settings', boss, { rounding: 15 });
+  });
+});
+
+describe('home assistant to-do lists linked to areas', () => {
+  it('keeps an area and a list in step, both ways', async () => {
+    const { syncHaTodos } = await import('../src/services/haTodo.js');
+    const boss = await t.login('admin');
+    const ha = await fakeHomeAssistant();
+    await call('PATCH', '/api/settings', boss, { ha: { url: ha.url, token: 'ha-token' } });
+    const area = (await call('POST', '/api/areas', boss, { name: 'Einkauf', icon: 'shopping-cart' })).json();
+    ha.todos.set('todo.einkaufsliste', [
+      { uid: 'a', summary: 'Milch', status: 'needs_action' },
+      { uid: 'b', summary: 'Alt, schon erledigt', status: 'completed' },
+      { uid: 'c', summary: 'Brot', status: 'needs_action', due: '2030-06-01' },
+    ]);
+    ha.states.set('todo.einkaufsliste', { state: '2', attributes: { friendly_name: 'Einkaufsliste' } });
+    ha.states.set('todo.tasklog_zuhause', { state: '3', attributes: {} });
+    const mine = (await call('POST', '/api/tickets', boss, { title: 'Eier', areaId: area.id, due: '2030-06-02', dueTime: '18:00' })).json();
+
+    const offer = (await call('GET', '/api/ha/todo-links', boss)).json();
+    expect(offer.lists.map((l: { id: string }) => l.id)).toEqual(['todo.einkaufsliste']); // not the integration's own lists
+    expect((await call('PUT', `/api/areas/${area.id}/ha-todo`, boss, { entity: 'todo.tasklog_zuhause' })).statusCode).toBe(400);
+    expect((await call('PUT', `/api/areas/${area.id}/ha-todo`, boss, { entity: 'todo.einkaufsliste' })).statusCode).toBe(200);
+
+    // Open items came over, ticked-off ones did not; the ticket went to the list with its date and time.
+    const inArea = async () => (await call('GET', `/api/tickets?areaId=${area.id}`, boss)).json() as { id: number; title: string; status: string; due: string | null; source: string }[];
+    const tickets = await inArea();
+    expect(tickets.map(x => x.title).sort()).toEqual(['Brot', 'Eier', 'Milch']);
+    expect(tickets.find(x => x.title === 'Brot')).toMatchObject({ due: '2030-06-01', source: 'ha' });
+    const list = () => ha.todos.get('todo.einkaufsliste')!;
+    expect(list().find(i => i.summary === 'Eier')).toMatchObject({ due: '2030-06-02 18:00:00', status: 'needs_action' });
+    const status = (await call('GET', '/api/ha/todo-links', boss)).json().areas.find((a: { id: number }) => a.id === area.id);
+    expect(status).toMatchObject({ entity: 'todo.einkaufsliste', linked: 3, error: null });
+    expect(status.syncedAt).not.toBeNull();
+
+    // Ticked off and renamed in Home Assistant.
+    list().find(i => i.summary === 'Milch')!.status = 'completed';
+    list().find(i => i.summary === 'Brot')!.summary = 'Vollkornbrot';
+    await syncHaTodos(t.ctx);
+    let now = await inArea();
+    expect(now.find(x => x.title === 'Milch')?.status).toBe('done');
+    expect(now.some(x => x.title === 'Vollkornbrot')).toBe(true);
+
+    // Done and renamed in Tasklog.
+    await call('PATCH', `/api/tickets/${mine.id}`, boss, { status: 'done', title: 'Eier (10)' });
+    await syncHaTodos(t.ctx);
+    expect(list().find(i => i.uid === list().find(x => x.summary === 'Eier (10)')?.uid)).toMatchObject({ status: 'completed' });
+
+    // Removed in HA closes the ticket; deleted in Tasklog removes the item.
+    const brot = now.find(x => x.title === 'Vollkornbrot')!;
+    ha.todos.set('todo.einkaufsliste', list().filter(i => i.summary !== 'Vollkornbrot'));
+    await syncHaTodos(t.ctx);
+    expect((await call('GET', `/api/tickets/${brot.id}`, boss)).json().status).toBe('done');
+    const milk = now.find(x => x.title === 'Milch')!;
+    await call('DELETE', `/api/tickets/${milk.id}`, boss);
+    await syncHaTodos(t.ctx);
+    expect(list().some(i => i.summary === 'Milch')).toBe(false);
+
+    // Running it again changes nothing.
+    const before = JSON.stringify(list());
+    const calls = ha.calls.length;
+    await syncHaTodos(t.ctx);
+    expect(JSON.stringify(list())).toBe(before);
+    expect(ha.calls.filter((c, i) => i >= calls && !c.path.includes('get_items'))).toHaveLength(0);
+
+    // A shopping list without dates takes the title alone; one list belongs to one area.
+    const shop = (await call('POST', '/api/areas', boss, { name: 'Laden', icon: 'storefront' })).json();
+    ha.todos.set('todo.shopping_list', []);
+    await call('POST', '/api/tickets', boss, { title: 'Kaffee', areaId: shop.id, due: '2030-01-01' });
+    await call('PUT', `/api/areas/${shop.id}/ha-todo`, boss, { entity: 'todo.shopping_list' });
+    expect(ha.todos.get('todo.shopping_list')).toEqual([expect.objectContaining({ summary: 'Kaffee', status: 'needs_action' })]);
+    expect((await call('PUT', `/api/areas/${shop.id}/ha-todo`, boss, { entity: 'todo.einkaufsliste' })).statusCode).toBe(409);
+
+    // A list that is gone shows its error at the area.
+    ha.todos.delete('todo.shopping_list');
+    await syncHaTodos(t.ctx);
+    const broken = (await call('GET', '/api/ha/todo-links', boss)).json().areas.find((a: { id: number }) => a.id === shop.id);
+    expect(broken.error).toContain('todo.shopping_list');
+    await call('PUT', `/api/areas/${shop.id}/ha-todo`, boss, { entity: null });
+    await call('PUT', `/api/areas/${area.id}/ha-todo`, boss, { entity: null });
+    expect((await t.db.query('SELECT count(*)::int AS n FROM ha_todo_links')).rows[0].n).toBe(0);
+    await ha.close();
   });
 });

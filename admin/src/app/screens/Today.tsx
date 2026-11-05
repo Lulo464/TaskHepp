@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Icon, Loading } from '../../components/ui';
 import { useApi } from '../../lib/api';
-import { firstName, formatMinutes, formatTime } from '../../lib/format';
+import { firstName, formatTime, formatTracked } from '../../lib/format';
 import type { Me, MyTime, Ticket } from '../../lib/types';
 import { href, navigate } from '../router';
 import type { Timers } from '../timer';
@@ -36,9 +36,9 @@ export function Today({ me, timers, canEdit }: { me: Me; timers: Timers; canEdit
             <span>{t('app.today.tracked')}</span>
             {timers.timers.length > 0 && <span>{t('app.today.running')}</span>}
           </div>
-          <div className="pwa-hero-value">{time ? formatMinutes(time.today.total) : '–'}</div>
+          <div className="pwa-hero-value">{time ? formatTracked({ minutes: time.today.total, seconds: time.today.totalSeconds }) : '–'}</div>
           <div className="pwa-hero-areas">
-            {time?.today.byArea.map(a => <span key={a.name}><Icon name={a.icon} /> {a.name} {formatMinutes(a.minutes).replace(' h', '')}</span>)}
+            {time?.today.byArea.map(a => <span key={a.name}><Icon name={a.icon} /> {a.name} {formatTracked(a).replace(' h', '')}</span>)}
             {time && time.today.byArea.length === 0 && <span>{t('app.today.nothingTracked')}</span>}
           </div>
         </div>

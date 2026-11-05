@@ -13,7 +13,8 @@ export const settingsSchema = z.object({
   monitorInterval: z.union([z.literal(15), z.literal(30), z.literal(60)]),
   monitorToken: z.string(),
   timeRules: z.object({ autoStop: z.boolean(), longTimer: z.boolean(), singleTimer: z.boolean() }),
-  rounding: z.union([z.literal(0), z.literal(5), z.literal(15)]),
+  /** A stopped timer is rounded up to this many minutes; 0 = to the second, and times show seconds. */
+  rounding: z.number().int().min(0).max(480),
   enforceSignature: z.boolean(),
   webhookId: z.string(),
   webhookSecret: z.string(),

@@ -32,7 +32,14 @@ export class HomeAssistant {
       body: init.body === undefined ? undefined : JSON.stringify(init.body),
       signal: AbortSignal.timeout(this.timeoutMs),
     });
-    if (!res.ok) throw new Error(`Home Assistant antwortet mit ${res.status} ${res.statusText}`);
+    if (!res.ok) {
+      // HA often says why, e.g. "Entity todo.x not found".
+      const why = await res.json().then((d: unknown) => {
+        const message = (d as { message?: unknown } | null)?.message;
+        return typeof message === 'string' ? `: ${message.slice(0, 200)}` : '';
+      }, () => '');
+      throw new Error(`Home Assistant antwortet mit ${res.status} ${res.statusText}${why}`);
+    }
     const text = await res.text();
     return (text ? JSON.parse(text) : null) as T;
   }
@@ -79,5 +86,10 @@ export class HomeAssistant {
 
   callService(domain: string, service: string, data: Record<string, unknown>) {
     return this.request(`api/services/${encodeURIComponent(domain)}/${encodeURIComponent(service)}`, { method: 'POST', body: data });
+  }
+
+  /** A service that answers with data, e.g. todo.get_items (HA 2024.8 and later). */
+  callServiceWithResponse<T>(domain: string, service: string, data: Record<string, unknown>) {
+    return this.request<{ service_response?: T }>(`api/services/${encodeURIComponent(domain)}/${encodeURIComponent(service)}?return_response`, { method: 'POST', body: data });
   }
 }

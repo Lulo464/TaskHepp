@@ -263,6 +263,7 @@ textarea.input { min-height: 80px; }
 
 /* — area filter — */
 .pwa-area-filter { margin: 0 0 14px; }
+.pwa-area-filter .pwa-chip { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .pwa-area-filter .pwa-chip i { font-size: 14px; vertical-align: -2px; }
 .pwa-date + .pwa-area-filter { margin-top: 12px; }
 
@@ -422,4 +423,37 @@ textarea.input { min-height: 80px; }
     padding: 40px 36px 32px; box-shadow: var(--shadow-md);
   }
   .pwa-login .grow { flex: none; height: 32px; }
+}
+
+/* — NFC tags — */
+.pwa-tags-block { margin: -4px 0 14px; }
+.pwa-tag { padding: 10px 0; border-bottom: 1px solid var(--color-neutral-800); }
+.pwa-tag:last-of-type { border-bottom: 0; }
+.pwa-tag-head { display: flex; align-items: flex-start; gap: 10px; }
+.pwa-tag-head > i { font-size: 20px; margin-top: 2px; flex: none; }
+.pwa-tag-head .btn-icon { width: 34px; height: 34px; flex: none; }
+.pwa-tag-badge { margin-left: 8px; font-size: 11px; vertical-align: 1px; }
+.pwa-tag-writer, .pwa-tag-form { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.pwa-tag-writing { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--color-neutral-800); }
+.pwa-tag-writing > i { font-size: 24px; color: var(--color-accent); animation: pwa-pulse 1.2s ease-in-out infinite; }
+@keyframes pwa-pulse { 50% { opacity: .35; } }
+.pwa-tag-qr { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.pwa-tag-qr-img { width: 200px; padding: 8px; background: #fff; border-radius: 10px; }
+.pwa-tag-qr-img svg { display: block; width: 100%; height: auto; }
+.pwa-tag-ha summary { cursor: pointer; font-size: 13px; color: var(--color-neutral-300); }
+.pwa-tag-ha[open] { display: flex; flex-direction: column; gap: 8px; }
+.pwa-scan { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 12vh; }
+.pwa-scan-icon { font-size: 72px; color: var(--color-accent); margin-bottom: 12px; }
+.pwa-scan-icon.is-error { color: var(--color-neutral-400); }
+.pwa-scan .pwa-h1 { margin: 6px 0; }
+.pwa-scan-actions { width: 100%; max-width: 360px; gap: 10px; margin-top: 28px; }
+
+/* — offline — */
+.pwa-offline { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 10px; padding: 8px 16px; font-size: 13px; background: var(--color-neutral-800); color: var(--color-neutral-100); }
+.pwa-offline.is-offline { background: #4a3b1f; }
+.pwa-offline > i { font-size: 18px; flex: none; }
+.pwa-offline .btn { padding: 4px 10px; min-height: 0; font-size: 13px; }
+@media (min-width: 960px) {
+  .pwa { grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: 'nav offline' 'nav content' 'nav mini'; }
+  .pwa-offline { grid-area: offline; }
 }
