@@ -151,6 +151,15 @@ Erinnerungen gehen an die zugewiesene Person, sonst an alle, die den Bereich seh
 - Tickets entstehen nur bis zu 14 Tage im Voraus. Ist der Abfuhrtag vorbei, wird das Ticket automatisch erledigt.
 - Ein gelöschtes Ticket wird nicht neu angelegt.
 
+**Vorhandene To-do-Listen verknüpfen (ohne Installation in HA):** Unter **Admin → Home Assistant → Verbindung → To-do-Listen verknüpfen** wählst du pro Bereich eine To-do-Liste, die es in Home Assistant schon gibt, z. B. die Einkaufsliste, eine „Lokale To-do-Liste“ oder Google Tasks bzw. Todoist, wenn sie in HA eingebunden sind. Danach gleicht Tasklog jede Minute ab und wenige Sekunden nach Änderungen in Tasklog:
+- Neues in der HA-Liste wird ein Ticket im Bereich (mit Datum, falls vorhanden). Offene Tickets des Bereichs landen in der Liste, mit Datum und Uhrzeit, soweit die Liste das kann.
+- Abhaken und Umbenennen kommt auf der jeweils anderen Seite an. Gewinner ist die Seite, die sich seit dem letzten Abgleich geändert hat.
+- In HA entfernt → das Ticket wird erledigt. In Tasklog gelöscht → der Eintrag verschwindet aus der Liste.
+- Beim ersten Verknüpfen werden gleichnamige Einträge zusammengeführt statt doppelt angelegt. Erledigte Tickets und abgehakte Einträge werden nicht neu übertragen.
+- Fehler (z. B. Liste gelöscht) stehen direkt beim Bereich und im Protokoll. Eine Liste gehört zu genau einem Bereich. Die eigenen Listen der Tasklog-Integration (`todo.tasklog_…`) lassen sich nicht verknüpfen, sie zeigen den Bereich ja schon.
+
+Braucht Home Assistant 2024.8 oder neuer. Die Tasklog-Integration unten ist die Alternative, wenn du statt eigener Listen für jeden Bereich eine fertige Tasklog-Liste in HA willst.
+
 **Tasklog als To-do-Liste in Home Assistant:** Die Integration in `custom_components/tasklog` macht aus jedem Bereich eine HA-To-do-Liste (`todo.tasklog_zuhause` …). Abhaken, Anlegen (mit Datum, Uhrzeit, Beschreibung), Umbenennen und Löschen in Home Assistant landet sofort in Tasklog, auch per Sprachassistent. Erledigte Tickets bleiben zwei Tage abgehakt sichtbar.
 1. In Tasklog ein API-Token mit dem Recht `tickets:write` anlegen.
 2. In HACS → Integrationen → ⋮ → *Benutzerdefinierte Repositories* dieses Repository als *Integration* hinzufügen und „Tasklog“ installieren. Alternativ den Ordner `custom_components/tasklog` ins config-Verzeichnis von Home Assistant kopieren.

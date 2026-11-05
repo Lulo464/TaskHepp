@@ -849,3 +849,85 @@ describe('time rounding', () => {
     await call('PATCH', '/api/settings', boss, { rounding: 15 });
   });
 });
+
+describe('home assistant to-do lists linked to areas', () => {
+  it('keeps an area and a list in step, both ways', async () => {
+    const { syncHaTodos } = await import('../src/services/haTodo.js');
+    const boss = await t.login('admin');
+    const ha = await fakeHomeAssistant();
+    await call('PATCH', '/api/settings', boss, { ha: { url: ha.url, token: 'ha-token' } });
+    const area = (await call('POST', '/api/areas', boss, { name: 'Einkauf', icon: 'shopping-cart' })).json();
+    ha.todos.set('todo.einkaufsliste', [
+      { uid: 'a', summary: 'Milch', status: 'needs_action' },
+      { uid: 'b', summary: 'Alt, schon erledigt', status: 'completed' },
+      { uid: 'c', summary: 'Brot', status: 'needs_action', due: '2030-06-01' },
+    ]);
+    ha.states.set('todo.einkaufsliste', { state: '2', attributes: { friendly_name: 'Einkaufsliste' } });
+    ha.states.set('todo.tasklog_zuhause', { state: '3', attributes: {} });
+    const mine = (await call('POST', '/api/tickets', boss, { title: 'Eier', areaId: area.id, due: '2030-06-02', dueTime: '18:00' })).json();
+
+    const offer = (await call('GET', '/api/ha/todo-links', boss)).json();
+    expect(offer.lists.map((l: { id: string }) => l.id)).toEqual(['todo.einkaufsliste']); // not the integration's own lists
+    expect((await call('PUT', `/api/areas/${area.id}/ha-todo`, boss, { entity: 'todo.tasklog_zuhause' })).statusCode).toBe(400);
+    expect((await call('PUT', `/api/areas/${area.id}/ha-todo`, boss, { entity: 'todo.einkaufsliste' })).statusCode).toBe(200);
+
+    // Open items came over, ticked-off ones did not; the ticket went to the list with its date and time.
+    const inArea = async () => (await call('GET', `/api/tickets?areaId=${area.id}`, boss)).json() as { id: number; title: string; status: string; due: string | null; source: string }[];
+    const tickets = await inArea();
+    expect(tickets.map(x => x.title).sort()).toEqual(['Brot', 'Eier', 'Milch']);
+    expect(tickets.find(x => x.title === 'Brot')).toMatchObject({ due: '2030-06-01', source: 'ha' });
+    const list = () => ha.todos.get('todo.einkaufsliste')!;
+    expect(list().find(i => i.summary === 'Eier')).toMatchObject({ due: '2030-06-02 18:00:00', status: 'needs_action' });
+    const status = (await call('GET', '/api/ha/todo-links', boss)).json().areas.find((a: { id: number }) => a.id === area.id);
+    expect(status).toMatchObject({ entity: 'todo.einkaufsliste', linked: 3, error: null });
+    expect(status.syncedAt).not.toBeNull();
+
+    // Ticked off and renamed in Home Assistant.
+    list().find(i => i.summary === 'Milch')!.status = 'completed';
+    list().find(i => i.summary === 'Brot')!.summary = 'Vollkornbrot';
+    await syncHaTodos(t.ctx);
+    let now = await inArea();
+    expect(now.find(x => x.title === 'Milch')?.status).toBe('done');
+    expect(now.some(x => x.title === 'Vollkornbrot')).toBe(true);
+
+    // Done and renamed in Tasklog.
+    await call('PATCH', `/api/tickets/${mine.id}`, boss, { status: 'done', title: 'Eier (10)' });
+    await syncHaTodos(t.ctx);
+    expect(list().find(i => i.uid === list().find(x => x.summary === 'Eier (10)')?.uid)).toMatchObject({ status: 'completed' });
+
+    // Removed in HA closes the ticket; deleted in Tasklog removes the item.
+    const brot = now.find(x => x.title === 'Vollkornbrot')!;
+    ha.todos.set('todo.einkaufsliste', list().filter(i => i.summary !== 'Vollkornbrot'));
+    await syncHaTodos(t.ctx);
+    expect((await call('GET', `/api/tickets/${brot.id}`, boss)).json().status).toBe('done');
+    const milk = now.find(x => x.title === 'Milch')!;
+    await call('DELETE', `/api/tickets/${milk.id}`, boss);
+    await syncHaTodos(t.ctx);
+    expect(list().some(i => i.summary === 'Milch')).toBe(false);
+
+    // Running it again changes nothing.
+    const before = JSON.stringify(list());
+    const calls = ha.calls.length;
+    await syncHaTodos(t.ctx);
+    expect(JSON.stringify(list())).toBe(before);
+    expect(ha.calls.filter((c, i) => i >= calls && !c.path.includes('get_items'))).toHaveLength(0);
+
+    // A shopping list without dates takes the title alone; one list belongs to one area.
+    const shop = (await call('POST', '/api/areas', boss, { name: 'Laden', icon: 'storefront' })).json();
+    ha.todos.set('todo.shopping_list', []);
+    await call('POST', '/api/tickets', boss, { title: 'Kaffee', areaId: shop.id, due: '2030-01-01' });
+    await call('PUT', `/api/areas/${shop.id}/ha-todo`, boss, { entity: 'todo.shopping_list' });
+    expect(ha.todos.get('todo.shopping_list')).toEqual([expect.objectContaining({ summary: 'Kaffee', status: 'needs_action' })]);
+    expect((await call('PUT', `/api/areas/${shop.id}/ha-todo`, boss, { entity: 'todo.einkaufsliste' })).statusCode).toBe(409);
+
+    // A list that is gone shows its error at the area.
+    ha.todos.delete('todo.shopping_list');
+    await syncHaTodos(t.ctx);
+    const broken = (await call('GET', '/api/ha/todo-links', boss)).json().areas.find((a: { id: number }) => a.id === shop.id);
+    expect(broken.error).toContain('todo.shopping_list');
+    await call('PUT', `/api/areas/${shop.id}/ha-todo`, boss, { entity: null });
+    await call('PUT', `/api/areas/${area.id}/ha-todo`, boss, { entity: null });
+    expect((await t.db.query('SELECT count(*)::int AS n FROM ha_todo_links')).rows[0].n).toBe(0);
+    await ha.close();
+  });
+});

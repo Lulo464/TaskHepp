@@ -164,6 +164,20 @@
     "empty": "In diesem Zeitraum wurde noch keine Zeit erfasst."
   },
   "ha": {
+    "todo": {
+      "title": "To-do-Listen verknüpfen",
+      "sub": "Wähle pro Bereich eine vorhandene To-do-Liste aus Home Assistant, z. B. die Einkaufsliste oder eine lokale Liste. Abhaken, Umbenennen, Hinzufügen und Löschen kommt dann auf beiden Seiten an. Dafür braucht es keine Installation in Home Assistant.",
+      "notConfigured": "Erst oben die Verbindung zu Home Assistant einrichten.",
+      "noLists": "Home Assistant hat keine To-do-Listen. Lege z. B. unter Einstellungen → Geräte & Dienste → „Lokale To-do-Liste“ eine an.",
+      "listFor": "To-do-Liste für {{area}}",
+      "noLink": "— nicht verknüpft —",
+      "none": "Nicht verknüpft",
+      "pending": "Wird gleich abgeglichen …",
+      "synced_one": "1 Eintrag verknüpft · abgeglichen {{when}}",
+      "synced_other": "{{count}} Einträge verknüpft · abgeglichen {{when}}",
+      "how": "Abgleich jede Minute und wenige Sekunden nach Änderungen in Tasklog. Erledigte Tickets und abgehakte Einträge werden nicht neu übertragen.",
+      "syncNow": "Jetzt abgleichen"
+    },
     "title": "Home Assistant",
     "token": "Long-Lived Access Token",
     "test": "Verbindung testen",
