@@ -611,7 +611,8 @@
     },
     "areaFilter": {
       "label": "Welche Bereiche du siehst",
-      "all": "Alle"
+      "all": "Alle",
+      "hint": "Tippen: nur diesen Bereich zeigen. Lange drücken: weiteren Bereich dazunehmen oder abwählen."
     },
     "legal": {
       "imprint": "Impressum",

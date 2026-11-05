@@ -263,6 +263,7 @@ textarea.input { min-height: 80px; }
 
 /* — area filter — */
 .pwa-area-filter { margin: 0 0 14px; }
+.pwa-area-filter .pwa-chip { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .pwa-area-filter .pwa-chip i { font-size: 14px; vertical-align: -2px; }
 .pwa-date + .pwa-area-filter { margin-top: 12px; }
 
