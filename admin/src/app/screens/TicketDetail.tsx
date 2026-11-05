@@ -11,6 +11,7 @@ import { Checklist } from './Checklist';
 import { Photos } from './Photos';
 import { RepeatPicker } from './Repeat';
 import { Snooze } from './Snooze';
+import { TicketTags } from './Tags';
 import { TicketNotes } from './TicketNotes';
 import { TicketText } from './TicketText';
 
@@ -65,6 +66,7 @@ export function TicketDetail({ id, me, timers, canEdit }: { id: number; me: Me; 
         <RepeatPicker value={ticket.recurrence} due={ticket.due} disabled={!canEdit} onChange={recurrence => act(() => patch(`/api/tickets/${id}`, { recurrence }))} />
       )}
       <AutoClose ticket={ticket} canEdit={canEdit} />
+      <TicketTags ticket={ticket} canEdit={canEdit} />
       {ticket.followupId && (
         <a className="btn btn-ghost pwa-followup" href={href({ name: 'ticket', id: ticket.followupId })}><Icon name="arrow-right" /> {t('repeat.next')}</a>
       )}

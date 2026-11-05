@@ -149,6 +149,16 @@ Erinnerungen gehen an die zugewiesene Person, sonst an alle, die den Bereich seh
 
 **Automatisch erledigen:** Auf der Ticket-Seite unter *Automatisch erledigen, wenn …* eine Entität und einen Zustand wählen, z. B. `sensor.waschmaschine` wechselt zu `idle`. Tasklog prüft jede Minute. Es zählt der Wechsel: Ist die Maschine schon „idle“, erledigt sich das Ticket nach ihrem nächsten Lauf. Wiederkehrende Tickets nehmen die Bedingung mit.
 
+**NFC-Tags:** Ein Aufkleber an der Mülltonne, Waschmaschine oder am Schreibtisch. Hält man das Handy daran, macht Tasklog eins von drei Dingen:
+- **Erledigen:** schließt das Ticket. Bei wiederkehrenden Tickets wirkt der Tag danach auf das nächste der Serie.
+- **Timer:** startet den Timer für die Person, die scannt, und stoppt ihn beim nächsten Scan.
+- **Ticket anlegen:** legt ein Ticket für heute an, z. B. „Entkalken“. Solange es offen ist, entsteht kein zweites.
+
+Anlegen auf der Ticket-Seite (*NFC-Tag für dieses Ticket …*) oder unter **Mehr → NFC-Tags**. Auf den Tag kommt ein Link `…/#/tag/<code>`. Chrome auf Android schreibt ihn direkt aus der App („Auf NFC-Tag schreiben“). Sonst kopierst du den Link in eine App wie „NFC Tools“ oder druckst den **QR-Code** aus. Nach dem Scan zeigt die App, was passiert ist, mit **Rückgängig**. Erneutes Laden scannt nicht nochmal.
+- **iPhone:** Das iPhone liest den Link auch, öffnet ihn aber in Safari, wo man einmal angemeldet sein muss. Alternativ über die Home-Assistant-App.
+- **Home-Assistant-Tags:** Mit der Tasklog-Integration (ab 1.1) meldet HA jeden `tag_scanned` an Tasklog. Im Tag unter *Mit der Home-Assistant-App scannen* auf „Jetzt scannen“ tippen und den Tag mit der HA-App scannen: Tasklog übernimmt die ID. Timer laufen dann für die Person, der das Ticket zugewiesen ist.
+- Geeignet sind NTAG213/215/216-Aufkleber, auf Metall „On-Metal“-Tags.
+
 Die Tests der Integration laufen gegen ein echtes Tasklog: `TASKLOG_URL=… TASKLOG_TOKEN=… pytest -c ha-tests/pytest.ini ha-tests` (mit `pytest-homeassistant-custom-component`).
 
 ## E-Mail-Import

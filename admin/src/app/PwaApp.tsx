@@ -13,6 +13,8 @@ import { NewTicket } from './screens/NewTicket';
 import { Notifications } from './screens/Notifications';
 import { Plan } from './screens/Plan';
 import { Presence } from './screens/Presence';
+import { TagScan } from './screens/TagScan';
+import { Tags } from './screens/Tags';
 import { TicketDetail } from './screens/TicketDetail';
 import { TicketList } from './screens/TicketList';
 import { Time } from './screens/Time';
@@ -82,7 +84,7 @@ function Shell({ me }: { me: Me }) {
     { route: { name: 'plan' }, icon: 'calendar-dots', label: t('app.tab.plan'), active: route.name === 'plan' },
     ...(canEdit ? [{ route: { name: 'new' } as Route, icon: 'plus-circle', label: t('app.tab.new'), active: route.name === 'new' }] : []),
     { route: { name: 'time' }, icon: 'chart-bar', label: t('app.tab.time'), active: route.name === 'time' },
-    { route: { name: 'more' }, icon: 'gear', label: t('app.tab.more'), active: route.name === 'more' || route.name === 'areas' || route.name === 'presence' || route.name === 'notifications' || route.name === 'mydata' || route.name === 'impressum' || route.name === 'datenschutz' },
+    { route: { name: 'more' }, icon: 'gear', label: t('app.tab.more'), active: route.name === 'more' || route.name === 'areas' || route.name === 'presence' || route.name === 'notifications' || route.name === 'mydata' || route.name === 'tags' || route.name === 'impressum' || route.name === 'datenschutz' },
   ];
 
   return (
@@ -117,6 +119,8 @@ function Shell({ me }: { me: Me }) {
         {route.name === 'presence' && <Presence />}
         {route.name === 'notifications' && <Notifications />}
         {route.name === 'mydata' && <MyData me={me} />}
+        {route.name === 'tags' && <Tags canEdit={canEdit} />}
+        {route.name === 'tag' && <TagScan key={route.code} code={route.code} />}
         {(route.name === 'impressum' || route.name === 'datenschutz') && <Legal doc={route.name} />}
       </main>
 

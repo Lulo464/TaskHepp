@@ -69,3 +69,31 @@ async def test_add_complete_and_remove_from_home_assistant(hass: HomeAssistant, 
 
     await hass.services.async_call(TODO_DOMAIN, "remove_item", {"item": [str(ticket["id"])]}, target={"entity_id": entity}, blocking=True)
     assert not any(t["id"] == ticket["id"] for t in await _tickets(tasklog))
+
+
+async def _call(conf, method, path, body=None):
+    async with aiohttp.ClientSession() as s, s.request(method, f"{conf['url']}{path}", json=body, headers={"Authorization": f"Bearer {conf['api_token']}"}) as r:
+        return await r.json() if r.status != 204 else None
+
+
+async def test_scanned_tags_go_to_tasklog(hass: HomeAssistant, tasklog) -> None:
+    await _set_up(hass, tasklog)
+    areas = await _call(tasklog, "GET", "/api/areas")
+    home = next(a for a in areas if a["name"] == "Zuhause")
+    ticket = await _call(tasklog, "POST", "/api/tickets", {"title": "HA-Test: Tag", "areaId": home["id"]})
+
+    # An unknown tag is offered for linking in Tasklog.
+    hass.bus.async_fire("tag_scanned", {"tag_id": "ha-test-unbekannt", "device_id": "x"})
+    await hass.async_block_till_done()
+    assert (await _call(tasklog, "GET", "/api/tags/ha/last"))["tagId"] == "ha-test-unbekannt"
+
+    for old in await _call(tasklog, "GET", "/api/tags"):
+        if old["haTagId"] == "ha-test-tag":  # left over from an aborted run
+            await _call(tasklog, "DELETE", f"/api/tags/{old['id']}")
+    tag = await _call(tasklog, "POST", "/api/tags", {"name": "HA-Test", "action": "done", "ticketId": ticket["id"], "haTagId": "ha-test-tag"})
+    assert tag["haTagId"] == "ha-test-tag", tag
+    hass.bus.async_fire("tag_scanned", {"tag_id": "ha-test-tag", "device_id": "x"})
+    await hass.async_block_till_done()
+    assert next(t for t in await _tickets(tasklog) if t["id"] == ticket["id"])["status"] == "done"
+    await _call(tasklog, "DELETE", f"/api/tags/{tag['id']}")
+    await _call(tasklog, "DELETE", f"/api/tickets/{ticket['id']}")

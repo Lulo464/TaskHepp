@@ -355,3 +355,32 @@ export interface Person {
   id: number;
   name: string;
 }
+
+/** An NFC tag (or QR code): scanning it closes a ticket, starts/stops its timer or creates a ticket. */
+export interface Tag {
+  id: number;
+  code: string;
+  name: string;
+  action: 'done' | 'timer' | 'create';
+  ticketId: number | null;
+  ticket: string | null;
+  ticketStatus: TicketStatus | null;
+  title: string | null;
+  areaId: number | null;
+  area: string | null;
+  prio: Prio;
+  haTagId: string | null;
+  scans: number;
+  lastScanAt: string | null;
+  lastScanBy: string | null;
+}
+
+export interface TagScan {
+  tag: string;
+  tagId: number;
+  action: Tag['action'];
+  result: 'done' | 'alreadyDone' | 'started' | 'stopped' | 'created' | 'exists' | 'missing';
+  ticketId?: number;
+  title?: string;
+  followupId?: number | null;
+}

@@ -734,3 +734,76 @@ describe('privacy', () => {
     expect((await call('PATCH', '/api/settings', boss, { retention: { logDays: -1 } })).statusCode).toBe(400);
   });
 });
+
+describe('nfc tags', () => {
+  let anna: string;
+  beforeAll(async () => { anna = await t.login('member'); });
+  const scan = async (code: string, who = anna) => (await call('POST', `/api/tags/scan/${code}`, who)).json();
+
+  it('closes a ticket and follows a repeating series', async () => {
+    const ticket = (await call('POST', '/api/tickets', anna, { title: 'Müll raus', areaId: 2, due: '2030-01-07', recurrence: { every: 1, unit: 'week' } })).json();
+    const tag = (await call('POST', '/api/tags', anna, { name: 'Mülltonne', action: 'done', ticketId: ticket.id })).json();
+    expect(tag.code).toMatch(/^[A-Za-z0-9_-]{12}$/);
+    const first = await scan(tag.code);
+    expect(first).toMatchObject({ tag: 'Mülltonne', action: 'done', result: 'done', ticketId: ticket.id });
+    expect(first.followupId).toBeGreaterThan(ticket.id);
+    // the next scan works on the next ticket of the series
+    const second = await scan(tag.code);
+    expect(second).toMatchObject({ result: 'done', ticketId: first.followupId });
+    const list = (await call('GET', '/api/tags', anna)).json().find((x: { id: number }) => x.id === tag.id);
+    expect(list).toMatchObject({ scans: 2, ticketId: second.followupId, ticketStatus: "open", lastScanBy: expect.any(String) });
+  });
+
+  it('starts and stops the timer for whoever scans', async () => {
+    const ticket = (await call('POST', '/api/tickets', anna, { title: 'Wäsche', areaId: 2 })).json();
+    const tag = (await call('POST', '/api/tags', anna, { name: 'Waschmaschine', action: 'timer', ticketId: ticket.id })).json();
+    expect(await scan(tag.code)).toMatchObject({ action: 'timer', result: 'started' });
+    expect((await call('GET', '/api/timer', anna)).json().map((x: { ticketId: number }) => x.ticketId)).toContain(ticket.id);
+    expect(await scan(tag.code)).toMatchObject({ result: 'stopped' });
+    expect((await call('GET', '/api/timer', anna)).json().map((x: { ticketId: number }) => x.ticketId)).not.toContain(ticket.id);
+  });
+
+  it('creates a ticket once until it is done', async () => {
+    const tag = (await call('POST', '/api/tags', anna, { name: 'Kaffeemaschine', action: 'create', title: 'Entkalken', areaId: 2, prio: 'high' })).json();
+    const made = await scan(tag.code);
+    expect(made).toMatchObject({ action: 'create', result: 'created', title: 'Entkalken' });
+    const ticket = (await call('GET', `/api/tickets/${made.ticketId}`, anna)).json();
+    expect(ticket).toMatchObject({ prio: 'high', area: 'Zuhause', status: 'open', source: 'app' });
+    expect(ticket.due).not.toBeNull();
+    expect(await scan(tag.code)).toMatchObject({ result: 'exists', ticketId: made.ticketId });
+    await call('PATCH', `/api/tickets/${made.ticketId}`, anna, { status: 'done' });
+    expect((await scan(tag.code)).ticketId).not.toBe(made.ticketId);
+  });
+
+  it('checks input and access', async () => {
+    expect((await call('POST', '/api/tags', anna, { name: 'x', action: 'done' })).statusCode).toBe(400);
+    expect((await call('POST', '/api/tags', anna, { name: 'x', action: 'create' })).statusCode).toBe(400);
+    expect((await call('POST', '/api/tags/scan/unbekannt', anna)).statusCode).toBe(404);
+    const ticket = (await call('POST', '/api/tickets', anna, { title: 'Lesen', areaId: 1 })).json();
+    const tag = (await call('POST', '/api/tags', anna, { name: 'Leser', action: 'done', ticketId: ticket.id })).json();
+    const reader2 = await t.login('read');
+    expect((await call('POST', `/api/tags/scan/${tag.code}`, reader2)).statusCode).toBe(403);
+    expect((await call('DELETE', `/api/tags/${tag.id}`, anna)).statusCode).toBe(204);
+    expect((await call('POST', `/api/tags/scan/${tag.code}`, anna)).statusCode).toBe(404);
+  });
+
+  it('takes scans from Home Assistant and learns unknown tags', async () => {
+    const boss = await t.login('admin');
+    const { token } = (await call('POST', '/api/tokens', boss, { name: 'HA', scope: 'tickets:write' })).json();
+    const bearer = { authorization: `Bearer ${token}` };
+    const ha = (body: unknown) => call('POST', '/api/tags/ha', undefined, body, bearer);
+
+    expect((await ha({ tagId: 'ha-1234' })).json()).toEqual({ result: 'unknown' });
+    expect((await call('GET', '/api/tags/ha/last', anna)).json()).toMatchObject({ tagId: 'ha-1234' });
+
+    const ticket = (await call('POST', '/api/tickets', anna, { title: 'Spülmaschine ausräumen', areaId: 2, assigneeId: null })).json();
+    const tag = (await call('POST', '/api/tags', anna, { name: 'Spüler', action: 'done', ticketId: ticket.id, haTagId: 'ha-1234' })).json();
+    expect((await call('GET', '/api/tags/ha/last', anna)).json()).toEqual({ tagId: null });
+    expect((await ha({ tagId: 'ha-1234' })).json()).toMatchObject({ result: 'done', ticketId: ticket.id });
+    expect((await call('GET', `/api/tickets/${ticket.id}`, anna)).json().status).toBe('done');
+    // one Home Assistant tag belongs to one Tasklog tag
+    expect((await call('PATCH', `/api/tags/${tag.id}`, anna, { haTagId: 'ha-1234' })).statusCode).toBe(200);
+    const other = (await call('POST', '/api/tags', anna, { name: 'Zweiter', action: 'done', ticketId: ticket.id, haTagId: 'ha-1234' }));
+    expect(other.statusCode).toBe(409);
+  });
+});

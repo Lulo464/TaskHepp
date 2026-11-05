@@ -47,6 +47,8 @@ export async function deleteUser(db: Queryable, userId: number): Promise<void> {
   );
   if (!u) throw new HttpError(404, 'Benutzer nicht gefunden');
   if (u.role === 'admin' && u.admins <= 1) throw new HttpError(409, 'Der letzte Admin kann nicht gelöscht werden');
+  // NFC tags remember who scanned them last by name.
+  await db.query('UPDATE tags SET last_scan_by = NULL WHERE last_scan_by = (SELECT name FROM users WHERE id = $1)', [userId]);
   await db.query('DELETE FROM users WHERE id = $1', [userId]);
 }
 

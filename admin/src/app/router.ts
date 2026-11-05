@@ -13,6 +13,8 @@ export type Route =
   | { name: 'presence' }
   | { name: 'notifications' }
   | { name: 'mydata' }
+  | { name: 'tags' }
+  | { name: 'tag'; code: string }
   | { name: 'impressum' }
   | { name: 'datenschutz' };
 
@@ -29,13 +31,19 @@ export function parseRoute(hash: string): Route {
     case 'presence': return { name: 'presence' };
     case 'notifications': return { name: 'notifications' };
     case 'mydata': return { name: 'mydata' };
+    case 'tags': return { name: 'tags' };
+    case 'tag': return arg ? { name: 'tag', code: arg } : { name: 'tags' };
     case 'impressum': return { name: 'impressum' };
     case 'datenschutz': return { name: 'datenschutz' };
     default: return { name: 'today' };
   }
 }
 
-export const href = (r: Route) => (r.name === 'today' ? '#/' : r.name === 'ticket' ? `#/ticket/${r.id}` : `#/${r.name}`);
+export const href = (r: Route) =>
+  r.name === 'today' ? '#/' : r.name === 'ticket' ? `#/ticket/${r.id}` : r.name === 'tag' ? `#/tag/${r.code}` : `#/${r.name}`;
+
+/** What goes on an NFC tag or QR code: opening it in the app runs the tag. */
+export const tagUrl = (code: string) => `${window.location.origin}/#/tag/${code}`;
 
 export function navigate(r: Route, replace = false) {
   if (replace) window.location.replace(href(r));
