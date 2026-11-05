@@ -31,6 +31,7 @@ export function Users() {
               <th>{t('users.col.group')}</th>
               <th>{t('users.col.role')}</th>
               <th>{t('users.col.seen')}</th>
+              <th aria-label={t('users.delete')} />
             </tr>
           </thead>
           <tbody>
@@ -49,6 +50,12 @@ export function Users() {
                   )}
                 </td>
                 <td className="soft">{formatAgo(u.lastSeenAt)}</td>
+                <td>
+                  <button type="button" className="icon-btn" title={t('users.delete')} aria-label={t('users.deleteNamed', { name: u.name })}
+                    onClick={() => window.confirm(t('users.deleteConfirm', { name: u.name, email: u.email })) && act(() => del(`/api/users/${u.id}`))}>
+                    <Icon name="trash" />
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

@@ -278,3 +278,5 @@ button.tag:focus-visible { outline: 2px solid var(--color-accent); outline-offse
 /* Long segment controls wrap inside editors instead of overflowing. */
 .editor .seg { display: flex; flex-wrap: wrap; max-width: 100%; }
 .editor .seg-btn.seg-fill { flex: 1 1 auto; }
+
+.legal-edit { font-size: 12px; line-height: 1.5; min-height: 320px; }

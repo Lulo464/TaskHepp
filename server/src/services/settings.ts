@@ -19,6 +19,10 @@ export const settingsSchema = z.object({
   webhookSecret: z.string(),
   ha: z.object({ url: z.string(), token: z.string() }),
   lastBackupAt: z.string().nullable(),
+  /** Imprint and privacy notice, shown on the sign-in page and in the app; empty = no link. */
+  legal: z.object({ imprint: z.string().max(20_000), privacy: z.string().max(60_000) }),
+  /** Days to keep the log and done tickets; 0 = keep. */
+  retention: z.object({ logDays: z.number().int().min(0).max(3650), doneTicketsDays: z.number().int().min(0).max(3650) }),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;
@@ -35,6 +39,8 @@ export const settingsPatchSchema = z.object({
   rounding: settingsSchema.shape.rounding,
   enforceSignature: z.boolean(),
   ha: z.object({ url: z.string().url().or(z.literal('')), token: z.string() }).partial(),
+  legal: settingsSchema.shape.legal.partial(),
+  retention: settingsSchema.shape.retention.partial(),
 }).partial().strict();
 
 export type SettingsPatch = z.infer<typeof settingsPatchSchema>;
@@ -56,6 +62,8 @@ function defaults(env: { HA_URL?: string; HA_TOKEN?: string }): Settings {
     webhookSecret: randomToken(32),
     ha: { url: env.HA_URL ?? '', token: env.HA_TOKEN ?? '' },
     lastBackupAt: null,
+    legal: { imprint: '', privacy: '' },
+    retention: { logDays: 90, doneTicketsDays: 0 },
   };
 }
 
@@ -79,6 +87,8 @@ export class SettingsStore {
       notifications: { ...base.notifications, ...stored.notifications },
       widgets: { ...base.widgets, ...stored.widgets },
       timeRules: { ...base.timeRules, ...stored.timeRules },
+      legal: { ...base.legal, ...stored.legal },
+      retention: { ...base.retention, ...stored.retention },
       ha: {
         url: stored.ha?.url || base.ha.url,
         token: stored.ha?.token || base.ha.token,
@@ -96,6 +106,8 @@ export class SettingsStore {
       widgets: { ...current.widgets, ...patch.widgets },
       timeRules: { ...current.timeRules, ...patch.timeRules },
       ha: { ...current.ha, ...patch.ha },
+      legal: { ...current.legal, ...patch.legal },
+      retention: { ...current.retention, ...patch.retention },
     };
     await this.save(next);
     return next;

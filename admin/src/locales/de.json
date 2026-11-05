@@ -61,6 +61,10 @@
       "label": "Protokoll",
       "sub": "Alle Ereignisse zwischen Home Assistant und Tasklog."
     },
+    "privacy": {
+      "label": "Datenschutz",
+      "sub": "Impressum, Datenschutzerklärung und wie lange Daten aufbewahrt werden."
+    },
     "system": {
       "label": "Einstellungen",
       "sub": "Status, Zeiterfassung, Tokens, Sicherheit und Backup."
@@ -279,6 +283,9 @@
       "seen": "Zuletzt aktiv"
     },
     "cycleRole": "Rolle wechseln",
+    "delete": "Benutzer löschen",
+    "deleteNamed": "{{name}} löschen",
+    "deleteConfirm": "{{name}} ({{email}}) löschen? Anmeldungen, Einstellungen und Erinnerungen werden gelöscht; Tickets, Zeiten, Notizen und Fotos bleiben, aber ohne Namen. Meldet sich die Person wieder an, entsteht ein neues Konto.",
     "groupMap": "Gruppen-Zuordnung",
     "sessions": "Aktive Sitzungen",
     "revoke": "Beenden",
@@ -606,6 +613,26 @@
       "label": "Welche Bereiche du siehst",
       "all": "Alle"
     },
+    "legal": {
+      "imprint": "Impressum",
+      "privacy": "Datenschutz",
+      "links": "Rechtliches",
+      "toLogin": "Zur Anmeldung",
+      "missing": "Dieser Text wurde noch nicht hinterlegt."
+    },
+    "mydata": {
+      "title": "Meine Daten",
+      "intro": "Hier bekommst du alles, was Tasklog über dich gespeichert hat, oder löschst dein Konto.",
+      "exportTitle": "Herunterladen",
+      "exportText": "Eine JSON-Datei mit deinem Konto, deinen Einstellungen, Anmeldungen, Tickets, Zeiten, Notizen, Fotos (als Liste) und Erinnerungen.",
+      "export": "Meine Daten herunterladen",
+      "deleteTitle": "Konto löschen",
+      "deleteText": "Dein Konto ({{email}}) wird gelöscht, du wirst abgemeldet. Deine Einstellungen, Anmeldungen und Ankunfts-Erinnerungen verschwinden. Tickets, Zeiten, Notizen und Fotos bleiben für die anderen erhalten, tragen aber deinen Namen nicht mehr.",
+      "confirmWord": "LÖSCHEN",
+      "confirm": "Zur Bestätigung „{{word}}“ eintippen",
+      "delete": "Konto endgültig löschen",
+      "oidcHint": "Meldest du dich später wieder an, legt Tasklog ein neues, leeres Konto an. Dein Zugang beim Anmeldedienst selbst bleibt davon unberührt."
+    },
     "notify": {
       "title": "Benachrichtigungen",
       "intro": "Tasklog schickt dir Nachrichten über Home Assistant – auf die Geräte, die du hier auswählst, und nur das, was du willst.",
@@ -872,5 +899,21 @@
       "onMonthDay": "am {{day}}.",
       "fromDone": "nach Erledigung"
     }
+  },
+  "privacy": {
+    "intro": "Impressum und Datenschutzerklärung erscheinen auf der Anmeldeseite der App und unter Mehr – aber nur, wenn hier ein Text steht. Für eine rein private Nutzung in der Familie sind sie meist nicht vorgeschrieben; nutzen auch andere Tasklog (Arbeit, Verein), brauchst du beides. Keine Rechtsberatung: Lass die Texte im Zweifel prüfen.",
+    "template": "Vorlage einfügen",
+    "templateConfirm": "Die Vorlage ersetzt die Texte in beiden Feldern. Fortfahren?",
+    "viewImprint": "Impressum ansehen",
+    "viewPrivacy": "Datenschutz ansehen",
+    "placeholders": "In den Texten stehen noch Platzhalter in [eckigen Klammern] – bitte durch deine Angaben ersetzen.",
+    "imprint": "Impressum",
+    "privacy": "Datenschutzerklärung",
+    "emptyHint": "Leer = kein Link",
+    "format": "Formatierung: „# “ und „## “ am Zeilenanfang für Überschriften, „- “ für Aufzählungen, **fett**, eine Leerzeile zwischen Absätzen. Die Vorlage beschreibt, was diese Installation tatsächlich speichert (z. B. Fotos, E-Mail-Import, Anwesenheit nur, wenn sie genutzt werden).",
+    "retention": "Aufbewahrung",
+    "logDays": "Protokoll behalten (Tage, 0 = immer)",
+    "doneTicketsDays": "Erledigte Tickets behalten (Tage, 0 = immer)",
+    "retentionHint": "Jede Nacht um 3:15 löscht Tasklog ältere Protokolleinträge, abgelaufene Anmeldungen und – falls eingestellt – lange erledigte Tickets samt ihrer Zeiten, Notizen und Fotos. Achtung: Gelöschte Tickets fehlen danach auch in den Zeit-Berichten."
   }
 }

@@ -12,6 +12,7 @@ import { Mail } from './sections/Mail';
 import { Monitor } from './sections/Monitor';
 import { Notifications } from './sections/Notifications';
 import { Overview } from './sections/Overview';
+import { Privacy } from './sections/Privacy';
 import { Reports } from './sections/Reports';
 import { Rules } from './sections/Rules';
 import { System } from './sections/System';
@@ -47,6 +48,7 @@ const navGroups: { group: string; sections: Section[] }[] = [
     { id: 'users', icon: 'users', view: Users },
     { id: 'log', icon: 'scroll', view: Log },
     { id: 'system', icon: 'gear', view: System },
+    { id: 'privacy', icon: 'shield-check', view: Privacy },
     { id: 'config', icon: 'code', view: Config },
   ] },
 ];

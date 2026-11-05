@@ -266,6 +266,18 @@ textarea.input { min-height: 80px; }
 .pwa-area-filter .pwa-chip i { font-size: 14px; vertical-align: -2px; }
 .pwa-date + .pwa-area-filter { margin-top: 12px; }
 
+/* — legal + my data — */
+.pwa-legal-links { display: flex; justify-content: center; gap: 18px; margin-top: 18px; font-size: 13px; }
+.pwa-legal-links a { color: var(--color-neutral-400); }
+.pwa-legal-links a:hover { color: var(--color-accent); }
+.pwa-legal-page { height: auto; min-height: 100%; }
+.pwa-legal-text { font-size: 14px; line-height: 1.6; color: var(--color-neutral-200); overflow-wrap: anywhere; }
+.pwa-legal-text h2 { font-size: 17px; font-weight: 500; margin: 22px 0 6px; color: var(--color-text); }
+.pwa-legal-text p { margin: 0 0 6px; }
+.pwa-legal-text ul { margin: 0 0 8px; padding-left: 20px; }
+.pwa-danger { border-color: color-mix(in srgb, #e5484d 45%, var(--color-neutral-700)); }
+.pwa-danger-btn:not(:disabled) { color: #ff8a8e; border-color: #e5484d; }
+
 /* — notifications — */
 .pwa-card.is-muted { opacity: .55; }
 .pwa-card > .pwa-rule:first-child { border-top: none; padding-top: 0; }
