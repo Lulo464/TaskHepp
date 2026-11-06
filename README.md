@@ -13,17 +13,29 @@ Ticket- und Zeiterfassungssystem für Arbeit und Zuhause, mit Home-Assistant-Anb
 
 ## Betrieb mit Docker
 
+Das fertige Image liegt auf Docker Hub: [`lulo464/tasklog`](https://hub.docker.com/r/lulo464/tasklog) (amd64 und arm64, also auch Raspberry Pi und Home Assistant Green).
+
 ```sh
 cp .env.example .env      # Passwort, PUBLIC_URL, COOKIE_SECRET und OIDC eintragen
-docker compose up -d      # startet PostgreSQL 16 und Tasklog auf Port 8080
+docker compose up -d      # holt das Image und startet PostgreSQL 16 und Tasklog auf Port 8080
 ```
 
 Beim Start legt Tasklog das Datenbankschema selbst an bzw. aktualisiert es (`server/migrations/`). Nächtliche Backups der Datenbank landen in `./backups`, Fotos im Docker-Volume `uploads`.
 
-**Aktuell halten:** Sicherheits-Updates von Node, Alpine und Postgres kommen über die Basis-Images. Deshalb ab und zu neu bauen und dabei die neuesten Images holen:
+**Aktualisieren:** Neue Versionen und Sicherheits-Updates von Node, Alpine und Postgres kommen mit den Images:
 ```sh
-docker compose pull db && docker compose build --pull && docker compose up -d
+docker compose pull && docker compose up -d
 ```
+
+**Selbst bauen** statt das Image zu holen, z. B. mit eigenen Änderungen:
+```sh
+git pull && docker compose build --pull && docker compose up -d
+```
+Danach nimmt `docker compose pull` wieder das Image von Docker Hub. Eine bestimmte Version legst du in der `.env` fest, z. B. `TASKLOG_IMAGE=lulo464/tasklog:266346a` (Tags: `latest`, kurzer Commit-Hash, bei Releases `1.2.3`).
+
+**Image automatisch bauen (GitHub Actions):** `.github/workflows/docker.yml` testet jeden Push und Pull Request (Server gegen PostgreSQL, App, Build). Nach jedem Merge in `main` baut es das Image für amd64 und arm64 und lädt es auf Docker Hub; ein Git-Tag `v1.2.3` ergibt zusätzlich die Tags `1.2.3`, `1.2` und `1`. Einmalig nötig, unter GitHub → Settings → Secrets and variables → Actions:
+- `DOCKERHUB_USERNAME`: der Docker-Hub-Benutzer, z. B. `lulo464`
+- `DOCKERHUB_TOKEN`: ein Token von hub.docker.com → Account settings → Personal access tokens, mit „Read & Write“
 
 ## Die App aufs Handy
 

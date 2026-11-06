@@ -1,0 +1,96 @@
+# Tests every push and pull request; after a merge into main (or a version tag v1.2.3) builds the image for
+# amd64 and arm64 and pushes it to Docker Hub as lulo464/tasklog.
+#
+# Needs two repository secrets (Settings → Secrets and variables → Actions):
+#   DOCKERHUB_USERNAME  your Docker Hub user, e.g. lulo464
+#   DOCKERHUB_TOKEN     an access token from hub.docker.com → Account settings → Personal access tokens (Read & Write)
+name: Test and publish image
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: lulo464/tasklog
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tasklog
+          POSTGRES_PASSWORD: tasklog
+          POSTGRES_DB: tasklog_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U tasklog -d tasklog_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://tasklog:tasklog@127.0.0.1:5432/tasklog_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            admin/package-lock.json
+      - name: Server – install, type check, test
+        working-directory: server
+        run: |
+          npm ci
+          npx tsc --noEmit -p .
+          npm test
+      - name: App and admin – install, test, build
+        working-directory: admin
+        run: |
+          npm ci
+          npm test
+          npm run build
+
+  publish:
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          # main → latest and the short commit; v1.2.3 → 1.2.3, 1.2 and 1
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=,format=short
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          pull: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
