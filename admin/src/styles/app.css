@@ -286,3 +286,19 @@ button.tag:focus-visible { outline: 2px solid var(--color-accent); outline-offse
 .todo-link-row > i { font-size: 20px; color: var(--color-accent); flex: none; }
 .todo-link-row select { width: min(320px, 45%); flex: none; }
 .todo-link-error { color: #f0a477; }
+
+/* — time per day — */
+.time-day-bar { margin-top: -6px; }
+.time-day-bar .input[type=date] { width: 160px; }
+.time-toggle { background: none; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 2px 4px; border-radius: 6px; white-space: nowrap; }
+.time-toggle:hover, .time-toggle[aria-expanded=true] { background: var(--color-neutral-800); color: var(--color-accent); }
+.table tr.is-open td { border-bottom-color: transparent; }
+.ticket-time-row > td { background: rgba(255, 255, 255, 0.02); padding: 12px 18px 16px; }
+.ticket-time { display: flex; flex-direction: column; gap: 12px; max-width: 760px; margin-left: auto; }
+.ticket-time-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ticket-day-head { display: flex; justify-content: space-between; font-weight: 600; padding-bottom: 4px; border-bottom: 1px solid var(--color-neutral-800); }
+.ticket-day-entry { display: flex; align-items: center; gap: 10px; padding: 4px 0; font-size: 13px; }
+.time-entry-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 0; }
+.time-entry-form .input[type=date] { width: 150px; }
+.time-entry-form .input[type=time] { width: 110px; }
+.time-entry-form .input[aria-invalid=true] { border-color: #f0a477; }

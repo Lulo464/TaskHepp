@@ -17,6 +17,7 @@ import { privacyRoutes } from './routes/privacy.js';
 import { presenceRoutes } from './routes/presence.js';
 import { integrationRoutes } from './routes/integration.js';
 import { tagRoutes } from './routes/tags.js';
+import { timeEntryRoutes } from './routes/timeEntries.js';
 import { mailRoutes } from './routes/mail.js';
 import { reportRoutes } from './routes/reports.js';
 import { ruleRoutes } from './routes/rules.js';
@@ -54,6 +55,7 @@ export async function buildApp(ctx: AppContext, opts: { logger?: boolean | objec
   privacyRoutes(app, ctx);
   presenceRoutes(app, ctx);
   tagRoutes(app, ctx);
+  timeEntryRoutes(app, ctx);
   mailRoutes(app, ctx);
   adminRoutes(app, ctx);
   systemRoutes(app, ctx);

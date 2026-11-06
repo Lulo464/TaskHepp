@@ -956,3 +956,52 @@ describe('home assistant to-do lists linked to areas', () => {
     await ha.close();
   });
 });
+
+describe('time per day', () => {
+  it('books, shows, moves and removes time day by day', async () => {
+    const boss = await t.login('admin');
+    const anna = await t.login('member');
+    const annaId = (await call('GET', '/api/me', anna)).json().id;
+    const ticket = (await call('POST', '/api/tickets', anna, { title: 'Gartenhaus bauen', areaId: 2 })).json();
+    const other = (await call('POST', '/api/tickets', anna, { title: 'Zaun', areaId: 2 })).json();
+    const day = async (offset: number) => (await t.db.query<{ d: string }>('SELECT (current_date + $1::int)::text AS d', [offset])).rows[0].d;
+    const [twoAgo, yesterday] = [await day(-2), await day(-1)];
+
+    // Several days on one ticket.
+    expect((await call('POST', `/api/tickets/${ticket.id}/time`, anna, { minutes: 90, date: twoAgo, start: '14:00' })).statusCode).toBe(201);
+    await call('POST', `/api/tickets/${ticket.id}/time`, anna, { minutes: 120, date: yesterday });
+    await call('POST', `/api/tickets/${ticket.id}/time`, anna, { minutes: 30, date: yesterday, start: '23:50' }); // moves earlier to stay on the day
+    const days = (await call('GET', `/api/tickets/${ticket.id}/days`, anna)).json();
+    expect(days.map((d: { date: string; minutes: number }) => [d.date, d.minutes])).toEqual([[yesterday, 150], [twoAgo, 90]]);
+    expect(days[1].entries[0]).toMatchObject({ userId: annaId, manual: true, seconds: 5400 });
+
+    // The admin view of one day: only tickets worked on that day, with that day's time.
+    const onDay = (await call('GET', `/api/tickets?day=${twoAgo}`, boss)).json();
+    expect(onDay.map((x: { id: number; dayMinutes: number }) => [x.id, x.dayMinutes])).toEqual([[ticket.id, 90]]);
+
+    // Move an entry to another day, then onto another ticket; delete one.
+    const entryId = days[1].entries[0].id;
+    expect((await call('PATCH', `/api/time/${entryId}`, anna, { date: yesterday, minutes: 60 })).statusCode).toBe(200);
+    expect((await call('GET', `/api/tickets?day=${twoAgo}`, boss)).json()).toEqual([]);
+    await call('PATCH', `/api/time/${entryId}`, anna, { ticketId: other.id });
+    expect((await call('GET', `/api/tickets/${other.id}/days`, anna)).json()[0].minutes).toBe(60);
+    expect((await call('DELETE', `/api/time/${entryId}`, anna)).statusCode).toBe(204);
+    expect((await call('GET', `/api/tickets/${other.id}/days`, anna)).json()).toEqual([]);
+
+    // Rules: no future, own entries only (admins all), admins book for others.
+    expect((await call('POST', `/api/tickets/${ticket.id}/time`, anna, { minutes: 30, date: await day(1) })).statusCode).toBe(400);
+    const bens = await t.login('member');
+    const annasEntry = (await call('GET', `/api/tickets/${ticket.id}/days`, anna)).json()[0].entries[0].id;
+    expect((await call('DELETE', `/api/time/${annasEntry}`, bens)).statusCode).toBe(403);
+    expect((await call('POST', `/api/tickets/${ticket.id}/time`, bens, { minutes: 30, userId: annaId })).statusCode).toBe(403);
+    expect((await call('POST', `/api/tickets/${ticket.id}/time`, boss, { minutes: 45, userId: annaId, date: twoAgo })).statusCode).toBe(201);
+    const booked = (await call('GET', `/api/tickets/${ticket.id}/days`, boss)).json().find((d: { date: string }) => d.date === twoAgo);
+    expect(booked.entries[0]).toMatchObject({ userId: annaId, seconds: 2700 });
+
+    // A running timer is shown on its day but can only be moved, not re-timed.
+    await call('POST', `/api/tickets/${ticket.id}/timer`, anna);
+    const running = (await call('GET', `/api/tickets/${ticket.id}/days`, anna)).json()[0].entries.find((e: { endedAt: string | null }) => e.endedAt === null);
+    expect((await call('PATCH', `/api/time/${running.id}`, anna, { minutes: 10 })).statusCode).toBe(409);
+    await call('POST', '/api/timer/stop', anna, { ticketId: ticket.id });
+  });
+});
