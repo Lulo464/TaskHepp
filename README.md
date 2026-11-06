@@ -46,6 +46,15 @@ Die App unter `<PUBLIC_URL>/` ist eine PWA:
 
 Danach startet Tasklog im Vollbild mit eigenem Icon, wie eine normale App.
 
+**Zeit pro Tag:** Zeit hängt nicht pauschal am Ticket, sondern an Tagen. Ein Ticket kann also über mehrere Tage laufen. In **Admin → Tickets**:
+- **Zeit: Gesamt / Heute / Datum** zeigt nur die Tickets, an denen an diesem Tag gearbeitet wurde, jeweils mit der Zeit des Tages und oben der Tagessumme. Das ist der Stundenzettel für einen Tag.
+- Ein Klick auf die Zeit eines Tickets klappt die **Zeit pro Tag** auf: jeder Tag mit Summe, darunter die einzelnen Einträge (Person, von–bis, nachgetragen oder Timer).
+- **Zeit buchen** trägt Zeit für einen beliebigen vergangenen Tag nach, mit Beginn, Dauer (`1:30`, `90` oder `1,5h`) und Person.
+- Einträge lassen sich **bearbeiten** (Tag, Beginn, Dauer), auf ein **anderes Ticket umbuchen** oder löschen. Ein laufender Timer lässt sich nur umbuchen.
+- Ein Timer über Mitternacht zählt auf beiden Tagen mit seinem jeweiligen Anteil.
+
+Mitglieder ändern ihre eigenen Einträge, Admins alle. Für andere buchen dürfen nur Admins.
+
 **Zeitraster:** Unter Admin → System → *Runden auf* stellst du ein, wie gestoppte Timer gerundet werden. Wählbar sind 5, 10, 15 oder 30 Minuten, oder unter *Eigener Takt* jede Zahl von 1 bis 480 Minuten (z. B. 6 für Zehntelstunden). Mit **Sekundengenau** wird nicht gerundet: App, Admin, Berichte und Tagesmonitor zeigen Zeiten dann als `1:23:45 h`, und der CSV-Bericht enthält Dauer, Sekunden und Stunden mit vier Nachkommastellen. Die Rundung gilt beim Stoppen. Schon erfasste Zeiten ändern sich nicht.
 
 **Offline:** Die App merkt sich, was sie zuletzt geladen hat, und funktioniert auch ohne Verbindung, im Keller, im Garten oder wenn der Server gerade neu startet. Oben steht dann „Offline · Stand 12:00“. Du kannst trotzdem:

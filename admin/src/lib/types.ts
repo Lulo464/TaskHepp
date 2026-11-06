@@ -33,6 +33,9 @@ export interface Ticket {
   minutes: number;
   /** Exact tracked time, for "to the second". */
   seconds: number;
+  /** Only with ?day=…: the time of that day. */
+  daySeconds?: number;
+  dayMinutes?: number;
   running: boolean;
   createdAt: string;
   doneAt: string | null;
@@ -389,4 +392,26 @@ export interface TagScan {
   ticketId?: number;
   title?: string;
   followupId?: number | null;
+}
+
+/** One time entry; on a day, `seconds` is the part that falls on that day. */
+export interface TimeEntry {
+  id: number;
+  userId: number | null;
+  user: string | null;
+  startedAt: string;
+  endedAt: string | null;
+  manual: boolean;
+  /** Local (Tasklog's time zone) day and times of the whole entry; endTime null while running. */
+  startDay: string;
+  startTime: string;
+  endTime: string | null;
+  seconds: number;
+}
+
+export interface TicketDay {
+  date: string;
+  seconds: number;
+  minutes: number;
+  entries: TimeEntry[];
 }

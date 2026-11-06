@@ -7,6 +7,7 @@ import { HttpError, idParam, notFound, parse } from '../lib/http.js';
 import { createTicket, getTicket, setStatus, TICKET_ORDER, TICKET_SELECT, type TicketRow } from '../services/tickets.js';
 import { recurrenceSchema } from '../services/recurrence.js';
 import { addManualTime, startTimer, stopEntries } from '../services/time.js';
+import { bookedSpan } from './timeEntries.js';
 
 const status = z.enum(['open', 'inProgress', 'done']);
 const prio = z.enum(['normal', 'high']);
@@ -48,6 +49,8 @@ const listQuery = z.object({
   source: z.enum(['manual', 'app', 'ha', 'mail']).optional(),
   status: status.optional(),
   open: z.stringbool().optional(),
+  /** Only tickets worked on that day, each with its time of the day (daySeconds, dayMinutes). */
+  day: date.optional(),
   limit: z.coerce.number().int().min(1).max(1000).default(500),
 });
 
@@ -92,12 +95,28 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
     if (q.source) add('t.source = ?', q.source);
     if (q.status) add('t.status = ?', q.status);
     if (q.open !== undefined) where.push(q.open ? "t.status <> 'done'" : "t.status = 'done'");
+    // Entries overlapping the (local) day; running timers count up to now.
+    const onDay = (p: string) => `e.started_at < ${p}::date + interval '1 day' AND COALESCE(e.ended_at, now()) > ${p}::date`;
+    if (q.day) {
+      params.push(q.day);
+      where.push(`t.id IN (SELECT e.ticket_id FROM time_entries e WHERE ${onDay(`$${params.length}`)})`);
+    }
     params.push(q.limit);
     const { rows } = await db.query<TicketRow>(
       `${TICKET_SELECT} ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ${TICKET_ORDER} LIMIT $${params.length}`,
       params,
     );
-    return rows;
+    if (!q.day) return rows;
+    const { rows: perTicket } = await db.query<{ id: number; seconds: number }>(
+      `SELECT e.ticket_id AS id,
+              round(sum(extract(epoch FROM (LEAST(COALESCE(e.ended_at, now()), $1::date + interval '1 day') - GREATEST(e.started_at, $1::date)))))::int AS seconds
+         FROM time_entries e WHERE e.ticket_id = ANY($2::int[]) AND ${onDay('$1')} GROUP BY e.ticket_id`,
+      [q.day, rows.map(r => r.id)],
+    );
+    const seconds = new Map(perTicket.map(r => [r.id, r.seconds]));
+    return rows
+      .map(r => ({ ...r, daySeconds: seconds.get(r.id) ?? 0, dayMinutes: Math.round((seconds.get(r.id) ?? 0) / 60) }))
+      .filter(r => r.daySeconds > 0);
   });
 
   app.get('/api/tickets/:id', async req => {
@@ -370,9 +389,25 @@ export function ticketRoutes(app: FastifyInstance, ctx: AppContext) {
 
   app.post('/api/tickets/:id/time', { config: { access: 'member' } }, async (req, reply) => {
     const { id } = parse(idParam, req.params);
-    const { minutes, at } = parse(z.object({ minutes: z.number().int().min(1).max(24 * 60), at: happenedAt }), req.body);
+    const body = parse(z.object({
+      minutes: z.number().int().min(1).max(24 * 60),
+      at: happenedAt,
+      /** Book it on another day (from `start`, default 09:00) — a ticket can take several days. */
+      date: date.optional(),
+      start: hhmm.optional(),
+      /** Admins book for someone else. */
+      userId: z.number().int().nullable().optional(),
+    }), req.body);
     if (!(await getTicket(db, id))) throw notFound('Ticket nicht gefunden');
-    await addManualTime(db, id, userId(req), minutes, at);
+    const isAdmin = req.principal?.kind === 'user' ? req.principal.user.role === 'admin' : req.principal?.scope === 'admin';
+    if (body.userId !== undefined && body.userId !== userId(req) && !isAdmin) throw new HttpError(403, 'Nur Admins buchen Zeit für andere');
+    const who = body.userId === undefined ? userId(req) : body.userId;
+    if (body.date) {
+      const span = await bookedSpan(ctx, body.date, body.start, body.minutes);
+      await db.query('INSERT INTO time_entries (ticket_id, user_id, started_at, ended_at, manual) VALUES ($1, $2, $3, $4, true)', [id, who, span.startedAt, span.endedAt]);
+    } else {
+      await addManualTime(db, id, who, body.minutes, body.at);
+    }
     publisher.schedule();
     reply.code(201);
     return getTicket(db, id);
