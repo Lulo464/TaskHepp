@@ -910,7 +910,7 @@ describe('home assistant to-do lists linked to areas', () => {
     const eggs = list().find(i => i.summary === 'Eier (10)')!;
     eggs.status = 'needs_action';
     await syncHaTodos(t.ctx);
-    const cheese = { uid: 'k', summary: 'Käse', status: 'needs_action' as const };
+    const cheese: { uid: string; summary: string; status: 'needs_action'; due?: string; description?: string } = { uid: 'k', summary: 'Käse', status: 'needs_action' };
     list().push(cheese);
     await syncHaTodos(t.ctx);
     const cheeseTicket = (await inArea()).find(x => x.title === 'Käse')!;
@@ -920,7 +920,7 @@ describe('home assistant to-do lists linked to areas', () => {
     await call('PATCH', `/api/tickets/${cheeseTicket.id}`, boss, { due: '2030-07-03', dueTime: null, description: 'Emmentaler' });
     await syncHaTodos(t.ctx);
     expect(cheese).toMatchObject({ due: '2030-07-03', description: 'Emmentaler' });
-    delete (cheese as { due?: string }).due;
+    delete cheese.due;
     await syncHaTodos(t.ctx);
     expect((await call('GET', `/api/tickets/${cheeseTicket.id}`, boss)).json().due).toBeNull();
 

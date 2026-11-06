@@ -1,13 +1,15 @@
 # Tasklog: API server + admin UI in one image.
 
-FROM node:24-alpine AS admin
+# The build stages produce plain JavaScript (no native modules), so they run on the build machine's own platform
+# even when the image is for another one (arm64 for a Raspberry Pi): fast, without emulation.
+FROM --platform=$BUILDPLATFORM node:24-alpine AS admin
 WORKDIR /build/admin
 COPY admin/package.json admin/package-lock.json ./
 RUN npm ci
 COPY admin/ ./
 RUN npm run build
 
-FROM node:24-alpine AS server
+FROM --platform=$BUILDPLATFORM node:24-alpine AS server
 WORKDIR /build/server
 COPY server/package.json server/package-lock.json ./
 RUN npm ci
