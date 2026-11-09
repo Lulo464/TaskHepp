@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Linkify } from '../../components/Linkify';
 import { Icon } from '../../components/ui';
 import { del, post, useAction, useApi } from '../../lib/api';
 import { formatTime } from '../../lib/format';
@@ -43,7 +44,7 @@ export function TicketNotes({ ticketId, me, canEdit }: { ticketId: number; me: M
               </button>
             )}
           </div>
-          <div className="pwa-note-body">{n.body}</div>
+          <div className="pwa-note-body"><Linkify text={n.body} /></div>
         </div>
       ))}
       {canEdit && (
