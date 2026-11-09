@@ -457,3 +457,7 @@ textarea.input { min-height: 80px; }
   .pwa { grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: 'nav offline' 'nav content' 'nav mini'; }
   .pwa-offline { grid-area: offline; }
 }
+
+/* — links found in text — */
+.auto-link { color: var(--color-accent); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+.auto-link:hover { text-decoration-thickness: 2px; }

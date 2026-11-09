@@ -69,6 +69,8 @@ Der Tab **Planung** zeigt die offenen Tickets der nächsten 7 Tage nach Tag, dar
 
 Auf der Ticket-Seite lassen sich **Notizen** anhängen, z. B. „Ersatzteil bestellt, kommt Freitag“. Jede Notiz zeigt, wer sie wann geschrieben hat. Alle sehen die Notizen, Mitglieder und Admins schreiben sie, und löschen darf jeder seine eigenen (Admins alle).
 
+**Links** in Beschreibung, Notizen und Checklisten werden klickbar: `https://…`, `www.…` und E-Mail-Adressen. Sie öffnen sich in einem neuen Tab. Satzzeichen am Ende wie „.“ oder „)“ gehören nicht zum Link.
+
 Unter **Mehr → Bereiche** sortiert jeder Benutzer die Bereiche für sich und blendet sie aus. Ausgeblendete Bereiche verschwinden aus Heute, Tickets und Neu. Die Einstellung gilt nur für diesen Benutzer, dafür aber auf allen seinen Geräten.
 
 **Wichtig:** Die volle Installation (eigenes App-Fenster, Start auch ohne Netz) gibt es nur über **HTTPS**. Unter `http://192.168…` läuft die App im Browser; Android legt dann nur eine Verknüpfung an, das iPhone startet sie ohne Offline-Funktion. Für HTTPS Tasklog hinter einen Reverse Proxy mit Zertifikat stellen (z. B. Nginx Proxy Manager, Caddy, Traefik oder ein Cloudflare-Tunnel) und `PUBLIC_URL` auf die `https://`-Adresse setzen.

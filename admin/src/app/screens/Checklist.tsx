@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Linkify } from '../../components/Linkify';
 import { Icon } from '../../components/ui';
 import { del, patch, post, useAction, useApi } from '../../lib/api';
 import type { ChecklistItem, Ticket } from '../../lib/types';
@@ -49,7 +50,7 @@ export function Checklist({ ticket, canEdit }: { ticket: Ticket; canEdit: boolea
               onChange={e => setEditing({ id: i.id, text: e.target.value })} onBlur={() => void rename()}
               onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); if (e.key === 'Escape') setEditing(null); }} />
           ) : (
-            <span className="grow pwa-check-text pwa-wrap" onClick={() => canEdit && setEditing({ id: i.id, text: i.text })}>{i.text}</span>
+            <span className="grow pwa-check-text pwa-wrap" onClick={() => canEdit && setEditing({ id: i.id, text: i.text })}><Linkify text={i.text} /></span>
           )}
           {canEdit && (
             <button type="button" className="btn btn-icon btn-ghost pwa-check-del" aria-label={t('app.checklist.delete', { text: i.text })}

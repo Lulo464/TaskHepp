@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Linkify } from '../../components/Linkify';
 import { Icon, Seg } from '../../components/ui';
 import { patch, useAction } from '../../lib/api';
 import type { Ticket } from '../../lib/types';
@@ -77,7 +78,7 @@ export function TicketText({ ticket, canEdit }: { ticket: Ticket; canEdit: boole
           </button>
         )}
       </div>
-      <p className="pwa-desc">{ticket.description || t('app.detail.noDescription')}</p>
+      <p className="pwa-desc">{ticket.description ? <Linkify text={ticket.description} /> : t('app.detail.noDescription')}</p>
     </>
   );
 }
