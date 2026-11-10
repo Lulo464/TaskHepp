@@ -464,4 +464,4 @@ TASKLOG_URL=… TASKLOG_TOKEN=… pytest -c ha-tests/pytest.ini ha-tests   # HA-
 
 **Selbst bauen** statt das Image zu holen: `docker compose build --pull && docker compose up -d`. Danach nimmt `docker compose pull` wieder das Image von Docker Hub.
 
-**Automatischer Build (GitHub Actions):** `.github/workflows/docker.yml` testet jeden Push und Pull Request. Nach jedem Merge in `main` baut der Workflow das Image für amd64 und arm64 und lädt es als `latest` und mit kurzem Commit-Hash hoch. Ein Git-Tag `v1.2.3` ergibt zusätzlich `1.2.3`, `1.2` und `1`. Einmalig nötig sind zwei Repository-Secrets unter *Settings → Secrets and variables → Actions*: `DOCKERHUB_USERNAME` und `DOCKERHUB_TOKEN` (ein Docker-Hub-Token mit „Read & Write“).
+**Automatischer Build (GitHub Actions):** `.github/workflows/docker.yml` testet jeden Push und Pull Request. Nach jedem Merge in `main` baut der Workflow das Image für amd64 und arm64 und lädt es als `latest` und mit kurzem Commit-Hash hoch.
