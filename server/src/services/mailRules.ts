@@ -21,6 +21,8 @@ export interface MailRule {
   subjectContains: string;
   bodyContains: string;
   subjectPattern: string;
+  /** Pattern on the mail text; its groups become {text1}, {text2} … (and named groups). Does not filter. */
+  bodyPattern?: string;
   action: 'ticket' | 'ignore';
   split: 'none' | 'lines' | 'bullets' | 'pattern';
   splitPattern: string;
@@ -87,9 +89,20 @@ export function matchRule(rule: MailRule, mail: MailMessage): Vars | null {
   return m ? groupVars(m) : null;
 }
 
-function groupVars(m: RegExpMatchArray): Vars {
+/** Values taken from the mail text: the first match of the rule's text pattern, as {text1}, {text2} … */
+export function bodyVars(rule: MailRule, body: string): Vars {
+  if (!rule.bodyPattern) return {};
+  try {
+    const m = mainText(body).join('\n').match(new RegExp(rule.bodyPattern, 'im'));
+    return m ? groupVars(m, 'text') : {};
+  } catch {
+    return {}; // invalid pattern: nothing extracted
+  }
+}
+
+function groupVars(m: RegExpMatchArray, prefix = ''): Vars {
   const vars: Vars = {};
-  m.slice(1).forEach((g, i) => { vars[String(i + 1)] = (g ?? '').trim(); });
+  m.slice(1).forEach((g, i) => { vars[`${prefix}${i + 1}`] = (g ?? '').trim(); });
   for (const [k, v] of Object.entries(m.groups ?? {})) vars[k] = (v ?? '').trim();
   return vars;
 }
@@ -203,7 +216,7 @@ export function planMail(rules: MailRule[], mail: MailMessage, today: Date): Mai
     } else {
       for (const item of splitItems(rule, mail.body)) {
         if (plan.tickets.length >= MAX_TICKETS_PER_MAIL) break;
-        const vars = { ...base, ...groups, ...item, item: item.item ?? mail.subject };
+        const vars = { ...base, ...groups, ...bodyVars(rule, mail.body), ...item, item: item.item ?? mail.subject };
         let due: string | null = null;
         let dueTime = rule.dueTime;
         if (rule.dueMode === 'days') due = addDays(today, rule.dueDays);
@@ -232,15 +245,44 @@ export function planMail(rules: MailRule[], mail: MailMessage, today: Date): Mai
   return plan;
 }
 
-/** Very small HTML → text conversion for mails without a text part. */
+const decode = (s: string) =>
+  s.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+
+/**
+ * Very small HTML → text conversion. Links keep their address: <a href="https://x">Link zum Ticket</a>
+ * becomes "Link zum Ticket <https://x>", so patterns and templates can still get at it.
+ */
 export function htmlToText(html: string): string {
   return html
     .replace(/<(script|style|head)[\s\S]*?<\/\1>/gi, '')
+    .replace(/<a\b[^>]*?\bhref\s*=\s*(["'])(https?:[^"']+)\1[^>]*>([\s\S]*?)<\/a>/gi, (_, _q: string, href: string, inner: string) => {
+      const url = decode(href.trim());
+      const text = decode(inner.replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim();
+      // Marked so the tag removal below keeps it; turned into <…> at the end.
+      return !text || text === url ? url : `${text} \u0001${url}\u0002`;
+    })
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/(p|div|li|tr|h\d)>/gi, '\n')
     .replace(/<li[^>]*>/gi, '- ')
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/\u0001([^\u0002]*)\u0002/g, '<$1>')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+}
+
+const URL_IN = /https?:\/\/[^\s"'<>]+/gi;
+
+/**
+ * The mail's text: the plain-text part, unless it lost links the HTML part has (many mails show
+ * "Link zum Ticket" in the text part without the address) — then the HTML, converted with its links.
+ */
+export function mailBody(text: string | undefined, html: string | undefined): string {
+  const plain = text?.trim() ?? '';
+  if (!html) return plain;
+  const fromHtml = htmlToText(html);
+  if (!plain) return fromHtml;
+  const htmlLinks = new Set(fromHtml.match(URL_IN) ?? []);
+  const missing = [...htmlLinks].some(u => !plain.includes(u));
+  return missing ? fromHtml : plain;
 }

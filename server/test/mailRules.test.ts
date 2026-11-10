@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { fixLatin1Headers } from '../src/services/mailImport.js';
-import { checkPattern, detectDue, htmlToText, planMail, render, splitItems, type MailMessage, type MailRule } from '../src/services/mailRules.js';
+import { checkPattern, detectDue, htmlToText, mailBody, planMail, render, splitItems, type MailMessage, type MailRule } from '../src/services/mailRules.js';
 
 const today = new Date(2026, 9, 28); // 28.10.2026
 
@@ -131,5 +131,54 @@ describe('header charset', () => {
     expect(fixLatin1Headers(latin1).toString('utf8')).toBe('From: Werkstatt Müller <a@b.de>\r\n\r\nKörper');
     const utf8 = Buffer.from('From: Müller <a@b.de>\r\n\r\nText', 'utf8');
     expect(fixLatin1Headers(utf8)).toBe(utf8);
+  });
+});
+
+describe('values from the mail text', () => {
+  // As a ticket system sends it: the link only in the HTML part, behind "Link zum Ticket".
+  const subject = 'WG: [herbrand#305564 IT Solutions-Ticket] "ITA - Tobias Horster - neuer Mitarbeiter" - Ticket ist zugewiesen';
+  const html = '<p>Hallo,</p><p>das Ticket wurde Ihnen zugewiesen.</p>' +
+    '<p><a href="https://support.herbrand.de/ticket/305564?a=1&amp;b=2" target="_blank"><b>Link zum Ticket</b></a></p>' +
+    '<p>Mit freundlichen Grüßen<br>Ihr IT-Team</p>';
+  const text = 'Hallo,\n\ndas Ticket wurde Ihnen zugewiesen.\n\nLink zum Ticket\n\nMit freundlichen Grüßen\nIhr IT-Team';
+  const ticketRule = rule({
+    subjectPattern: '["„“](.+?)["“”]',
+    bodyPattern: 'Link zum Ticket\\W*(https?://[^\\s<>\\])"]+)',
+    titleTemplate: '{1}',
+    descriptionTemplate: '{text1}',
+  });
+
+  it('keeps link addresses when turning HTML into text', () => {
+    expect(htmlToText('<a href="https://x.de/a?b=1&amp;c=2">Link zum Ticket</a>')).toBe('Link zum Ticket <https://x.de/a?b=1&c=2>');
+    expect(htmlToText('<a href="https://x.de">https://x.de</a>')).toBe('https://x.de');
+    expect(htmlToText('<a href="mailto:a@b.de">a@b.de</a>')).toBe('a@b.de');
+  });
+
+  it('uses the HTML part when the text part lost its links', () => {
+    expect(mailBody(text, html)).toContain('Link zum Ticket <https://support.herbrand.de/ticket/305564?a=1&b=2>');
+    expect(mailBody('Siehe https://x.de', '<a href="https://x.de">x</a>')).toBe('Siehe https://x.de');
+    expect(mailBody('nur Text', undefined)).toBe('nur Text');
+    expect(mailBody(undefined, '<p>nur HTML</p>')).toBe('nur HTML');
+  });
+
+  it('takes the title from the quotes and only the ticket link as description', () => {
+    const plan = planMail([ticketRule], mail({ subject, body: mailBody(text, html) }), today);
+    expect(plan.tickets).toEqual([expect.objectContaining({
+      title: 'ITA - Tobias Horster - neuer Mitarbeiter',
+      description: 'https://support.herbrand.de/ticket/305564?a=1&b=2',
+    })]);
+    // Typographic quotes work as well; a mail without the link still gets its ticket, with an empty description.
+    const other = planMail([ticketRule], mail({ subject: 'WG: „Drucker defekt“ - zugewiesen', body: 'kein Link' }), today);
+    expect(other.tickets).toEqual([expect.objectContaining({ title: 'Drucker defekt', description: '' })]);
+    // The same pattern finds the link however the text part writes it.
+    for (const body of ['Link zum Ticket: https://t.de/1', 'Link zum Ticket [https://t.de/1]', 'Link zum Ticket\nhttps://t.de/1', 'Link zum Ticket (https://t.de/1)']) {
+      expect(planMail([ticketRule], mail({ subject, body }), today).tickets[0].description).toBe('https://t.de/1');
+    }
+  });
+
+  it('names groups of the text pattern {text1}, {text2} and by name', () => {
+    const r = rule({ bodyPattern: 'Kunde: (?<kunde>\\w+), Nr\\. (\\d+)', titleTemplate: '{kunde} {text2}', descriptionTemplate: '{text1}' });
+    expect(planMail([r], mail({ body: 'Kunde: Meier, Nr. 42' }), today).tickets[0]).toMatchObject({ title: 'Meier 42', description: 'Meier' });
+    expect(planMail([rule({ bodyPattern: '(' })], mail(), today).result).toBe('created'); // broken pattern extracts nothing
   });
 });

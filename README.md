@@ -308,13 +308,54 @@ Beispiel: Rechnungen, Bestellungen oder Mails von Oma werden automatisch zu Tick
    - **Bedingungen:** Absender, Betreff oder Text enthält …, optional ein Betreff-Muster (Regex)
    - **Aktion:** Ticket anlegen oder ignorieren (z. B. Newsletter)
    - **Aufteilen:** ein Ticket pro Zeile, pro Aufzählungspunkt oder pro Treffer eines Musters. Treffer mit Wörtern aus „Treffer überspringen“ fallen weg.
-   - **Vorlagen** für Titel und Beschreibung mit `{subject}`, `{from}`, `{fromName}`, `{fromAddress}`, `{date}`, `{body}`, `{bodyFirstLine}`, `{item}` und `{1}`, `{2}` … aus dem Muster. `{1|2}` nimmt den ersten nicht leeren Wert.
+   - **Werte aus dem Mailtext holen:** ein Muster (Regex) auf den Text. Der erste Treffer liefert `{text1}`, `{text2}` … Es filtert nicht: Passt es nicht, entsteht das Ticket trotzdem. Links aus HTML-Mails stehen im Text als `Linktext <Adresse>`.
+   - **Vorlagen** für Titel und Beschreibung mit `{subject}`, `{from}`, `{fromName}`, `{fromAddress}`, `{date}`, `{body}`, `{bodyFirstLine}`, `{item}`, dazu `{1}`, `{2}` … aus dem Betreff-Muster und `{text1}`, `{text2}` … aus dem Text-Muster. `{1|2}` nimmt den ersten nicht leeren Wert.
    - **Bereich, Priorität, Fälligkeit:** keine, in X Tagen oder ein Datum aus der Mail
 3. **Vorschau** zeigt für die neuesten Mails, welche Tickets entstehen würden, ohne etwas zu importieren. Unter **Ausprobieren** testest du die Regeln an einer eingetippten Beispielmail.
 
 Jede Mail wird genau einmal verarbeitet. Das Passwort wird verschlüsselt gespeichert, der Schlüssel ist `COOKIE_SECRET`.
 
-Beispiel „ein Ticket pro Link“: Muster `^\s*(?:[-*•–·]|\d{1,3}[.)])?\s*(.*?)[\s\[(<:]*((?:https?://|www\.)[^\s\]>)"]+).*$`, Titel `{1|2}`, Beschreibung `{2}`.
+### 8.1 Beispiel: Mails aus einem Ticketsystem
+
+Ein Ticketsystem schickt Mails wie diese:
+
+> **Betreff:** `WG: [herbrand#305564 IT Solutions-Ticket] "ITA - Tobias Horster - neuer Mitarbeiter" - Ticket ist zugewiesen`
+> **Text:** … das Ticket wurde Ihnen zugewiesen. <u>Link zum Ticket</u> … (ein Link, die Adresse steht nur dahinter)
+
+Daraus soll ein Ticket werden mit
+- dem **Titel** aus den Anführungszeichen: `ITA - Tobias Horster - neuer Mitarbeiter`
+- in der **Beschreibung nur dem Link**, der in der Mail hinter „Link zum Ticket“ steckt
+
+**So richtest du das ein:**
+
+1. **Admin → E-Mail**, links das Postfach wählen, oben auf **Regeln** und **Neue Regel**.
+2. Die Felder so ausfüllen:
+
+   | Feld | Eintrag | Bedeutung |
+   |---|---|---|
+   | Name | `IT-Tickets` | frei wählbar |
+   | Betreff enthält | `Ticket ist zugewiesen` | Die Regel greift nur bei diesen Mails. |
+   | Betreff passt zum Muster | `["„“](.+?)["“”]` | nimmt den Text zwischen den Anführungszeichen, gerade oder typografische, als `{1}` |
+   | Aktion | *Ticket anlegen* | |
+   | Tickets pro Mail | *Ein Ticket* | |
+   | Werte aus dem Mailtext holen | `Link zum Ticket\W*(https?://[^\s<>\])"]+)` | sucht im Text „Link zum Ticket“ und nimmt die Adresse dahinter als `{text1}` |
+   | Titel | `{1}` | |
+   | Beschreibung | `{text1}` | |
+   | Bereich, Priorität | z. B. *Arbeit*, *Normal* | |
+
+3. **Speichern.** Steht vorher eine Regel, die alle Mails nimmt (z. B. „Alle Mails“), schiebst du die neue Regel mit den Pfeilen **über** diese. Regeln werden von oben nach unten geprüft.
+4. **Testen**, unten bei der Regel unter **Ausprobieren**: den Betreff einfügen und als Text den Quelltext der Mail, also den HTML-Teil. Die meisten Mailprogramme zeigen ihn über „Quelltext anzeigen“ oder „Nachrichtenquelle“ an, in Thunderbird z. B. *Ansicht → Nachrichtenquelltext*. Alternativ einfach `Link zum Ticket <https://…>` eintippen. Nach **Testen** zeigt Tasklog Titel und Beschreibung des Tickets, das entstehen würde.
+5. Unter **Vorschau & Protokoll** siehst du für die echten Mails im Postfach, was daraus würde, ohne dass etwas importiert wird.
+
+**Für andere Mails anpassen:**
+- Steht der Titel anders im Betreff, z. B. nach `Auftrag 1234:`, nimmst du das Muster `Auftrag \d+:\s*(.+)`. Was in der Klammer `( )` steht, wird `{1}`.
+- Heißt der Link anders, z. B. „Zum Vorgang“, ersetzt du im Text-Muster einfach `Link zum Ticket` durch diesen Text.
+- Weitere Klammern im Text-Muster ergeben `{text2}`, `{text3}` …, z. B. `Ticketnummer:\s*(\d+)`.
+- Links aus HTML-Mails stehen für die Muster immer als `Linktext <Adresse>` im Text, auch wenn die Mail nur den Linktext zeigt.
+
+### 8.2 Beispiel: ein Ticket pro Link
+
+Für Mails mit einer Liste von Links, z. B. Artikel zum Lesen: *Tickets pro Mail* auf **Pro Treffer**, Muster `^\s*(?:[-*•–·]|\d{1,3}[.)])?\s*(.*?)[\s\[(<:]*((?:https?://|www\.)[^\s\]>)"]+).*$`, Titel `{1|2}` (Text vor dem Link, sonst der Link), Beschreibung `{2}` (der Link). Unter *Treffer überspringen* kannst du Links ausschließen, z. B. `abmelden, impressum`.
 
 ---
 
