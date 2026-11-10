@@ -319,11 +319,11 @@ Jede Mail wird genau einmal verarbeitet. Das Passwort wird verschlüsselt gespei
 
 Ein Ticketsystem schickt Mails wie diese:
 
-> **Betreff:** `WG: [herbrand#305564 IT Solutions-Ticket] "ITA - Tobias Horster - neuer Mitarbeiter" - Ticket ist zugewiesen`
+> **Betreff:** `WG: [herbrand#305564 IT Solutions-Ticket] "ITA -- neuer Mitarbeiter" - Ticket ist zugewiesen`
 > **Text:** … das Ticket wurde Ihnen zugewiesen. <u>Link zum Ticket</u> … (ein Link, die Adresse steht nur dahinter)
 
 Daraus soll ein Ticket werden mit
-- dem **Titel** aus den Anführungszeichen: `ITA - Tobias Horster - neuer Mitarbeiter`
+- dem **Titel** aus den Anführungszeichen: `ITA -- neuer Mitarbeiter`
 - in der **Beschreibung nur dem Link**, der in der Mail hinter „Link zum Ticket“ steckt
 
 **So richtest du das ein:**
