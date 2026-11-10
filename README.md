@@ -308,11 +308,22 @@ Beispiel: Rechnungen, Bestellungen oder Mails von Oma werden automatisch zu Tick
    - **Bedingungen:** Absender, Betreff oder Text enthält …, optional ein Betreff-Muster (Regex)
    - **Aktion:** Ticket anlegen oder ignorieren (z. B. Newsletter)
    - **Aufteilen:** ein Ticket pro Zeile, pro Aufzählungspunkt oder pro Treffer eines Musters. Treffer mit Wörtern aus „Treffer überspringen“ fallen weg.
-   - **Vorlagen** für Titel und Beschreibung mit `{subject}`, `{from}`, `{fromName}`, `{fromAddress}`, `{date}`, `{body}`, `{bodyFirstLine}`, `{item}` und `{1}`, `{2}` … aus dem Muster. `{1|2}` nimmt den ersten nicht leeren Wert.
+   - **Werte aus dem Mailtext holen:** ein Muster (Regex) auf den Text. Der erste Treffer liefert `{text1}`, `{text2}` … Es filtert nicht: Passt es nicht, entsteht das Ticket trotzdem. Links aus HTML-Mails stehen im Text als `Linktext <Adresse>`.
+   - **Vorlagen** für Titel und Beschreibung mit `{subject}`, `{from}`, `{fromName}`, `{fromAddress}`, `{date}`, `{body}`, `{bodyFirstLine}`, `{item}`, dazu `{1}`, `{2}` … aus dem Betreff-Muster und `{text1}`, `{text2}` … aus dem Text-Muster. `{1|2}` nimmt den ersten nicht leeren Wert.
    - **Bereich, Priorität, Fälligkeit:** keine, in X Tagen oder ein Datum aus der Mail
 3. **Vorschau** zeigt für die neuesten Mails, welche Tickets entstehen würden, ohne etwas zu importieren. Unter **Ausprobieren** testest du die Regeln an einer eingetippten Beispielmail.
 
 Jede Mail wird genau einmal verarbeitet. Das Passwort wird verschlüsselt gespeichert, der Schlüssel ist `COOKIE_SECRET`.
+
+**Beispiel Ticketsystem:** Aus dem Betreff `WG: [herbrand#305564 IT Solutions-Ticket] "ITA - Tobias Horster - neuer Mitarbeiter" - Ticket ist zugewiesen` soll der Titel `ITA - Tobias Horster - neuer Mitarbeiter` werden, und in die Beschreibung nur der Link, der in der Mail hinter „Link zum Ticket“ steckt:
+
+| Feld | Eintrag |
+|---|---|
+| Betreff enthält | `Ticket ist zugewiesen` |
+| Betreff passt zum Muster | `["„“](.+?)["“”]` |
+| Werte aus dem Mailtext holen | `Link zum Ticket\W*(https?://[^\s<>\])"]+)` |
+| Titel | `{1}` |
+| Beschreibung | `{text1}` |
 
 Beispiel „ein Ticket pro Link“: Muster `^\s*(?:[-*•–·]|\d{1,3}[.)])?\s*(.*?)[\s\[(<:]*((?:https?://|www\.)[^\s\]>)"]+).*$`, Titel `{1|2}`, Beschreibung `{2}`.
 

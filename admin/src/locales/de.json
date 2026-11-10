@@ -925,7 +925,9 @@
     "splitExclude": "Treffer überspringen, wenn sie eines davon enthalten (mit Komma getrennt)",
     "titleTemplate": "Ticket-Titel",
     "descriptionTemplate": "Beschreibung",
-    "placeholders": "Platzhalter: {subject} {from} {fromName} {fromAddress} {date} {body} {bodyFirstLine} {item} {1} {2} … – {1|2} nimmt den ersten nicht leeren Wert.",
+    "placeholders": "Platzhalter: {subject} {from} {fromName} {fromAddress} {date} {body} {bodyFirstLine} {item} · {1} {2} … aus dem Betreff-Muster · {text1} {text2} … aus dem Text-Muster · {1|2} nimmt den ersten nicht leeren Wert.",
+    "bodyPattern": "Werte aus dem Mailtext holen (Regex, optional)",
+    "bodyPatternHint": "Der erste Treffer im Text; die Klammern werden zu {text1}, {text2} … Beispiel für einen Link hinter „Link zum Ticket“: Link zum Ticket\\W*(https?://[^\\s<>\\])\"]+) → {text1}. Links aus HTML-Mails stehen im Text als „Linktext <Adresse>“. Passt das Muster nicht, entsteht das Ticket trotzdem, nur ohne diese Werte.",
     "due": {
       "none": "Keine",
       "days": "In X Tagen",

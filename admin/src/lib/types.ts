@@ -319,6 +319,8 @@ export interface MailRule {
   subjectContains: string;
   bodyContains: string;
   subjectPattern: string;
+  /** Pattern on the mail text; groups become {text1}, {text2} … */
+  bodyPattern?: string;
   action: 'ticket' | 'ignore';
   split: 'none' | 'lines' | 'bullets' | 'pattern';
   splitPattern: string;

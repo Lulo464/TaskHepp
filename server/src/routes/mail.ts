@@ -4,7 +4,7 @@ import type { AppContext } from '../context.js';
 import { withTransaction } from '../db.js';
 import { HttpError, idParam, notFound, parse } from '../lib/http.js';
 import { ACCOUNT_SELECT, RULE_SELECT, type MailAccount } from '../services/mailImport.js';
-import { checkPattern, planMail, type MailRule } from '../services/mailRules.js';
+import { checkPattern, htmlToText, planMail, type MailRule } from '../services/mailRules.js';
 
 const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Uhrzeit im Format HH:MM');
 const pattern = z.string().max(500).superRefine((p, ctx) => {
@@ -38,6 +38,7 @@ const ruleInput = z.object({
   subjectContains: z.string().max(200),
   bodyContains: z.string().max(200),
   subjectPattern: pattern,
+  bodyPattern: pattern.default(''),
   action: z.enum(['ticket', 'ignore']),
   split: z.enum(['none', 'lines', 'bullets', 'pattern']),
   splitPattern: pattern,
@@ -53,7 +54,7 @@ const ruleInput = z.object({
 });
 const RULE_COLUMNS: Record<keyof z.infer<typeof ruleInput>, string> = {
   name: 'name', enabled: 'enabled', fromContains: 'from_contains', subjectContains: 'subject_contains', bodyContains: 'body_contains',
-  subjectPattern: 'subject_pattern', action: 'action', split: 'split', splitPattern: 'split_pattern', splitExclude: 'split_exclude', titleTemplate: 'title_template',
+  subjectPattern: 'subject_pattern', bodyPattern: 'body_pattern', action: 'action', split: 'split', splitPattern: 'split_pattern', splitExclude: 'split_exclude', titleTemplate: 'title_template',
   descriptionTemplate: 'description_template', areaId: 'area_id', prio: 'prio', dueMode: 'due_mode', dueDays: 'due_days',
   dueTime: 'due_time', continueAfter: 'continue_after',
 };
@@ -241,7 +242,8 @@ export function mailRoutes(app: FastifyInstance, ctx: AppContext) {
     );
     return planMail(rules, {
       messageKey: 'sample', fromName: m ? m[1].replace(/^"|"$/g, '') : '', fromAddress: m ? m[2] : sample.from.trim(),
-      subject: sample.subject, body: sample.body, date: new Date(),
+      // Pasted HTML (the mail's source) is read like an imported HTML mail, links included.
+      subject: sample.subject, body: /<\/?(a|p|div|br|span|table|html)\b/i.test(sample.body) ? htmlToText(sample.body) : sample.body, date: new Date(),
     }, new Date(d.y, d.m - 1, d.d));
   });
 }
