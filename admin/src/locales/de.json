@@ -687,6 +687,14 @@
       "logoutConfirm_one": "1 Änderung ist noch nicht übertragen und geht beim Abmelden verloren. Trotzdem abmelden?",
       "logoutConfirm_other": "{{count}} Änderungen sind noch nicht übertragen und gehen beim Abmelden verloren. Trotzdem abmelden?"
     },
+    "board": {
+      "title": "Board",
+      "list": "Liste",
+      "dropHere": "Hierher ziehen",
+      "empty": "Leer",
+      "doneHint": "Erledigtes der letzten {{days}} Tage",
+      "moved": "„{{title}}“ → {{status}}"
+    },
     "templates": {
       "title": "Vorlagen",
       "intro": "Eine Vorlage legt mit einem Tipp mehrere Tickets auf einmal an, z. B. alles für den Urlaub. Die Fälligkeiten zählen vom Tag, den du beim Anwenden wählst.",

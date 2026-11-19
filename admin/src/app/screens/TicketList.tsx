@@ -7,6 +7,8 @@ import { useMyAreas } from '../areas';
 import type { Timers } from '../timer';
 import { AreaFilter } from './AreaFilter';
 import { TicketRow } from './TicketRow';
+import { rememberView } from './Board';
+import { href } from '../router';
 
 type Filter = 'all' | 'mine' | 'ha' | 'mail' | 'done';
 
@@ -32,7 +34,10 @@ export function TicketList({ timers, canEdit, selectedId }: { timers: Timers; ca
 
   return (
     <div className="pwa-screen pwa-list">
-      <h1 className="pwa-h1">{t('app.tab.tickets')}</h1>
+      <div className="pwa-board-head">
+        <h1 className="pwa-h1">{t('app.tab.tickets')}</h1>
+        <a className="btn btn-ghost" href={href({ name: 'board' })} onClick={() => rememberView('board')}><Icon name="kanban" /> {t('app.board.title')}</a>
+      </div>
       <AreaFilter />
       <input className="input pwa-search" type="search" placeholder={t('tickets.search')} value={query} onChange={e => setQuery(e.target.value)} aria-label={t('tickets.search')} />
       <div className="pwa-chips" role="tablist">

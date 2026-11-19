@@ -381,6 +381,7 @@ Der Link ist geheim und lässt sich dort jederzeit erneuern.
   - **Anwenden:** unter *Mehr → Vorlagen* oder direkt bei **Neu** über „Aus Vorlage“. Du wählst Stichtag und Bereich, siehst alle Tickets mit ihren Terminen und kannst einzelne abwählen.
 - **Duplizieren:** Auf der Ticket-Seite legt **Duplizieren** eine Kopie an, mit Beschreibung, Checkliste (alles wieder offen), Termin, Zuweisung und Wiederholung. Ohne Zeiten, Notizen und Fotos.
 - **Planung:** die nächsten 7 Tage nach Tag, Überfälliges darüber, Ungeplantes daneben. Per Ziehen einplanen (am Handy kurz gedrückt halten).
+- **Board (Kanban):** In *Tickets* oben rechts auf **Board** tippen. Die Tickets stehen dann in drei Spalten: Offen, In Arbeit und Erledigt (die letzten 14 Tage). Zieh eine Karte in eine andere Spalte, um ihren Status zu ändern, mit „Rückgängig“. Am Handy kurz gedrückt halten, dann rollen die Spalten beim Ziehen mit. Bereichsfilter, Suche und „Meine“ gelten auch hier. Die App merkt sich, ob „Tickets“ die Liste oder das Board öffnet.
 - **Später:** Das Uhr-Symbol schiebt ein Ticket auf morgen, aufs Wochenende, auf nächste Woche oder auf ein Datum, mit „Rückgängig“.
 - **Bearbeiten:** Titel, Beschreibung, Bereich und Projekt über den Stift auf der Ticket-Seite.
 - **Zuweisen:** an Mitglieder und Admins. „Meine“ zeigt die eigenen.

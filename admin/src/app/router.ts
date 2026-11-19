@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 export type Route =
   | { name: 'today' }
   | { name: 'tickets' }
+  | { name: 'board' }
   | { name: 'plan' }
   | { name: 'ticket'; id: number }
   | { name: 'new' }
@@ -23,6 +24,7 @@ export function parseRoute(hash: string): Route {
   const [, name, arg] = hash.replace(/^#/, '').split('/');
   switch (name) {
     case 'tickets': return { name: 'tickets' };
+    case 'board': return { name: 'board' };
     case 'plan': return { name: 'plan' };
     // Tickets created offline have a temporary negative id until they reach Tasklog.
     case 'ticket': return Number.isInteger(Number(arg)) && Number(arg) !== 0 ? { name: 'ticket', id: Number(arg) } : { name: 'tickets' };

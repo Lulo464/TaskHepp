@@ -486,3 +486,33 @@ textarea.input { min-height: 80px; }
 .pwa-template-picker { margin: -6px 0 16px; }
 .pwa-template-picker .pwa-chips { flex-wrap: wrap; }
 .pwa-detail-actions { flex-wrap: wrap; gap: 4px; margin-top: 24px; margin-left: -6px; }
+
+/* — board (kanban) — */
+.pwa-board-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pwa-board-head .pwa-h1 { margin: 0; }
+.pwa-board { display: grid; grid-template-columns: repeat(3, minmax(250px, 1fr)); gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 20px; padding-bottom: 8px; margin: 0 -20px; padding-inline: 20px; scrollbar-width: none; }
+.pwa-board::-webkit-scrollbar { display: none; }
+.pwa-board-col { scroll-snap-align: start; display: flex; flex-direction: column; min-height: 160px; border-radius: 14px; background: var(--color-neutral-900, rgba(255, 255, 255, 0.03)); border: 1px solid var(--color-neutral-800); padding: 10px; transition: border-color .15s, background .15s; }
+.pwa-board-col.is-drop { border-color: var(--color-accent); background: rgba(124, 92, 255, 0.08); }
+.pwa-board-col-head { display: flex; justify-content: space-between; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--color-neutral-300); padding: 2px 4px 8px; }
+.pwa-board-col.is-inProgress .pwa-board-col-head span:first-child { color: var(--color-accent); }
+.pwa-board-cards { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.pwa-board-empty { flex: 1; display: grid; place-items: center; min-height: 80px; border: 1px dashed var(--color-neutral-800); border-radius: 10px; font-size: 13px; color: var(--color-neutral-400); }
+.pwa-board-foot { margin-top: 8px; text-align: center; }
+.pwa-card-ticket { padding: 10px 12px; border-radius: 10px; background: var(--color-neutral-800); cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: pan-y; border-left: 3px solid transparent; }
+.pwa-card-ticket.is-high { border-left-color: var(--color-accent); }
+.pwa-card-ticket.is-dragging { opacity: .35; }
+.pwa-card-ticket:hover { background: var(--color-neutral-700); }
+.pwa-card-title { font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
+.pwa-card-title .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--color-accent); margin-right: 6px; vertical-align: 1px; }
+.pwa-card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 6px; font-size: 12px; color: var(--color-neutral-300); }
+.pwa-card-meta .is-overdue, .pwa-card-meta .is-high { color: var(--color-accent); }
+.pwa-card-avatar { width: 22px; height: 22px; font-size: 11px; }
+.is-done .pwa-card-title { color: var(--color-neutral-300); text-decoration: line-through; text-decoration-color: var(--color-neutral-500, #777); }
+@media (min-width: 960px) {
+  .pwa-board-screen { max-width: none; }
+  .pwa-board { margin: 0; padding-inline: 0; overflow: visible; }
+  .pwa-board-col { max-height: none; }
+}
+/* While dragging, columns must scroll freely instead of snapping back. */
+.pwa-board.is-dragging { scroll-snap-type: none; }
