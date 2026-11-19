@@ -417,3 +417,22 @@ export interface TicketDay {
   minutes: number;
   entries: TimeEntry[];
 }
+
+/** One ticket a template creates; offsetDays counts from the day chosen when using it (null = no date). */
+export interface TemplateItem {
+  title: string;
+  description: string;
+  prio: Prio;
+  offsetDays: number | null;
+  dueTime: string | null;
+  checklist: string[];
+}
+
+export interface TicketTemplate {
+  id: number;
+  name: string;
+  icon: string;
+  areaId: number | null;
+  area: string | null;
+  items: TemplateItem[];
+}

@@ -461,3 +461,28 @@ textarea.input { min-height: 80px; }
 /* — links found in text — */
 .auto-link { color: var(--color-accent); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
 .auto-link:hover { text-decoration-thickness: 2px; }
+
+/* — templates — */
+.pwa-template { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.pwa-template > .pwa-account > i, .pwa-template-apply > .pwa-account > i { font-size: 22px; }
+.pwa-template-apply { display: flex; flex-direction: column; gap: 12px; margin: 0 0 14px; }
+.pwa-template-preview { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.pwa-template-preview li { display: flex; align-items: center; gap: 6px; padding: 4px 0; font-size: 14px; border-bottom: 1px solid var(--color-neutral-800); }
+.pwa-template-preview li:last-child { border-bottom: 0; }
+.pwa-template-preview li.is-skipped .grow { color: var(--color-neutral-400); text-decoration: line-through; }
+.pwa-template-preview .btn-icon { width: 32px; height: 32px; flex: none; }
+.pwa-template-edit { display: flex; flex-direction: column; gap: 12px; }
+.pwa-icon-pick { display: flex; flex-wrap: wrap; gap: 4px; }
+.pwa-icon-pick .btn-icon { width: 38px; height: 38px; font-size: 18px; }
+.pwa-icon-pick .is-active { color: var(--color-accent); background: var(--color-neutral-800); }
+.pwa-template-item { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid var(--color-neutral-800); border-radius: 12px; }
+.pwa-template-item .btn-icon { width: 34px; height: 34px; flex: none; }
+.pwa-template-when { flex-wrap: wrap; }
+.pwa-template-when select { flex: 1 1 140px; }
+.pwa-template-when input[type=time] { width: 110px; }
+.pwa-prio-toggle.is-active { color: var(--color-accent); }
+.pwa-template-more summary { cursor: pointer; font-size: 13px; color: var(--color-neutral-300); }
+.pwa-template-more[open] { display: flex; flex-direction: column; gap: 8px; }
+.pwa-template-picker { margin: -6px 0 16px; }
+.pwa-template-picker .pwa-chips { flex-wrap: wrap; }
+.pwa-detail-actions { flex-wrap: wrap; gap: 4px; margin-top: 24px; margin-left: -6px; }

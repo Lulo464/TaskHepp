@@ -14,6 +14,7 @@ export type Route =
   | { name: 'notifications' }
   | { name: 'mydata' }
   | { name: 'tags' }
+  | { name: 'templates' }
   | { name: 'tag'; code: string }
   | { name: 'impressum' }
   | { name: 'datenschutz' };
@@ -33,6 +34,7 @@ export function parseRoute(hash: string): Route {
     case 'notifications': return { name: 'notifications' };
     case 'mydata': return { name: 'mydata' };
     case 'tags': return { name: 'tags' };
+    case 'templates': return { name: 'templates' };
     case 'tag': return arg ? { name: 'tag', code: arg } : { name: 'tags' };
     case 'impressum': return { name: 'impressum' };
     case 'datenschutz': return { name: 'datenschutz' };

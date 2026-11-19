@@ -12,6 +12,7 @@ import { Photos } from './Photos';
 import { RepeatPicker } from './Repeat';
 import { Snooze } from './Snooze';
 import { TicketTags } from './Tags';
+import { showToast } from '../toast';
 import { TicketNotes } from './TicketNotes';
 import { TicketText } from './TicketText';
 
@@ -30,6 +31,15 @@ export function TicketDetail({ id, me, timers, canEdit }: { id: number; me: Me; 
   const addTime = (minutes: number) => act(() => post(`/api/tickets/${id}/time`, { minutes }));
   const setStatus = (status: TicketStatus) => act(() => patch(`/api/tickets/${id}`, { status }));
   const setDue = (body: { due?: string | null; dueTime?: string | null }) => act(() => patch(`/api/tickets/${id}`, body));
+  const duplicate = () => act(async () => {
+    const copy = await post<Ticket>(`/api/tickets/${id}/duplicate`);
+    showToast(t('app.detail.duplicated'));
+    navigate({ name: 'ticket', id: copy.id });
+  });
+  const asTemplate = () => act(async () => {
+    await post(`/api/tickets/${id}/template`);
+    showToast(t('app.detail.savedAsTemplate'), { label: t('app.detail.openTemplates'), run: () => navigate({ name: 'templates' }) });
+  });
   const remove = () => window.confirm(t('app.detail.deleteConfirm')) && act(async () => {
     await del(`/api/tickets/${id}`);
     navigate({ name: 'tickets' }, true);
@@ -121,7 +131,13 @@ export function TicketDetail({ id, me, timers, canEdit }: { id: number; me: Me; 
         </>
       )}
 
-      {canEdit && <button type="button" className="btn btn-ghost pwa-delete" onClick={remove}><Icon name="trash" /> {t('app.detail.delete')}</button>}
+      {canEdit && (
+        <div className="row pwa-detail-actions">
+          <button type="button" className="btn btn-ghost" onClick={duplicate}><Icon name="copy" /> {t('app.detail.duplicate')}</button>
+          <button type="button" className="btn btn-ghost" onClick={asTemplate}><Icon name="stack" /> {t('app.detail.asTemplate')}</button>
+          <button type="button" className="btn btn-ghost" onClick={remove}><Icon name="trash" /> {t('app.detail.delete')}</button>
+        </div>
+      )}
     </div>
   );
 }
