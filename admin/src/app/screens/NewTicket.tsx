@@ -8,6 +8,7 @@ import { useMyAreas } from '../areas';
 import { isListLine, linesOf, looksLikeList, parseQuick, shortTitle, splitMessages, stripBullet, takeShared, type Shared } from '../quickAdd';
 import { href, navigate } from '../router';
 import { RepeatPicker } from './Repeat';
+import { TemplatePicker } from './Templates';
 import type { Timers } from '../timer';
 
 const MAX_TICKETS = 50;
@@ -154,6 +155,7 @@ export function NewTicket({ timers }: { timers: Timers }) {
     <div className="pwa-screen">
       <a className="btn btn-ghost pwa-back" href={href({ name: 'today' })}><Icon name="x" /> {t('common.cancel')}</a>
       <h1 className="pwa-h1" style={{ margin: '10px 0 18px' }}>{t('app.new.title')}</h1>
+      {!shared && <TemplatePicker />}
       {shared && (
         <div className="pwa-shared"><Icon name="share-network" /> {senders.length ? t('app.new.sharedFrom', { sender: senders.join(', ') }) : t('app.new.shared')}</div>
       )}

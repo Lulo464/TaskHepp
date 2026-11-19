@@ -18,7 +18,7 @@ const targetAt = (x: number, y: number) => document.elementFromPoint(x, y)?.clos
  * Drag tickets with mouse or finger onto elements with data-drop. HTML5 drag and drop does not work on phones, so this
  * follows the pointer itself: the mouse starts after a small move, a finger after a short press (a swipe still scrolls).
  */
-export function usePointerDrag(scroller: string, onDrop: (id: number, target: string) => void) {
+export function usePointerDrag(scroller: string | string[], onDrop: (id: number, target: string) => void) {
   const [drag, setDrag] = useState<Drag | null>(null);
   const current = useRef<Drag | null>(null);
   const justDropped = useRef(false);
@@ -76,19 +76,26 @@ export function usePointerDrag(scroller: string, onDrop: (id: number, target: st
     window.addEventListener('touchmove', onTouchMove, { passive: false });
   }, []);
 
-  // Scroll while the pointer rests near the top or bottom edge.
+  // Scroll while the pointer rests near an edge: up and down, and sideways for areas that scroll sideways
+  // (the board's columns on a phone).
   const dragging = drag !== null;
+  const scrollers = Array.isArray(scroller) ? scroller.join('|') : scroller;
   useEffect(() => {
     if (!dragging) return;
     let frame = 0;
     const tick = () => {
       const d = current.current;
-      const el = document.querySelector<HTMLElement>(scroller);
-      if (d && el) {
+      for (const sel of scrollers.split('|')) {
+        const el = document.querySelector<HTMLElement>(sel);
+        if (!d || !el) continue;
         const r = el.getBoundingClientRect();
-        const by = d.y < r.top + EDGE ? -(r.top + EDGE - d.y) / 4 : d.y > r.bottom - EDGE ? (d.y - (r.bottom - EDGE)) / 4 : 0;
-        if (by) {
+        const by = el.scrollHeight > el.clientHeight
+          ? (d.y < r.top + EDGE ? -(r.top + EDGE - d.y) / 4 : d.y > r.bottom - EDGE ? (d.y - (r.bottom - EDGE)) / 4 : 0) : 0;
+        const bx = el.scrollWidth > el.clientWidth
+          ? (d.x < r.left + EDGE ? -(r.left + EDGE - d.x) / 4 : d.x > r.right - EDGE ? (d.x - (r.right - EDGE)) / 4 : 0) : 0;
+        if (by || bx) {
           el.scrollTop += by;
+          el.scrollLeft += bx;
           update({ ...d, over: targetAt(d.x, d.y) });
         }
       }
@@ -96,7 +103,7 @@ export function usePointerDrag(scroller: string, onDrop: (id: number, target: st
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [dragging, scroller]);
+  }, [dragging, scrollers]);
 
   return { drag, begin, justDropped };
 }

@@ -4,6 +4,7 @@ import { patch, post, useAction, useApi } from '../../lib/api';
 import { clearOffline, getOfflineState } from '../../lib/offline';
 import type { AuthInfo, Me, Rule, SystemInfo } from '../../lib/types';
 import { href } from '../router';
+import { CalDav } from './CalDav';
 import { CalendarFeed } from './CalendarFeed';
 import { LegalLinks } from './Legal';
 
@@ -72,10 +73,12 @@ export function More({ me }: { me: Me }) {
       </div>
 
       <CalendarFeed />
+      <CalDav />
 
       <div className="stack" style={{ gap: 10, marginTop: 22 }}>
         <a className="btn btn-secondary btn-block" href={href({ name: 'areas' })}><Icon name="folders" /> {t('app.more.areas')}</a>
         <a className="btn btn-secondary btn-block" href={href({ name: 'notifications' })}><Icon name="bell-ringing" /> {t('app.notify.title')}</a>
+        <a className="btn btn-secondary btn-block" href={href({ name: 'templates' })}><Icon name="stack" /> {t('app.templates.title')}</a>
         <a className="btn btn-secondary btn-block" href={href({ name: 'tags' })}><Icon name="contactless-payment" /> {t('app.tags.title')}</a>
         <a className="btn btn-secondary btn-block" href={href({ name: 'presence' })}><Icon name="map-pin-area" /> {t('app.presence.title')}</a>
         <a className="btn btn-secondary btn-block" href={href({ name: 'mydata' })}><Icon name="shield-check" /> {t('app.mydata.title')}</a>
