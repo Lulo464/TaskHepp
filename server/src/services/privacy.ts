@@ -8,7 +8,7 @@ export async function exportUser(db: Queryable, userId: number) {
   const [account] = await one(
     `SELECT id, name, email, oidc_group AS "group", role, created_at AS "createdAt", last_seen_at AS "lastSeenAt",
             area_order AS "areaOrder", hidden_areas AS "hiddenAreas", notify_targets AS "notifyTargets", notify_kinds AS "notifyKinds",
-            calendar_token IS NOT NULL AS "calendarFeedActive"
+            calendar_token IS NOT NULL AS "calendarFeedActive", dav_password_hash IS NOT NULL AS "calendarAppAccess"
        FROM users WHERE id = $1`,
   );
   if (!account) throw new HttpError(404, 'Benutzer nicht gefunden');

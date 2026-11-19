@@ -4,6 +4,7 @@ import { patch, post, useAction, useApi } from '../../lib/api';
 import { clearOffline, getOfflineState } from '../../lib/offline';
 import type { AuthInfo, Me, Rule, SystemInfo } from '../../lib/types';
 import { href } from '../router';
+import { CalDav } from './CalDav';
 import { CalendarFeed } from './CalendarFeed';
 import { LegalLinks } from './Legal';
 
@@ -72,6 +73,7 @@ export function More({ me }: { me: Me }) {
       </div>
 
       <CalendarFeed />
+      <CalDav />
 
       <div className="stack" style={{ gap: 10, marginTop: 22 }}>
         <a className="btn btn-secondary btn-block" href={href({ name: 'areas' })}><Icon name="folders" /> {t('app.more.areas')}</a>

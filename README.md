@@ -387,7 +387,24 @@ Der Link ist geheim und lässt sich dort jederzeit erneuern.
 - **Zuweisen:** an Mitglieder und Admins. „Meine“ zeigt die eigenen.
 - **Checklisten, Notizen, Fotos** pro Ticket. Fotos werden vor dem Hochladen verkleinert.
 - **Links** in Beschreibung, Notizen und Checklisten sind klickbar.
-- **Kalender-Abo:** Unter *Mehr → Kalender-Abo* gibt es einen geheimen iCal-Link für Google, Apple, Outlook oder Home Assistant.
+- **Kalender-Abo:** Unter *Mehr → Kalender-Abo* gibt es einen geheimen iCal-Link für Google, Apple, Outlook oder Home Assistant. Das Abo ist nur zum Ansehen. Zum Bearbeiten im Kalender gibt es den Zwei-Wege-Kalender:
+- **Zwei-Wege-Kalender (CalDAV):** Tasklog erscheint im Kalender von iPhone, Android oder Thunderbird, mit **einem Kalender pro Bereich**. Was du dort tust, landet direkt in Tasklog:
+  - Termin verschieben → neue Fälligkeit
+  - umbenennen → neuer Titel
+  - Beschreibung ändern → neue Beschreibung
+  - neuer Termin → neues Ticket im Bereich des Kalenders, dir zugewiesen
+  - Termin in einen anderen Bereichs-Kalender → Ticket wechselt den Bereich
+  - Termin löschen → Ticket erledigt
+
+  Im Kalender stehen offene Tickets mit Datum: ohne Uhrzeit ganztägig, mit Uhrzeit 30 Minuten lang. Wiederkehrende Tickets erscheinen mit ihrem nächsten Termin.
+
+  **Einrichten:**
+  1. In der App unter *Mehr → Zwei-Wege-Kalender* auf **Kalender-Passwort erzeugen** tippen. Es ist ein eigenes Passwort nur für Kalender-Apps und wird nur einmal angezeigt.
+  2. **iPhone/iPad:** *Einstellungen → Apps → Kalender → Kalender-Accounts → Account hinzufügen → Andere → CalDAV-Account hinzufügen*. Als Server deine Adresse (z. B. `tasks.meine-domain.de`), dazu deine E-Mail-Adresse als Benutzername und das Kalender-Passwort.
+  3. **Android:** die App *DAVx⁵* installieren → *Mit URL und Benutzername anmelden* → Basis-URL `https://tasks.meine-domain.de/dav/`, Benutzername und Kalender-Passwort → Kalender auswählen.
+  4. **Thunderbird:** *Neuer Kalender → Im Netzwerk*, Benutzername und Adresse `https://tasks.meine-domain.de/dav/`.
+
+  Nur über HTTPS nutzen, denn das Passwort wird bei jedem Abgleich mitgeschickt. *Zugang sperren* trennt alle Kalender-Apps auf einmal. Der Reverse Proxy muss die WebDAV-Methoden (`PROPFIND`, `REPORT`) durchlassen. Caddy, Nginx Proxy Manager und Traefik tun das von sich aus.
 
 ### Bereiche
 Oben in Heute, Tickets, Planung und Zeit steht eine Leiste mit den Bereichen. Ein Tipp zeigt nur diesen Bereich, ein Tipp auf einen anderen wechselt, „Alle“ zeigt wieder alles. Lange drücken (am Desktop Strg/⌘-Klick) kombiniert mehrere Bereiche. Die Auswahl gilt pro Benutzer auf allen Geräten.

@@ -1,7 +1,7 @@
 // Minimal iCalendar (RFC 5545) writer for the ticket feed.
 
 /** Text value: backslash, semicolon, comma and line breaks escaped. */
-export const icalText = (s: string) => s.replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+export const icalText = (s: string) => s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
 
 /** Lines longer than 75 octets continue on the next line after a space; UTF-8 characters are never split. */
 export function foldLine(line: string): string {

@@ -687,6 +687,27 @@
       "logoutConfirm_one": "1 Änderung ist noch nicht übertragen und geht beim Abmelden verloren. Trotzdem abmelden?",
       "logoutConfirm_other": "{{count}} Änderungen sind noch nicht übertragen und gehen beim Abmelden verloren. Trotzdem abmelden?"
     },
+    "caldav": {
+      "title": "Zwei-Wege-Kalender",
+      "intro": "Tasklog als Kalender im Handy oder in Thunderbird, ein Kalender pro Bereich. Termine verschieben ändert die Fälligkeit, umbenennen den Titel, ein neuer Termin wird ein Ticket, und ein gelöschter Termin erledigt das Ticket.",
+      "server": "Server",
+      "username": "Benutzername",
+      "password": "Kalender-Passwort",
+      "once": "Jetzt in die Kalender-App eintragen: Das Passwort wird nur dieses eine Mal angezeigt.",
+      "hasPassword": "Kalender-Passwort angelegt {{when}}.",
+      "noPassword": "Noch kein Kalender-Passwort. Es ist ein eigenes Passwort nur für Kalender-Apps, nicht dein Login.",
+      "create": "Kalender-Passwort erzeugen",
+      "renew": "Neues Passwort",
+      "renewConfirm": "Neues Kalender-Passwort erzeugen? Kalender-Apps mit dem alten Passwort verlieren die Verbindung, bis du das neue einträgst.",
+      "revoke": "Zugang sperren",
+      "revokeConfirm": "Kalender-Zugang sperren? Alle Kalender-Apps verlieren die Verbindung.",
+      "insecure": "Diese Adresse ist nicht verschlüsselt (http). Kalender-Apps schicken das Passwort dann im Klartext; im Internet nur über HTTPS nutzen.",
+      "how": "So richtest du es ein",
+      "helpIphone": "iPhone/iPad: Einstellungen → Apps → Kalender → Kalender-Accounts → Account hinzufügen → Andere → CalDAV-Account hinzufügen. Server: {{server}}, dazu Benutzername und Kalender-Passwort.",
+      "helpAndroid": "Android: die App DAVx⁵ installieren → „Mit URL und Benutzername anmelden“ → Basis-URL {{url}}, Benutzername und Kalender-Passwort → Kalender auswählen. Sie erscheinen dann in jeder Kalender-App.",
+      "helpThunderbird": "Thunderbird: Kalender → Neuer Kalender → Im Netzwerk → Benutzername und Adresse {{url}} → Kalender auswählen.",
+      "helpRules": "Im Kalender stehen offene Tickets mit Datum. Ein Termin ohne Uhrzeit ist ganztägig, mit Uhrzeit 30 Minuten lang. Wiederkehrende Tickets erscheinen mit dem nächsten Termin. Ein Termin in einem anderen Bereichs-Kalender verschiebt das Ticket dorthin."
+    },
     "board": {
       "title": "Board",
       "list": "Liste",
