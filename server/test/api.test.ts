@@ -1005,3 +1005,64 @@ describe('time per day', () => {
     await call('POST', '/api/timer/stop', anna, { ticketId: ticket.id });
   });
 });
+
+describe('templates and duplicating', () => {
+  it('creates all tickets of a template, dated from a chosen day', async () => {
+    const anna = await t.login('member');
+    const annaId = (await call('GET', '/api/me', anna)).json().id;
+    const example = (await call('GET', '/api/templates/example', anna)).json();
+    const made = await call('POST', '/api/templates', anna, { ...example, areaId: 2 });
+    expect(made.statusCode).toBe(201);
+    const template = made.json();
+    expect(template).toMatchObject({ name: 'Urlaub vorbereiten', area: 'Zuhause' });
+    expect(template.items).toHaveLength(5);
+
+    const res = await call('POST', `/api/templates/${template.id}/apply`, anna, { date: '2030-07-20' });
+    expect(res.statusCode).toBe(201);
+    const { created, tickets } = res.json();
+    expect(created).toBe(5);
+    expect(tickets.map((x: { title: string; due: string; dueTime: string | null }) => [x.title, x.due, x.dueTime])).toEqual([
+      ['Unterkunft und Anreise prüfen', '2030-07-06', null],
+      ['Nachbarn wegen Post und Blumen fragen', '2030-07-13', null],
+      ['Koffer packen', '2030-07-19', null],
+      ['Heizung runter, Fenster zu, Stecker ziehen', '2030-07-20', '07:00'],
+      ['Müll rausbringen, Kühlschrank leeren', '2030-07-19', '19:00'],
+    ]);
+    expect(tickets.every((x: { area: string; assigneeId: number; source: string }) => x.area === 'Zuhause' && x.assigneeId === annaId && x.source === 'app')).toBe(true);
+    const packing = tickets.find((x: { title: string }) => x.title === 'Koffer packen');
+    expect(packing).toMatchObject({ checkTotal: 5, checkDone: 0, prio: 'normal' });
+
+    // Another area, nobody assigned, only some items, no date: items without offset stay undated, others from today.
+    const some = (await call('POST', `/api/templates/${template.id}/apply`, anna, { areaId: 1, assigneeId: null, only: [2, 3] })).json();
+    expect(some.created).toBe(2);
+    expect(some.tickets.every((x: { area: string; assigneeId: number | null }) => x.area === 'Arbeit' && x.assigneeId === null)).toBe(true);
+
+    // Edit, check input, delete.
+    const edited = (await call('PUT', `/api/templates/${template.id}`, anna, { name: 'Kurztrip', icon: 'suitcase', areaId: null, items: [{ title: 'Tasche packen', offsetDays: null }] })).json();
+    expect(edited).toMatchObject({ name: 'Kurztrip', areaId: null, items: [{ title: 'Tasche packen', offsetDays: null, checklist: [], prio: 'normal' }] });
+    expect((await call('POST', `/api/templates/${template.id}/apply`, anna, {})).statusCode).toBe(400); // no area
+    expect((await call('PUT', `/api/templates/${template.id}`, anna, { name: 'x', items: [] })).statusCode).toBe(400);
+    const reader2 = await t.login('read');
+    expect((await call('POST', `/api/templates/${template.id}/apply`, reader2, { areaId: 1 })).statusCode).toBe(403);
+    expect((await call('DELETE', `/api/templates/${template.id}`, anna)).statusCode).toBe(204);
+  });
+
+  it('duplicates a ticket with its checklist but without time, notes or done state', async () => {
+    const anna = await t.login('member');
+    const original = (await call('POST', '/api/tickets', anna, { title: 'Reifen wechseln', areaId: 2, prio: 'high', due: '2030-10-15', dueTime: '10:00', description: 'Winterreifen' })).json();
+    await call('POST', `/api/tickets/${original.id}/checklist`, anna, { text: 'Termin\nReifen holen' });
+    await call('POST', `/api/tickets/${original.id}/time`, anna, { minutes: 30 });
+    await call('POST', `/api/tickets/${original.id}/notes`, anna, { body: 'erledigt beim Händler' });
+    await call('PATCH', `/api/tickets/${original.id}`, anna, { status: 'done' });
+
+    const copy = (await call('POST', `/api/tickets/${original.id}/duplicate`, anna)).json();
+    expect(copy.id).not.toBe(original.id);
+    expect(copy).toMatchObject({ title: 'Reifen wechseln', description: 'Winterreifen', prio: 'high', due: '2030-10-15', dueTime: '10:00', status: 'open', minutes: 0, checkTotal: 2, checkDone: 0 });
+    expect((await call('GET', `/api/tickets/${copy.id}/notes`, anna)).json()).toEqual([]);
+
+    // And as a template.
+    const template = (await call('POST', `/api/tickets/${original.id}/template`, anna)).json();
+    expect(template).toMatchObject({ name: 'Reifen wechseln', area: 'Zuhause', items: [{ title: 'Reifen wechseln', offsetDays: 0, dueTime: '10:00', checklist: ['Termin', 'Reifen holen'] }] });
+    expect((await call('POST', '/api/tickets/999999/duplicate', anna)).statusCode).toBe(404);
+  });
+});
