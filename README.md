@@ -376,7 +376,12 @@ Der Link ist geheim und lässt sich dort jederzeit erneuern.
 - **Schnell erfassen:** Der Termin darf einfach im Text stehen. „Oma Arzt Donnerstag 10 Uhr“ wird zum Ticket „Oma Arzt“, fällig Donnerstag 10:00. Erkannt werden heute, morgen, Wochentage, „in 3 Tagen“, „nächste Woche“, Daten wie 5.11. und Uhrzeiten. Mehrere Zeilen werden auf Wunsch mehrere Tickets.
 - **Teilen aus WhatsApp & Co. (Android, installierte App):** Nachricht lange drücken → Teilen → Tasklog.
 - **Wiederkehrende Tickets:** täglich, werktags, wöchentlich, monatlich, jährlich oder benutzerdefiniert. Ist eines erledigt, entsteht das nächste. Die Schnelleingabe versteht auch „jeden Montag 7 Uhr Müll raus“.
+- **Vorlagen:** Eine Vorlage legt mehrere Tickets auf einmal an, z. B. „Urlaub vorbereiten“ mit fünf Tickets, die sich auf den Abreisetag beziehen („14 Tage vorher“, „am Stichtag 07:00“). Jedes Ticket der Vorlage kann eine Beschreibung, eine Checkliste, eine Uhrzeit und eine hohe Priorität haben.
+  - **Anlegen:** unter *Mehr → Vorlagen*, beim ersten Mal mit dem fertigen Beispiel. Oder auf einer Ticket-Seite über **Als Vorlage**.
+  - **Anwenden:** unter *Mehr → Vorlagen* oder direkt bei **Neu** über „Aus Vorlage“. Du wählst Stichtag und Bereich, siehst alle Tickets mit ihren Terminen und kannst einzelne abwählen.
+- **Duplizieren:** Auf der Ticket-Seite legt **Duplizieren** eine Kopie an, mit Beschreibung, Checkliste (alles wieder offen), Termin, Zuweisung und Wiederholung. Ohne Zeiten, Notizen und Fotos.
 - **Planung:** die nächsten 7 Tage nach Tag, Überfälliges darüber, Ungeplantes daneben. Per Ziehen einplanen (am Handy kurz gedrückt halten).
+- **Board (Kanban):** In *Tickets* oben rechts auf **Board** tippen. Die Tickets stehen dann in drei Spalten: Offen, In Arbeit und Erledigt (die letzten 14 Tage). Zieh eine Karte in eine andere Spalte, um ihren Status zu ändern, mit „Rückgängig“. Am Handy kurz gedrückt halten, dann rollen die Spalten beim Ziehen mit. Bereichsfilter, Suche und „Meine“ gelten auch hier. Die App merkt sich, ob „Tickets“ die Liste oder das Board öffnet.
 - **Später:** Das Uhr-Symbol schiebt ein Ticket auf morgen, aufs Wochenende, auf nächste Woche oder auf ein Datum, mit „Rückgängig“.
 - **Bearbeiten:** Titel, Beschreibung, Bereich und Projekt über den Stift auf der Ticket-Seite.
 - **Zuweisen:** an Mitglieder und Admins. „Meine“ zeigt die eigenen.

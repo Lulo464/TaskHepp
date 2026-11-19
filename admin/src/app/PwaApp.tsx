@@ -7,6 +7,7 @@ import type { Me, SystemInfo } from '../lib/types';
 import { OfflineBar } from './OfflineBar';
 import { href, navigate, useRoute, type Route } from './router';
 import { Areas } from './screens/Areas';
+import { Board, preferredView } from './screens/Board';
 import { Legal } from './screens/Legal';
 import { Login } from './screens/Login';
 import { MyData } from './screens/MyData';
@@ -17,6 +18,7 @@ import { Plan } from './screens/Plan';
 import { Presence } from './screens/Presence';
 import { TagScan } from './screens/TagScan';
 import { Tags } from './screens/Tags';
+import { Templates } from './screens/Templates';
 import { TicketDetail } from './screens/TicketDetail';
 import { TicketList } from './screens/TicketList';
 import { Time } from './screens/Time';
@@ -85,11 +87,11 @@ function Shell({ me }: { me: Me }) {
 
   const tabs: { route: Route; icon: string; label: string; active: boolean }[] = [
     { route: { name: 'today' }, icon: 'house', label: t('app.tab.today'), active: route.name === 'today' },
-    { route: { name: 'tickets' }, icon: 'list-checks', label: t('app.tab.tickets'), active: route.name === 'tickets' || route.name === 'ticket' },
+    { route: { name: preferredView() }, icon: 'list-checks', label: t('app.tab.tickets'), active: route.name === 'tickets' || route.name === 'ticket' || route.name === 'board' },
     { route: { name: 'plan' }, icon: 'calendar-dots', label: t('app.tab.plan'), active: route.name === 'plan' },
     ...(canEdit ? [{ route: { name: 'new' } as Route, icon: 'plus-circle', label: t('app.tab.new'), active: route.name === 'new' }] : []),
     { route: { name: 'time' }, icon: 'chart-bar', label: t('app.tab.time'), active: route.name === 'time' },
-    { route: { name: 'more' }, icon: 'gear', label: t('app.tab.more'), active: route.name === 'more' || route.name === 'areas' || route.name === 'presence' || route.name === 'notifications' || route.name === 'mydata' || route.name === 'tags' || route.name === 'impressum' || route.name === 'datenschutz' },
+    { route: { name: 'more' }, icon: 'gear', label: t('app.tab.more'), active: route.name === 'more' || route.name === 'areas' || route.name === 'presence' || route.name === 'notifications' || route.name === 'mydata' || route.name === 'tags' || route.name === 'templates' || route.name === 'impressum' || route.name === 'datenschutz' },
   ];
 
   return (
@@ -118,6 +120,7 @@ function Shell({ me }: { me: Me }) {
           </>
         )}
         {route.name === 'plan' && <Plan me={me} />}
+        {route.name === 'board' && <Board me={me} canEdit={canEdit} />}
         {route.name === 'new' && <NewTicket timers={timers} />}
         {route.name === 'time' && <Time />}
         {route.name === 'more' && <More me={me} />}
@@ -126,6 +129,7 @@ function Shell({ me }: { me: Me }) {
         {route.name === 'notifications' && <Notifications />}
         {route.name === 'mydata' && <MyData me={me} />}
         {route.name === 'tags' && <Tags canEdit={canEdit} />}
+        {route.name === 'templates' && <Templates canEdit={canEdit} />}
         {route.name === 'tag' && <TagScan key={route.code} code={route.code} />}
         {(route.name === 'impressum' || route.name === 'datenschutz') && <Legal doc={route.name} />}
       </main>
