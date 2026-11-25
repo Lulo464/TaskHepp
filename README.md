@@ -291,6 +291,8 @@ Es gibt zwei Wege. Wähle einen pro Bereich:
 
 Für jeden Termin entsteht genau ein Ticket, bis zu 14 Tage im Voraus. Ist der Termin vorbei, wird das Ticket automatisch erledigt. Ein gelöschtes Ticket kommt nicht wieder.
 
+**Tonne wieder reinstellen:** Mit **Danach wieder reinstellen** entsteht zu jedem Termin ein zweites Ticket, z. B. „Restmüll wieder reinstellen“. Es ist standardmäßig einen Tag nach dem Rausstellen fällig, also am Abholtag. Einstellbar sind der Titel (`{title}` = Abfallart), der Tag (am selben Tag bis 3 Tage danach) und eine Uhrzeit, z. B. 18:00, wenn du von der Arbeit kommst. Einschalten wirkt auch für schon angelegte Termine, Ausschalten entfernt die offenen zweiten Tickets. Mit „Automatisch erledigen“ schließt sich das zweite Ticket, wenn sein Tag vorbei ist.
+
 ### 7.7 Mehr mit Home Assistant
 
 - **Automatisch erledigen:** Auf der Ticket-Seite unter *Automatisch erledigen, wenn …* eine Entität und einen Zustand wählen, z. B. `sensor.waschmaschine` wechselt zu `idle`.
@@ -376,13 +378,35 @@ Der Link ist geheim und lässt sich dort jederzeit erneuern.
 - **Schnell erfassen:** Der Termin darf einfach im Text stehen. „Oma Arzt Donnerstag 10 Uhr“ wird zum Ticket „Oma Arzt“, fällig Donnerstag 10:00. Erkannt werden heute, morgen, Wochentage, „in 3 Tagen“, „nächste Woche“, Daten wie 5.11. und Uhrzeiten. Mehrere Zeilen werden auf Wunsch mehrere Tickets.
 - **Teilen aus WhatsApp & Co. (Android, installierte App):** Nachricht lange drücken → Teilen → Tasklog.
 - **Wiederkehrende Tickets:** täglich, werktags, wöchentlich, monatlich, jährlich oder benutzerdefiniert. Ist eines erledigt, entsteht das nächste. Die Schnelleingabe versteht auch „jeden Montag 7 Uhr Müll raus“.
+- **Vorlagen:** Eine Vorlage legt mehrere Tickets auf einmal an, z. B. „Urlaub vorbereiten“ mit fünf Tickets, die sich auf den Abreisetag beziehen („14 Tage vorher“, „am Stichtag 07:00“). Jedes Ticket der Vorlage kann eine Beschreibung, eine Checkliste, eine Uhrzeit und eine hohe Priorität haben.
+  - **Anlegen:** unter *Mehr → Vorlagen*, beim ersten Mal mit dem fertigen Beispiel. Oder auf einer Ticket-Seite über **Als Vorlage**.
+  - **Anwenden:** unter *Mehr → Vorlagen* oder direkt bei **Neu** über „Aus Vorlage“. Du wählst Stichtag und Bereich, siehst alle Tickets mit ihren Terminen und kannst einzelne abwählen.
+- **Duplizieren:** Auf der Ticket-Seite legt **Duplizieren** eine Kopie an, mit Beschreibung, Checkliste (alles wieder offen), Termin, Zuweisung und Wiederholung. Ohne Zeiten, Notizen und Fotos.
 - **Planung:** die nächsten 7 Tage nach Tag, Überfälliges darüber, Ungeplantes daneben. Per Ziehen einplanen (am Handy kurz gedrückt halten).
+- **Board (Kanban):** In *Tickets* oben rechts auf **Board** tippen. Die Tickets stehen dann in drei Spalten: Offen, In Arbeit und Erledigt (die letzten 14 Tage). Zieh eine Karte in eine andere Spalte, um ihren Status zu ändern, mit „Rückgängig“. Am Handy kurz gedrückt halten, dann rollen die Spalten beim Ziehen mit. Bereichsfilter, Suche und „Meine“ gelten auch hier. Die App merkt sich, ob „Tickets“ die Liste oder das Board öffnet.
 - **Später:** Das Uhr-Symbol schiebt ein Ticket auf morgen, aufs Wochenende, auf nächste Woche oder auf ein Datum, mit „Rückgängig“.
 - **Bearbeiten:** Titel, Beschreibung, Bereich und Projekt über den Stift auf der Ticket-Seite.
 - **Zuweisen:** an Mitglieder und Admins. „Meine“ zeigt die eigenen.
 - **Checklisten, Notizen, Fotos** pro Ticket. Fotos werden vor dem Hochladen verkleinert.
 - **Links** in Beschreibung, Notizen und Checklisten sind klickbar.
-- **Kalender-Abo:** Unter *Mehr → Kalender-Abo* gibt es einen geheimen iCal-Link für Google, Apple, Outlook oder Home Assistant.
+- **Kalender-Abo:** Unter *Mehr → Kalender-Abo* gibt es einen geheimen iCal-Link für Google, Apple, Outlook oder Home Assistant. Das Abo ist nur zum Ansehen. Zum Bearbeiten im Kalender gibt es den Zwei-Wege-Kalender:
+- **Zwei-Wege-Kalender (CalDAV):** Tasklog erscheint im Kalender von iPhone, Android oder Thunderbird, mit **einem Kalender pro Bereich**. Was du dort tust, landet direkt in Tasklog:
+  - Termin verschieben → neue Fälligkeit
+  - umbenennen → neuer Titel
+  - Beschreibung ändern → neue Beschreibung
+  - neuer Termin → neues Ticket im Bereich des Kalenders, dir zugewiesen
+  - Termin in einen anderen Bereichs-Kalender → Ticket wechselt den Bereich
+  - Termin löschen → Ticket erledigt
+
+  Im Kalender stehen offene Tickets mit Datum: ohne Uhrzeit ganztägig, mit Uhrzeit 30 Minuten lang. Wiederkehrende Tickets erscheinen mit ihrem nächsten Termin.
+
+  **Einrichten:**
+  1. In der App unter *Mehr → Zwei-Wege-Kalender* auf **Kalender-Passwort erzeugen** tippen. Es ist ein eigenes Passwort nur für Kalender-Apps und wird nur einmal angezeigt.
+  2. **iPhone/iPad:** *Einstellungen → Apps → Kalender → Kalender-Accounts → Account hinzufügen → Andere → CalDAV-Account hinzufügen*. Als Server deine Adresse (z. B. `tasks.meine-domain.de`), dazu deine E-Mail-Adresse als Benutzername und das Kalender-Passwort.
+  3. **Android:** die App *DAVx⁵* installieren → *Mit URL und Benutzername anmelden* → Basis-URL `https://tasks.meine-domain.de/dav/`, Benutzername und Kalender-Passwort → Kalender auswählen.
+  4. **Thunderbird:** *Neuer Kalender → Im Netzwerk*, Benutzername und Adresse `https://tasks.meine-domain.de/dav/`.
+
+  Nur über HTTPS nutzen, denn das Passwort wird bei jedem Abgleich mitgeschickt. *Zugang sperren* trennt alle Kalender-Apps auf einmal. Der Reverse Proxy muss die WebDAV-Methoden (`PROPFIND`, `REPORT`) durchlassen. Caddy, Nginx Proxy Manager und Traefik tun das von sich aus.
 
 ### Bereiche
 Oben in Heute, Tickets, Planung und Zeit steht eine Leiste mit den Bereichen. Ein Tipp zeigt nur diesen Bereich, ein Tipp auf einen anderen wechselt, „Alle“ zeigt wieder alles. Lange drücken (am Desktop Strg/⌘-Klick) kombiniert mehrere Bereiche. Die Auswahl gilt pro Benutzer auf allen Geräten.

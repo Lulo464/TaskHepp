@@ -4,7 +4,7 @@ import { rruleOf } from '../src/routes/feed.js';
 
 describe('ical', () => {
   it('escapes text and folds long lines at 75 octets without splitting characters', () => {
-    expect(icalText('a;b,c\\d\nneu')).toBe('a\;b\\,c\\\\d\\nneu');
+    expect(icalText('a;b,c\\d\nneu')).toBe('a\\;b\\,c\\\\d\\nneu');
     const folded = foldLine(`SUMMARY:${'ä'.repeat(60)}`);
     for (const line of folded.split('\r\n')) expect(Buffer.byteLength(line)).toBeLessThanOrEqual(75);
     expect(folded.split('\r\n').map((l, i) => (i ? l.slice(1) : l)).join('')).toBe(`SUMMARY:${'ä'.repeat(60)}`);

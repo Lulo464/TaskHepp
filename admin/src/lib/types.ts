@@ -229,6 +229,11 @@ export interface CalendarSource {
   autoClose: boolean;
   enabled: boolean;
   excludedTypes: string[];
+  /** A second ticket afterwards, e.g. bringing the bin back in. */
+  afterEnabled: boolean;
+  afterTitleTemplate: string;
+  afterDays: number;
+  afterDueTime: string | null;
   lastSyncAt: string | null;
   lastError: string | null;
 }
@@ -249,6 +254,7 @@ export interface CalendarEventPreview {
   ticketId: number | null;
   ticketStatus: TicketStatus | null;
   createFrom: string;
+  after: { title: string; due: string; dueTime: string | null } | null;
 }
 
 export interface RunningTimer {
@@ -416,4 +422,23 @@ export interface TicketDay {
   seconds: number;
   minutes: number;
   entries: TimeEntry[];
+}
+
+/** One ticket a template creates; offsetDays counts from the day chosen when using it (null = no date). */
+export interface TemplateItem {
+  title: string;
+  description: string;
+  prio: Prio;
+  offsetDays: number | null;
+  dueTime: string | null;
+  checklist: string[];
+}
+
+export interface TicketTemplate {
+  id: number;
+  name: string;
+  icon: string;
+  areaId: number | null;
+  area: string | null;
+  items: TemplateItem[];
 }
