@@ -139,3 +139,57 @@ describe('calendar due time', () => {
     expect(open.every((x: { dueTime: string }) => x.dueTime === '19:00')).toBe(true);
   });
 });
+
+describe('bringing the bin back in', () => {
+  const titles = async (q: string) => (await call('GET', `/api/tickets?q=${encodeURIComponent(q)}`)).json() as
+    { id: number; title: string; due: string; dueTime: string | null; status: string; area: string }[];
+
+  it('adds a second ticket the day after putting the bin out', async () => {
+    ha.calendars.set('calendar.tonnen', [
+      { summary: 'Blaue Tonne', start: { date: day(3) } },
+      { summary: 'Grüne Tonne', start: { date: day(0) } }, // today: out is overdue already, in is today
+    ]);
+    const res = await call('POST', '/api/calendars', {
+      ...source, entityId: 'calendar.tonnen', name: 'Tonnen', afterEnabled: true, afterDueTime: '18:00',
+    });
+    expect(res.statusCode).toBe(201);
+    expect(res.json()).toMatchObject({ afterEnabled: true, afterTitleTemplate: '{title} wieder reinstellen', afterDays: 1, afterDueTime: '18:00' });
+
+    const blue = await titles('Blaue Tonne');
+    expect(blue.map(x => [x.title, x.due, x.dueTime])).toEqual(expect.arrayContaining([
+      ['Blaue Tonne rausstellen', day(2), null],
+      ['Blaue Tonne wieder reinstellen', day(3), '18:00'],
+    ]));
+    expect(blue).toHaveLength(2);
+    expect((await titles('Grüne Tonne wieder reinstellen'))[0]).toMatchObject({ due: day(0), area: 'Zuhause' });
+
+    const preview = (await call('GET', `/api/calendars/${res.json().id}/events`)).json();
+    expect(preview.events.find((e: { summary: string }) => e.summary === 'Blaue Tonne').after).toEqual({ title: 'Blaue Tonne wieder reinstellen', due: day(3), dueTime: '18:00' });
+  });
+
+  it('follows changed settings, and goes and comes back with the option', async () => {
+    const tonnen = (await call('GET', '/api/calendars')).json().find((s: { entityId: string }) => s.entityId === 'calendar.tonnen');
+    await call('PATCH', `/api/calendars/${tonnen.id}`, { afterDays: 2, afterTitleTemplate: '{title} reinholen', afterDueTime: null });
+    expect((await titles('Blaue Tonne reinholen'))[0]).toMatchObject({ due: day(4), dueTime: null });
+
+    await call('PATCH', `/api/calendars/${tonnen.id}`, { afterEnabled: false });
+    expect(await titles('reinholen')).toEqual([]);
+    expect(await titles('Blaue Tonne rausstellen')).toHaveLength(1); // the first ticket stays
+
+    await call('PATCH', `/api/calendars/${tonnen.id}`, { afterEnabled: true });
+    expect(await titles('Blaue Tonne reinholen')).toHaveLength(1);
+  });
+
+  it('does not bring back a deleted one, and closes it once its day is over', async () => {
+    const tonnen = (await call('GET', '/api/calendars')).json().find((s: { entityId: string }) => s.entityId === 'calendar.tonnen');
+    const [green] = await titles('Grüne Tonne reinholen');
+    await call('DELETE', `/api/tickets/${green.id}`);
+    await call('POST', `/api/calendars/${tonnen.id}/sync`);
+    expect(await titles('Grüne Tonne reinholen')).toEqual([]);
+
+    const [blue] = await titles('Blaue Tonne reinholen');
+    await t.db.query('UPDATE tickets SET due_date = current_date - 1 WHERE id = $1', [blue.id]);
+    await call('POST', `/api/calendars/${tonnen.id}/sync`);
+    expect((await call('GET', `/api/tickets/${blue.id}`)).json().status).toBe('done');
+  });
+});

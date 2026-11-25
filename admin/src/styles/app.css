@@ -302,3 +302,5 @@ button.tag:focus-visible { outline: 2px solid var(--color-accent); outline-offse
 .time-entry-form .input[type=date] { width: 150px; }
 .time-entry-form .input[type=time] { width: 110px; }
 .time-entry-form .input[aria-invalid=true] { border-color: #f0a477; }
+
+.calendar-after { gap: 12px; padding-left: 12px; border-left: 2px solid var(--color-neutral-800); }

@@ -26,9 +26,9 @@ export function Calendars() {
   const selected = sources?.find(s => s.id === selectedId) ?? sources?.[0] ?? null;
   const preview = useApi<CalendarPreview>(selected ? `/api/calendars/${selected.id}/events` : null);
   const events = preview?.events;
-  const [draft, setDraft] = useState({ name: '', titleTemplate: '' });
+  const [draft, setDraft] = useState({ name: '', titleTemplate: '', afterTitleTemplate: '' });
   useEffect(() => {
-    if (selected) setDraft({ name: selected.name, titleTemplate: selected.titleTemplate });
+    if (selected) setDraft({ name: selected.name, titleTemplate: selected.titleTemplate, afterTitleTemplate: selected.afterTitleTemplate });
     setSyncInfo(null);
   }, [selected?.id]); // only when switching calendars, not on every refetch
 
@@ -132,6 +132,27 @@ export function Calendars() {
                 onBlur={e => (e.target.value || null) !== selected.dueTime && save({ dueTime: e.target.value || null })} />
             </Field>
             <div className="field-hint" style={{ marginTop: -8 }}>{t('calendars.timeHint')}</div>
+            <div className="list-card" style={{ padding: 0 }}>
+              <ToggleRow last title={t('calendars.after')} desc={t('calendars.afterDesc')} on={selected.afterEnabled} onToggle={() => save({ afterEnabled: !selected.afterEnabled })} />
+            </div>
+            {selected.afterEnabled && (
+              <div className="stack calendar-after">
+                <Field label={t('calendars.afterTemplate')}>
+                  <input className="input" value={draft.afterTitleTemplate} onChange={e => setDraft({ ...draft, afterTitleTemplate: e.target.value })}
+                    onBlur={() => draft.afterTitleTemplate.trim() && draft.afterTitleTemplate !== selected.afterTitleTemplate && save({ afterTitleTemplate: draft.afterTitleTemplate })} />
+                </Field>
+                <LabeledSeg
+                  title={t('calendars.afterWhen')}
+                  options={[0, 1, 2, 3].map(n => ({ value: n, label: t(`calendars.afterDays${n}`) }))}
+                  value={selected.afterDays}
+                  onChange={afterDays => save({ afterDays })}
+                />
+                <Field label={t('calendars.time')}>
+                  <input className="input" type="time" style={{ maxWidth: 160 }} defaultValue={selected.afterDueTime ?? ''} key={`${selected.id}-after-${selected.afterDueTime}`}
+                    onBlur={e => (e.target.value || null) !== selected.afterDueTime && save({ afterDueTime: e.target.value || null })} />
+                </Field>
+              </div>
+            )}
             <LabeledSeg
               title={t('calendars.lookahead')}
               options={[7, 14, 30].map(n => ({ value: n, label: t('calendars.days', { n }) }))}
@@ -175,7 +196,11 @@ export function Calendars() {
               {!events ? <div className="list-row"><Loading /></div> : events.map(e => (
                 <div key={`${e.date}|${e.summary}`} className="list-row">
                   <span className="accent" style={{ width: 90, flex: 'none' }}>{formatDay(e.date, i18n.language)}</span>
-                  <span className="grow">{e.summary}<div className="user-mail">{e.ticketTitle} · {t('calendars.dueOn', { date: formatDay(e.due, i18n.language) + (e.dueTime ? ` ${e.dueTime}` : '') })}</div></span>
+                  <span className="grow">
+                    {e.summary}
+                    <div className="user-mail">{e.ticketTitle} · {t('calendars.dueOn', { date: formatDay(e.due, i18n.language) + (e.dueTime ? ` ${e.dueTime}` : '') })}</div>
+                    {e.after && <div className="user-mail">{e.after.title} · {t('calendars.dueOn', { date: formatDay(e.after.due, i18n.language) + (e.after.dueTime ? ` ${e.after.dueTime}` : '') })}</div>}
+                  </span>
                   {e.imported
                     ? <span className={`tag ${e.ticketStatus ? ticketTag[e.ticketStatus] : 'tag-neutral'}`}>{e.ticketStatus ? t(`status.${e.ticketStatus}`) : t('calendars.ticketDeleted')}</span>
                     : <span className="tag tag-neutral">{t('calendars.createdFrom', { date: formatDay(e.createFrom, i18n.language) })}</span>}

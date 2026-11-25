@@ -487,7 +487,15 @@
     "types": "Abfallarten",
     "typesHint": "Ausgeschaltete Arten bekommen keine Tickets; offene Tickets dieser Art werden entfernt.",
     "time": "Uhrzeit (optional)",
-    "timeHint": "Leer = ganzer Tag. Mit Uhrzeit, z. B. 19:00, kommt die Erinnerung eine Stunde vorher."
+    "timeHint": "Leer = ganzer Tag. Mit Uhrzeit, z. B. 19:00, kommt die Erinnerung eine Stunde vorher.",
+    "after": "Danach wieder reinstellen",
+    "afterDesc": "Zu jedem Termin ein zweites Ticket, z. B. „Restmüll wieder reinstellen“ einen Tag nach dem Rausstellen.",
+    "afterTemplate": "Titel des zweiten Tickets",
+    "afterWhen": "Fällig",
+    "afterDays0": "Am selben Tag",
+    "afterDays1": "1 Tag danach",
+    "afterDays2": "2 Tage danach",
+    "afterDays3": "3 Tage danach"
   },
   "app": {
     "tagline": "Aufgaben und Zeit – bei der Arbeit und zuhause an einem Ort.",

@@ -229,6 +229,11 @@ export interface CalendarSource {
   autoClose: boolean;
   enabled: boolean;
   excludedTypes: string[];
+  /** A second ticket afterwards, e.g. bringing the bin back in. */
+  afterEnabled: boolean;
+  afterTitleTemplate: string;
+  afterDays: number;
+  afterDueTime: string | null;
   lastSyncAt: string | null;
   lastError: string | null;
 }
@@ -249,6 +254,7 @@ export interface CalendarEventPreview {
   ticketId: number | null;
   ticketStatus: TicketStatus | null;
   createFrom: string;
+  after: { title: string; due: string; dueTime: string | null } | null;
 }
 
 export interface RunningTimer {

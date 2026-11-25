@@ -291,6 +291,8 @@ Es gibt zwei Wege. Wähle einen pro Bereich:
 
 Für jeden Termin entsteht genau ein Ticket, bis zu 14 Tage im Voraus. Ist der Termin vorbei, wird das Ticket automatisch erledigt. Ein gelöschtes Ticket kommt nicht wieder.
 
+**Tonne wieder reinstellen:** Mit **Danach wieder reinstellen** entsteht zu jedem Termin ein zweites Ticket, z. B. „Restmüll wieder reinstellen“. Es ist standardmäßig einen Tag nach dem Rausstellen fällig, also am Abholtag. Einstellbar sind der Titel (`{title}` = Abfallart), der Tag (am selben Tag bis 3 Tage danach) und eine Uhrzeit, z. B. 18:00, wenn du von der Arbeit kommst. Einschalten wirkt auch für schon angelegte Termine, Ausschalten entfernt die offenen zweiten Tickets. Mit „Automatisch erledigen“ schließt sich das zweite Ticket, wenn sein Tag vorbei ist.
+
 ### 7.7 Mehr mit Home Assistant
 
 - **Automatisch erledigen:** Auf der Ticket-Seite unter *Automatisch erledigen, wenn …* eine Entität und einen Zustand wählen, z. B. `sensor.waschmaschine` wechselt zu `idle`.
